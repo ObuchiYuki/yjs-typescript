@@ -1,4 +1,4 @@
-import { AbstractStruct, DeleteSet, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, ID, AbstractType, Transaction } from '../internals';
+import { AbstractStruct, DeleteSet, StructStore, ID, AbstractType, Transaction, UpdateDecoderAny, UpdateEncoderAny } from '../internals';
 export declare const followRedone: (store: StructStore, id: ID) => {
     item: Item;
     diff: number;
@@ -96,10 +96,10 @@ export declare class Item extends AbstractStruct {
      *
      * This is called when this Item is sent to a remote peer.
      */
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number): void;
+    write(encoder: UpdateEncoderAny, offset: number): void;
 }
-export declare const readItemContent: (decoder: UpdateDecoderV1 | UpdateDecoderV2, info: number) => AbstractContent;
-export type ContentRef = (decoder: UpdateDecoderV1 | UpdateDecoderV2) => AbstractContent;
+export declare const readItemContent: (decoder: UpdateDecoderAny, info: number) => AbstractContent;
+export type ContentRef = (decoder: UpdateDecoderAny) => AbstractContent;
 /**
  * A lookup map for reading Item content.
  */
@@ -124,6 +124,6 @@ export declare class AbstractContent {
     integrate(transaction: Transaction, item: Item): void;
     delete(transaction: Transaction): void;
     gc(store: StructStore): void;
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number): void;
+    write(encoder: UpdateEncoderAny, offset: number): void;
     getRef(): number;
 }

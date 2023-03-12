@@ -26,7 +26,7 @@ class ContentFormat {
     getRef() { return 6; }
 }
 exports.ContentFormat = ContentFormat;
-const readContentFormat = (decoder) => {
+const readContentFormat = decoder => {
     return new ContentFormat(decoder.readKey(), decoder.readJSON());
 };
 exports.readContentFormat = readContentFormat;

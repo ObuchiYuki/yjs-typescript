@@ -55,5 +55,6 @@ __exportStar(require("./structs/ContentType.js"), exports);
 __exportStar(require("./structs/Item.js"), exports);
 __exportStar(require("./structs/Skip.js"), exports);
 // ======================================================================================== //
+__exportStar(require("./types/AbstractType_"), exports);
 __exportStar(require("./structs/AbstractContent_"), exports);
 __exportStar(require("./structs/AbstractStruct_"), exports);

@@ -1,14 +1,19 @@
 
 import {
-    AbstractStruct,
-    UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction, ID // eslint-disable-line
+    StructStore, Transaction, ID, AbstractStruct_, UpdateEncoderAny
 } from '../internals'
+
 import * as error from 'lib0/error'
 import * as encoding from 'lib0/encoding'
 
 export const structSkipRefNumber = 10
 
-export class Skip extends AbstractStruct {
+export class Skip implements AbstractStruct_ {
+    constructor(
+        public id: ID,
+        public length: number
+    ) {}
+
     get deleted(): boolean { return true }
 
     delete () {}
@@ -24,7 +29,7 @@ export class Skip extends AbstractStruct {
         error.unexpectedCase()
     }
 
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) {
+    write(encoder: UpdateEncoderAny, offset: number) {
         encoder.writeInfo(structSkipRefNumber)
         // write as VarUint because Skips can't make use of predictable length-encoding
         encoding.writeVarUint(encoder.restEncoder, this.length - offset)

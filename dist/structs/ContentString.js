@@ -1,9 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readContentString = exports.ContentString = void 0;
-/**
- * @private
- */
 class ContentString {
     constructor(str) {
         this.str = str;
@@ -40,7 +37,7 @@ class ContentString {
     getRef() { return 4; }
 }
 exports.ContentString = ContentString;
-const readContentString = (decoder) => {
+const readContentString = decoder => {
     return new ContentString(decoder.readString());
 };
 exports.readContentString = readContentString;

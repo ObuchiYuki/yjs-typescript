@@ -35,7 +35,7 @@ class ContentJSON {
     getRef() { return 2; }
 }
 exports.ContentJSON = ContentJSON;
-const readContentJSON = (decoder) => {
+const readContentJSON = decoder => {
     const len = decoder.readLen();
     const cs = [];
     for (let i = 0; i < len; i++) {

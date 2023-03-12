@@ -3,10 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GC = exports.structGCRefNumber = void 0;
 const internals_1 = require("../internals");
 exports.structGCRefNumber = 0;
-/**
- * @private
- */
-class GC extends internals_1.AbstractStruct {
+// AbstractStruct で constructor チェックをしている部分はないので、implements にして良い
+class GC {
+    constructor(id, length) {
+        this.id = id;
+        this.length = length;
+    }
     get deleted() { return true; }
     delete() { }
     mergeWith(right) {

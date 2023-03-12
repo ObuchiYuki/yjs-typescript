@@ -2,15 +2,20 @@
 import {
     AbstractStruct,
     addStruct,
-    UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction, ID // eslint-disable-line
+    StructStore, Transaction, UpdateEncoderAny, ID,
+    AbstractStruct_
 } from '../internals'
 
 export const structGCRefNumber = 0
 
-/**
- * @private
- */
-export class GC extends AbstractStruct {
+// AbstractStruct で constructor チェックをしている部分はないので、implements にして良い
+
+export class GC implements AbstractStruct_ {
+    constructor(
+        public id: ID,
+        public length: number
+    ) {}
+    
     get deleted () { return true }
 
     delete() {}
@@ -31,12 +36,12 @@ export class GC extends AbstractStruct {
         addStruct(transaction.doc.store, this)
     }
 
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) {
+    write(encoder: UpdateEncoderAny, offset: number) {
         encoder.writeInfo(structGCRefNumber)
         encoder.writeLen(this.length - offset)
     }
 
-    getMissing (transaction: Transaction, store: StructStore): number | null {
+    getMissing(transaction: Transaction, store: StructStore): number | null {
         return null
     }
 }

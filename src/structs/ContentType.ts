@@ -7,14 +7,16 @@ import {
     readYXmlFragment,
     readYXmlHook,
     readYXmlText,
-    UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction, Item, YEvent, AbstractType // eslint-disable-line
+    UpdateEncoderAny, UpdateDecoderAny,
+    
+    StructStore, Transaction, Item, AbstractType,
+
+    AbstractContent_, AbstractContentDecoder_
 } from '../internals'
 
 import * as error from 'lib0/error'
 
-type TypeRef = (decoder: UpdateDecoderV1 | UpdateDecoderV2) => AbstractType<any>
-
-export const typeRefs: TypeRef[] = [
+export const typeRefs: ( (decoder: UpdateDecoderAny) => AbstractType<any> )[] = [
     readYArray,
     readYMap,
     readYText,
@@ -32,10 +34,8 @@ export const YXmlFragmentRefID = 4
 export const YXmlHookRefID = 5
 export const YXmlTextRefID = 6
 
-export class ContentType {
-    constructor(
-        public type: AbstractType<any>
-    ) {}
+export class ContentType implements AbstractContent_ {
+    constructor(public type: AbstractType<any>) {}
 
     getLength(): number { return 1 }
 
@@ -94,13 +94,13 @@ export class ContentType {
         this.type._map = new Map()
     }
 
-    write (encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) {
+    write (encoder: UpdateEncoderAny, offset: number) {
         this.type._write(encoder)
     }
 
     getRef(): number { return 7 }
 }
 
-export const readContentType = (decoder: UpdateDecoderV1 | UpdateDecoderV2): ContentType => {
+export const readContentType: AbstractContentDecoder_ = decoder => {
     return new ContentType(typeRefs[decoder.readTypeRef()](decoder))
 }

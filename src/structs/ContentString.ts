@@ -3,9 +3,6 @@ import {
     AbstractContent_, AbstractContentDecoder_, UpdateEncoderAny
 } from '../internals'
 
-/**
- * @private
- */
 export class ContentString implements AbstractContent_ {
     constructor(public str: string) {}
 

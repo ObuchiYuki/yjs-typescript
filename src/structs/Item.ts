@@ -23,17 +23,18 @@ import {
     readContentType,
     addChangedTypeToTransaction,
     isDeleted,
-    DeleteSet, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, ContentType, ContentDeleted, StructStore, ID, AbstractType, Transaction // eslint-disable-line
+    DeleteSet, ContentType, ContentDeleted, StructStore, ID, AbstractType, Transaction,
+
+    UpdateDecoderAny, UpdateEncoderAny
 } from '../internals'
 
 import * as error from 'lib0/error'
 import * as binary from 'lib0/binary'
 
 export const followRedone = (store: StructStore, id: ID): { item: Item, diff: number } => {
-
     let nextID: ID|null = id
     let diff = 0
-    let item
+    let item: Item | null
     do {
         if (diff > 0) {
             nextID = createID(nextID.client, nextID.clock + diff)
@@ -42,9 +43,8 @@ export const followRedone = (store: StructStore, id: ID): { item: Item, diff: nu
         diff = nextID.clock - item.id.clock
         nextID = item.redone
     } while (nextID !== null && item instanceof Item)
-    return {
-        item, diff
-    }
+    
+    return { item, diff }
 }
 
 /**
@@ -549,7 +549,7 @@ export class Item extends AbstractStruct {
      *
      * This is called when this Item is sent to a remote peer.
      */
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) {
+    write(encoder: UpdateEncoderAny, offset: number) {
         const origin = offset > 0 ? createID(this.id.client, this.id.clock + offset - 1) : this.origin
         const rightOrigin = this.rightOrigin
         const parentSub = this.parentSub
@@ -595,11 +595,11 @@ export class Item extends AbstractStruct {
     }
 }
 
-export const readItemContent = (decoder: UpdateDecoderV1 | UpdateDecoderV2, info: number): AbstractContent => {
+export const readItemContent = (decoder: UpdateDecoderAny, info: number): AbstractContent => {
     return contentRefs[info & binary.BITS5](decoder)
 }
 
-export type ContentRef = (decoder: UpdateDecoderV1 | UpdateDecoderV2) => AbstractContent
+export type ContentRef = (decoder: UpdateDecoderAny) => AbstractContent
 
 /**
  * A lookup map for reading Item content.
@@ -647,7 +647,7 @@ export class AbstractContent {
 
     gc(store: StructStore) { throw error.methodUnimplemented() }
 
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) { throw error.methodUnimplemented() }
+    write(encoder: UpdateEncoderAny, offset: number) { throw error.methodUnimplemented() }
 
     getRef(): number { throw error.methodUnimplemented() }
 }

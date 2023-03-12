@@ -79,7 +79,7 @@ class ContentType {
     getRef() { return 7; }
 }
 exports.ContentType = ContentType;
-const readContentType = (decoder) => {
+const readContentType = decoder => {
     return new ContentType(exports.typeRefs[decoder.readTypeRef()](decoder));
 };
 exports.readContentType = readContentType;
