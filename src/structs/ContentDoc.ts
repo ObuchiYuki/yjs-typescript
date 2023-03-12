@@ -36,7 +36,7 @@ export class ContentDoc {
     
     copy(): ContentDoc { return new ContentDoc(createDocFromOpts(this.doc.guid, this.opts)) }
 
-    splice(offset: number) { throw error.methodUnimplemented() }
+    splice(offset: number): ContentDoc { throw error.methodUnimplemented() }
 
     mergeWith(right: ContentDoc): boolean {
         return false

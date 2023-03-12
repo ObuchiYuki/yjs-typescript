@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Skip = exports.structSkipRefNumber = void 0;
-const internals_1 = require("yjs/dist/src/internals");
+const internals_1 = require("../internals");
 const error = require("lib0/error");
 const encoding = require("lib0/encoding");
 exports.structSkipRefNumber = 10;

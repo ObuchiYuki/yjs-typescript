@@ -10,7 +10,7 @@ export declare class ContentDoc {
     getContent(): any[];
     isCountable(): boolean;
     copy(): ContentDoc;
-    splice(offset: number): void;
+    splice(offset: number): ContentDoc;
     mergeWith(right: ContentDoc): boolean;
     integrate(transaction: Transaction, item: Item): void;
     delete(transaction: Transaction): void;

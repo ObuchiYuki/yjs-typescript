@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AbstractContent = exports.contentRefs = exports.readItemContent = exports.Item = exports.redoItem = exports.splitItem = exports.keepItem = exports.followRedone = void 0;
-const internals_1 = require("yjs/dist/src/internals");
+const internals_1 = require("../internals");
 const error = require("lib0/error");
 const binary = require("lib0/binary");
 const followRedone = (store, id) => {

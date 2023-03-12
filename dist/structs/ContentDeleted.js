@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readContentDeleted = exports.ContentDeleted = void 0;
-const internals_1 = require("yjs/dist/src/internals");
+const internals_1 = require("../internals");
 class ContentDeleted {
     constructor(len) {
         this.len = len;

@@ -202,7 +202,7 @@ const insertText = (transaction: Transaction, parent: AbstractType<any>, currPos
     minimizeAttributeChanges(currPos, attributes)
     const negatedAttributes = insertAttributes(transaction, parent, currPos, attributes)
     // insert content
-    const content = text.constructor === String ? new ContentString(/** @type {string} */ (text)) : (text instanceof AbstractType ? new ContentType(text) : new ContentEmbed(text))
+    const content = text.constructor === String ? new ContentString((text as string)) : (text instanceof AbstractType ? new ContentType(text) : new ContentEmbed(text as object))
     let { left, right, index } = currPos
     if (parent._searchMarker) {
         updateMarkerChanges(parent._searchMarker, currPos.index, content.getLength())

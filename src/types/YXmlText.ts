@@ -103,6 +103,6 @@ export class YXmlText extends YText {
  * @private
  * @function
  */
-export const readYXmlText = (decoder: UpdateEncoderV1 | UpdateEncoderV2) => {
+export const readYXmlText = (decoder: UpdateDecoderV1 | UpdateDecoderV2): YXmlText => {
     return new YXmlText()
 }

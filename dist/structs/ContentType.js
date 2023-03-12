@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readContentType = exports.ContentType = exports.YXmlTextRefID = exports.YXmlHookRefID = exports.YXmlFragmentRefID = exports.YXmlElementRefID = exports.YTextRefID = exports.YMapRefID = exports.YArrayRefID = exports.typeRefs = void 0;
-const internals_1 = require("yjs/dist/src/internals");
+const internals_1 = require("../internals");
 const error = require("lib0/error");
 exports.typeRefs = [
     internals_1.readYArray,

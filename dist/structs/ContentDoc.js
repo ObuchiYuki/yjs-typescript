@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readContentDoc = exports.ContentDoc = void 0;
-const internals_1 = require("yjs/dist/src/internals");
+const internals_1 = require("../internals");
 const error = require("lib0/error");
 const createDocFromOpts = (guid, opts) => {
     return new internals_1.Doc(Object.assign(Object.assign({ guid }, opts), { shouldLoad: opts.shouldLoad || opts.autoLoad || false }));

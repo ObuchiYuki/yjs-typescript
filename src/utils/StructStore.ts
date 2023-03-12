@@ -155,7 +155,9 @@ export const find = (store: StructStore, id: ID): GC | Item => {
  * @private
  * @function
  */
-export const getItem = /** @type {function(StructStore,ID):Item} */ (find)
+export const getItem = (store: StructStore, id: ID): Item => {
+    return find(store, id) as Item
+}
 
 /**
  * @param {Transaction} transaction
