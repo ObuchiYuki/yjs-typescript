@@ -85,3 +85,4 @@ export declare class UpdateDecoderV2 extends DSDecoderV2 {
     readJSON(): any;
     readKey(): string;
 }
+export type UpdateDecoderAny = UpdateDecoderV1 | UpdateDecoderV2;

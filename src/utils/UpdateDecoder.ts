@@ -209,3 +209,5 @@ export class UpdateDecoderV2 extends DSDecoderV2 {
         }
     }
 }
+
+export type UpdateDecoderAny = UpdateDecoderV1 | UpdateDecoderV2

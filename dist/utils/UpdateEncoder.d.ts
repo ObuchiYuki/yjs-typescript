@@ -110,3 +110,4 @@ export declare class UpdateEncoderV2 extends DSEncoderV2 {
      */
     writeKey(key: string): void;
 }
+export type UpdateEncoderAny = UpdateEncoderV1 | UpdateEncoderV2;

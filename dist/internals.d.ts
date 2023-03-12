@@ -38,3 +38,5 @@ export * from './structs/ContentString.js';
 export * from './structs/ContentType.js';
 export * from './structs/Item.js';
 export * from './structs/Skip.js';
+export * from "./structs/AbstractContent_";
+export * from "./structs/AbstractStruct_";
