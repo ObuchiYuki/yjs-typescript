@@ -1,13 +1,13 @@
 import {
-    UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Item, Transaction // eslint-disable-line
+    UpdateEncoderAny, UpdateDecoderAny, StructStore, Item, Transaction,
+    AbstractContent_, AbstractContentDecoder_
+
 } from '../internals'
 
 import * as error from 'lib0/error'
 
-export class ContentBinary {
-    constructor (
-        public content: Uint8Array
-    ) {}
+export class ContentBinary implements AbstractContent_ {
+    constructor (public content: Uint8Array) {}
 
     getLength(): number { return 1 }
 
@@ -17,13 +17,9 @@ export class ContentBinary {
 
     copy(): ContentBinary { return new ContentBinary(this.content) }
 
-    splice(offset: number): ContentBinary {
-        throw error.methodUnimplemented()
-    }
+    splice(offset: number): ContentBinary { throw error.methodUnimplemented() }
 
-    mergeWith(right: ContentBinary): boolean {
-        return false
-    }
+    mergeWith(right: ContentBinary): boolean { return false }
     
     integrate(transaction: Transaction, item: Item) {}
     
@@ -31,13 +27,11 @@ export class ContentBinary {
     
     gc(store: StructStore) {}
     
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) {
-        encoder.writeBuf(this.content)
-    }
+    write(encoder: UpdateEncoderAny, offset: number) { encoder.writeBuf(this.content) }
 
     getRef(): number { return 3 }
 }
 
-export const readContentBinary = (decoder: UpdateDecoderV1 | UpdateDecoderV2): ContentBinary => {
+export const readContentBinary: AbstractContentDecoder_ = decoder => {
     return new ContentBinary(decoder.readBuf())
 }

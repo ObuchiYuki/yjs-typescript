@@ -25,13 +25,11 @@ class ContentDeleted {
     }
     delete(transaction) { }
     gc(store) { }
-    write(encoder, offset) {
-        encoder.writeLen(this.len - offset);
-    }
+    write(encoder, offset) { encoder.writeLen(this.len - offset); }
     getRef() { return 1; }
 }
 exports.ContentDeleted = ContentDeleted;
-const readContentDeleted = (decoder) => {
+const readContentDeleted = decoder => {
     return new ContentDeleted(decoder.readLen());
 };
 exports.readContentDeleted = readContentDeleted;

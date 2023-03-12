@@ -1,14 +1,13 @@
 
 import {
-    UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Item, Transaction // eslint-disable-line
+    UpdateEncoderAny, StructStore, Item, Transaction,
+    AbstractContent_, AbstractContentDecoder_
 } from '../internals'
 
 import * as error from 'lib0/error'
 
-export class ContentEmbed {
-    constructor(
-        public embed: object
-    ) {}
+export class ContentEmbed implements AbstractContent_ {
+    constructor(public embed: object) {}
 
     getLength(): number { return 1 }
 
@@ -28,11 +27,11 @@ export class ContentEmbed {
     
     gc(store: StructStore) {}
 
-    write (encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) { encoder.writeJSON(this.embed) }
+    write (encoder: UpdateEncoderAny, offset: number) { encoder.writeJSON(this.embed) }
 
     getRef(): number { return 5 }
 }
 
-export const readContentEmbed = (decoder: UpdateDecoderV1 | UpdateDecoderV2): ContentEmbed => {
+export const readContentEmbed: AbstractContentDecoder_ = decoder => {
     return new ContentEmbed(decoder.readJSON())
 }

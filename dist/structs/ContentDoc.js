@@ -14,7 +14,7 @@ class ContentDoc {
         this.doc = doc;
         const opts = {};
         if (!doc.gc) {
-            opts["gc"] = false;
+            opts.gc = false;
         }
         if (doc.autoLoad) {
             opts.autoLoad = true;
@@ -29,9 +29,7 @@ class ContentDoc {
     isCountable() { return true; }
     copy() { return new ContentDoc(createDocFromOpts(this.doc.guid, this.opts)); }
     splice(offset) { throw error.methodUnimplemented(); }
-    mergeWith(right) {
-        return false;
-    }
+    mergeWith(right) { return false; }
     integrate(transaction, item) {
         // this needs to be reflected in doc.destroy as well
         this.doc._item = item;
@@ -56,7 +54,7 @@ class ContentDoc {
     getRef() { return 9; }
 }
 exports.ContentDoc = ContentDoc;
-const readContentDoc = (decoder) => {
+const readContentDoc = decoder => {
     return new ContentDoc(createDocFromOpts(decoder.readString(), decoder.readAny()));
 };
 exports.readContentDoc = readContentDoc;

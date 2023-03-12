@@ -1,13 +1,12 @@
 
 import {
     addToDeleteSet,
-    UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Item, Transaction // eslint-disable-line
+    UpdateEncoderAny, StructStore, Item, Transaction,
+    AbstractContent_, AbstractContentDecoder_
 } from '../internals'
 
-export class ContentDeleted {
-    constructor(
-        public len: number
-    ) {}
+export class ContentDeleted implements AbstractContent_ {
+    constructor(public len: number) {}
 
     getLength(): number { return this.len }
 
@@ -37,13 +36,11 @@ export class ContentDeleted {
     
     gc(store: StructStore) {}
     
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) {
-        encoder.writeLen(this.len - offset)
-    }
+    write(encoder: UpdateEncoderAny, offset: number) { encoder.writeLen(this.len - offset) }
 
     getRef(): number { return 1 }
 }
 
-export const readContentDeleted = (decoder:UpdateDecoderV1 | UpdateDecoderV2 ): ContentDeleted => {
+export const readContentDeleted: AbstractContentDecoder_ = decoder => {
     return new ContentDeleted(decoder.readLen())
 }

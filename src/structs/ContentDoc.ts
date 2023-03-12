@@ -1,17 +1,23 @@
 
 import {
-    Doc, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction, Item // eslint-disable-line
+    Doc, UpdateEncoderAny, StructStore, Transaction, Item,
+    AbstractContent_, AbstractContentDecoder_
 } from '../internals'
 
 import * as error from 'lib0/error'
-
-type ContentDocOpts = { [K in string]: any }
 
 const createDocFromOpts = (guid: string, opts: ContentDocOpts) => {
     return new Doc({ guid, ...opts, shouldLoad: opts.shouldLoad || opts.autoLoad || false })
 }
 
-export class ContentDoc {
+export type ContentDocOpts = { 
+    gc?: boolean,
+    meta?: any,
+    autoLoad?: boolean,
+    shouldLoad?: boolean
+}
+
+export class ContentDoc implements AbstractContent_ {
     doc: Doc
     opts: ContentDocOpts
 
@@ -22,7 +28,7 @@ export class ContentDoc {
         this.doc = doc
 
         const opts: ContentDocOpts = {}
-        if (!doc.gc) { opts["gc"] = false }
+        if (!doc.gc) { opts.gc = false }
         if (doc.autoLoad) { opts.autoLoad = true }
         if (doc.meta !== null) { opts.meta = doc.meta }
         this.opts = opts
@@ -38,9 +44,7 @@ export class ContentDoc {
 
     splice(offset: number): ContentDoc { throw error.methodUnimplemented() }
 
-    mergeWith(right: ContentDoc): boolean {
-        return false
-    }
+    mergeWith(right: ContentDoc): boolean { return false }
 
     integrate(transaction: Transaction, item: Item) {
         // this needs to be reflected in doc.destroy as well
@@ -61,7 +65,7 @@ export class ContentDoc {
 
     gc(store: StructStore) { }
 
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) {
+    write(encoder: UpdateEncoderAny, offset: number) {
         encoder.writeString(this.doc.guid)
         encoder.writeAny(this.opts)
     }
@@ -69,6 +73,6 @@ export class ContentDoc {
     getRef(): number { return 9 }
 }
 
-export const readContentDoc = (decoder: UpdateDecoderV1 | UpdateDecoderV2): ContentDoc => {
+export const readContentDoc: AbstractContentDecoder_ = decoder => {
     return new ContentDoc(createDocFromOpts(decoder.readString(), decoder.readAny()))
 }

@@ -1,8 +1,11 @@
-import { Doc, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction, Item } from '../internals';
-type ContentDocOpts = {
-    [K in string]: any;
+import { Doc, UpdateEncoderAny, StructStore, Transaction, Item, AbstractContent_, AbstractContentDecoder_ } from '../internals';
+export type ContentDocOpts = {
+    gc?: boolean;
+    meta?: any;
+    autoLoad?: boolean;
+    shouldLoad?: boolean;
 };
-export declare class ContentDoc {
+export declare class ContentDoc implements AbstractContent_ {
     doc: Doc;
     opts: ContentDocOpts;
     constructor(doc: Doc);
@@ -15,8 +18,7 @@ export declare class ContentDoc {
     integrate(transaction: Transaction, item: Item): void;
     delete(transaction: Transaction): void;
     gc(store: StructStore): void;
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number): void;
+    write(encoder: UpdateEncoderAny, offset: number): void;
     getRef(): number;
 }
-export declare const readContentDoc: (decoder: UpdateDecoderV1 | UpdateDecoderV2) => ContentDoc;
-export {};
+export declare const readContentDoc: AbstractContentDecoder_;

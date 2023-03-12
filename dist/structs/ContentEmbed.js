@@ -19,7 +19,7 @@ class ContentEmbed {
     getRef() { return 5; }
 }
 exports.ContentEmbed = ContentEmbed;
-const readContentEmbed = (decoder) => {
+const readContentEmbed = decoder => {
     return new ContentEmbed(decoder.readJSON());
 };
 exports.readContentEmbed = readContentEmbed;

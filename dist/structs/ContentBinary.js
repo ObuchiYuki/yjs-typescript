@@ -10,22 +10,16 @@ class ContentBinary {
     getContent() { return [this.content]; }
     isCountable() { return true; }
     copy() { return new ContentBinary(this.content); }
-    splice(offset) {
-        throw error.methodUnimplemented();
-    }
-    mergeWith(right) {
-        return false;
-    }
+    splice(offset) { throw error.methodUnimplemented(); }
+    mergeWith(right) { return false; }
     integrate(transaction, item) { }
     delete(transaction) { }
     gc(store) { }
-    write(encoder, offset) {
-        encoder.writeBuf(this.content);
-    }
+    write(encoder, offset) { encoder.writeBuf(this.content); }
     getRef() { return 3; }
 }
 exports.ContentBinary = ContentBinary;
-const readContentBinary = (decoder) => {
+const readContentBinary = decoder => {
     return new ContentBinary(decoder.readBuf());
 };
 exports.readContentBinary = readContentBinary;
