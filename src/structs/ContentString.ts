@@ -1,14 +1,13 @@
 import {
-    UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Transaction, Item, StructStore // eslint-disable-line
+    Transaction, Item, StructStore,
+    AbstractContent_, AbstractContentDecoder_, UpdateEncoderAny
 } from '../internals'
 
 /**
  * @private
  */
-export class ContentString {
-    constructor(
-        public str: string
-    ) {}
+export class ContentString implements AbstractContent_ {
+    constructor(public str: string) {}
 
     getLength(): number { return this.str.length }
 
@@ -46,13 +45,13 @@ export class ContentString {
     
     gc(store: StructStore) {}
     
-    write (encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) {
+    write (encoder: UpdateEncoderAny, offset: number) {
         encoder.writeString(offset === 0 ? this.str : this.str.slice(offset))
     }
 
     getRef(): number { return 4 }
 }
 
-export const readContentString = (decoder: UpdateDecoderV1 | UpdateDecoderV2): ContentString => {
+export const readContentString: AbstractContentDecoder_ = decoder => {
     return new ContentString(decoder.readString())
 }

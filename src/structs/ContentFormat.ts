@@ -1,11 +1,12 @@
 
 import {
-    AbstractType, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Item, StructStore, Transaction // eslint-disable-line
+    UpdateEncoderAny, StructStore, Item, Transaction,
+    AbstractContent_, AbstractContentDecoder_, AbstractType_
 } from '../internals'
 
 import * as error from 'lib0/error'
 
-export class ContentFormat {
+export class ContentFormat implements AbstractContent_ {
     constructor(
         public key: string,
         public value: object
@@ -25,14 +26,14 @@ export class ContentFormat {
 
     integrate(transaction: Transaction, item: Item) {
         // @todo searchmarker are currently unsupported for rich text documents
-        (item.parent as AbstractType<any>)._searchMarker = null
+        (item.parent as AbstractType_<any>)._searchMarker = null
     }
 
     delete(transaction: Transaction) {}
     
     gc(store: StructStore) {}
     
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) {
+    write(encoder: UpdateEncoderAny, offset: number) {
         encoder.writeKey(this.key)
         encoder.writeJSON(this.value)
     }
@@ -40,6 +41,6 @@ export class ContentFormat {
     getRef(): number { return 6 }
 }
 
-export const readContentFormat = (decoder: UpdateDecoderV1 | UpdateDecoderV2): ContentFormat => {
+export const readContentFormat: AbstractContentDecoder_ = decoder => {
     return new ContentFormat(decoder.readKey(), decoder.readJSON())
 }

@@ -1,14 +1,13 @@
 import {
-    UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Transaction, Item, StructStore // eslint-disable-line
+    Transaction, Item, StructStore, 
+    AbstractContent_, AbstractContentDecoder_, UpdateEncoderAny
 } from '../internals'
 
 /**
  * @private
  */
-export class ContentJSON {
-    constructor(
-        public arr: any[]
-    ) {}
+export class ContentJSON implements AbstractContent_ {
+    constructor(public arr: any[]) {}
 
     getLength(): number { return this.arr.length }
 
@@ -35,7 +34,7 @@ export class ContentJSON {
     
     gc(store: StructStore) {}
     
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) {
+    write(encoder: UpdateEncoderAny, offset: number) {
         const len = this.arr.length
         encoder.writeLen(len - offset)
         for (let i = offset; i < len; i++) {
@@ -47,7 +46,7 @@ export class ContentJSON {
     getRef(): number { return 2 }
 }
 
-export const readContentJSON = (decoder: UpdateDecoderV1 | UpdateDecoderV2): ContentJSON => {
+export const readContentJSON: AbstractContentDecoder_ = decoder => {
     const len = decoder.readLen()
     const cs = []
     for (let i = 0; i < len; i++) {

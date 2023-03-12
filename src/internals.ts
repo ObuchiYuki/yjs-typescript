@@ -44,5 +44,7 @@ export * from './structs/Skip.js'
 
 // ======================================================================================== //
 
+export * from "./types/AbstractType_"
+
 export * from "./structs/AbstractContent_"
 export * from "./structs/AbstractStruct_"
