@@ -1,4 +1,4 @@
-import { AbstractStruct, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction } from 'yjs/dist/src/internals';
+import { AbstractStruct, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction } from '../internals';
 export declare const structGCRefNumber = 0;
 /**
  * @private

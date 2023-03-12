@@ -6,7 +6,7 @@ import {
     iterateStructs,
     UpdateEncoderV2,
     DSDecoderV1, DSEncoderV1, DSDecoderV2, DSEncoderV2, Item, GC, StructStore, Transaction, ID // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as array from 'lib0/array'
 import * as math from 'lib0/math'

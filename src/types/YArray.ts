@@ -17,7 +17,7 @@ import {
     callTypeObservers,
     transact,
     ArraySearchMarker, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 import { typeListSlice } from './AbstractType.js'
 
 /** Event that describes the changes on a YArray */

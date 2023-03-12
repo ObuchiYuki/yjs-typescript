@@ -12,7 +12,7 @@ import {
     ContentBinary,
     getItemCleanStart,
     ContentDoc, YText, YArray, UpdateEncoderV1, UpdateEncoderV2, Doc, Snapshot, Transaction, EventHandler, YEvent, Item, // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as map from 'lib0/map'
 import * as iterator from 'lib0/iterator'

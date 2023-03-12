@@ -3,7 +3,7 @@ import {
     YText,
     YXmlTextRefID,
     ContentType, YXmlElement, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 /**
  * Represents text in a Dom Element. In the future this type will also handle

@@ -2,7 +2,7 @@
 import {
     isDeleted,
     Item, AbstractType, Transaction, AbstractStruct // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as set from 'lib0/set'
 import * as array from 'lib0/array'

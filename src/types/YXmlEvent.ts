@@ -2,7 +2,7 @@
 import {
     YEvent,
     YXmlText, YXmlElement, YXmlFragment, Transaction // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 /**
  * @extends YEvent<YXmlElement|YXmlText|YXmlFragment>

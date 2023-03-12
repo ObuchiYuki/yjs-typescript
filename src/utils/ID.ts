@@ -1,5 +1,5 @@
 
-import { AbstractType } from 'yjs/dist/src/internals' // eslint-disable-line
+import { AbstractType } from '../internals' // eslint-disable-line
 
 import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'

@@ -4,7 +4,7 @@ import {
     GC,
     splitItem,
     Transaction, ID, Item, DSDecoderV2 // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as math from 'lib0/math'
 import * as error from 'lib0/error'

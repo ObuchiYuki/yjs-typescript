@@ -3,7 +3,7 @@ import { Observable } from 'lib0/observable'
 
 import {
     Doc // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 /**
  * This is an abstract interface that all Connectors should implement to keep them interchangeable.

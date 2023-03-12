@@ -1,4 +1,4 @@
-import { UpdateEncoderV1, UpdateEncoderV2, ID, Transaction } from 'yjs/dist/src/internals';
+import { UpdateEncoderV1, UpdateEncoderV2, ID, Transaction } from '../internals';
 export declare class AbstractStruct {
     id: ID;
     length: number;

@@ -15,7 +15,7 @@ import {
     DSEncoderV2,
     decodeStateVector,
     Item, GC, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2 // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 /**
  * @param {UpdateDecoderV1 | UpdateDecoderV2} decoder

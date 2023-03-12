@@ -3,7 +3,7 @@ import {
     AbstractStruct,
     addStruct,
     UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction, ID // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 export const structGCRefNumber = 0
 

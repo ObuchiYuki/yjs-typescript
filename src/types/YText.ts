@@ -28,7 +28,7 @@ import {
     updateMarkerChanges,
     ContentType,
     ArraySearchMarker, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, ID, Doc, Item, Snapshot, Transaction // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as object from 'lib0/object'
 import * as map from 'lib0/map'

@@ -17,7 +17,7 @@ import {
     applyUpdateV2,
     DSEncoderV1, DSEncoderV2, DSDecoderV1, DSDecoderV2, Transaction, Doc, DeleteSet, Item, // eslint-disable-line
     StructStore
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as map from 'lib0/map'
 import * as set from 'lib0/set'

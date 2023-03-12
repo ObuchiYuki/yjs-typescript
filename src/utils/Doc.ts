@@ -11,7 +11,7 @@ import {
     YXmlFragment,
     transact,
     ContentDoc, Item, Transaction, YEvent // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import { Observable } from 'lib0/observable'
 import * as random from 'lib0/random'

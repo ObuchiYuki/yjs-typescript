@@ -1,4 +1,4 @@
-import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Item, StructStore, Transaction } from 'yjs/dist/src/internals';
+import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Item, StructStore, Transaction } from '../internals';
 export declare class ContentFormat {
     key: string;
     value: object;

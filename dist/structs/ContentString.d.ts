@@ -1,4 +1,4 @@
-import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Transaction, Item, StructStore } from 'yjs/dist/src/internals';
+import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Transaction, Item, StructStore } from '../internals';
 /**
  * @private
  */

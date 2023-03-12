@@ -38,7 +38,7 @@ import {
     diffUpdateV2,
     convertUpdateFormatV2ToV1,
     DSDecoderV2, Doc, Transaction, GC, Item, StructStore // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'

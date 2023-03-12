@@ -1,4 +1,4 @@
-import { UpdateEncoderV1, UpdateEncoderV2, UpdateDecoderV1, UpdateDecoderV2, Transaction, Item, StructStore } from 'yjs/dist/src/internals';
+import { UpdateEncoderV1, UpdateEncoderV2, UpdateDecoderV1, UpdateDecoderV2, Transaction, Item, StructStore } from '../internals';
 export declare class ContentAny {
     arr: any[];
     constructor(arr: any[]);

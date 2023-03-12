@@ -4,7 +4,7 @@ import * as encoding from 'lib0/encoding'
 
 import {
     ID // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 export class DSEncoderV1 {
     restEncoder: encoding.Encoder

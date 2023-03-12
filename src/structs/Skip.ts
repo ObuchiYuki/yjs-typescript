@@ -2,7 +2,7 @@
 import {
     AbstractStruct,
     UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction, ID // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 import * as error from 'lib0/error'
 import * as encoding from 'lib0/encoding'
 

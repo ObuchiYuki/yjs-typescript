@@ -18,7 +18,7 @@ import {
     typeListGet,
     typeListSlice,
     UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, ContentType, Transaction, Item, YXmlText, YXmlHook // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as error from 'lib0/error'
 import * as array from 'lib0/array'

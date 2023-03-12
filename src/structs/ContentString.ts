@@ -1,6 +1,6 @@
 import {
     UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Transaction, Item, StructStore // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 /**
  * @private

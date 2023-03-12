@@ -1,6 +1,6 @@
 import {
     UpdateEncoderV1, UpdateEncoderV2, UpdateDecoderV1, UpdateDecoderV2, Transaction, Item, StructStore 
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 export class ContentAny {
     constructor(

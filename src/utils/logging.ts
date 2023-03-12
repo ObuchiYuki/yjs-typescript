@@ -1,7 +1,7 @@
 
 import {
     AbstractType // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 /**
  * Convenient helper to log type information.

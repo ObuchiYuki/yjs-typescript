@@ -1,4 +1,4 @@
-import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Item, Transaction } from 'yjs/dist/src/internals';
+import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Item, Transaction } from '../internals';
 export declare class ContentBinary {
     content: Uint8Array;
     constructor(content: Uint8Array);

@@ -10,7 +10,7 @@ import {
     ContentType,
     followRedone,
     ID, Doc, AbstractType // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'

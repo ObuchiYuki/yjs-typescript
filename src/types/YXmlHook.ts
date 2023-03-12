@@ -3,7 +3,7 @@ import {
     YMap,
     YXmlHookRefID,
     UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2 // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 /**
  * You can manage binding to a custom type with YXmlHook.

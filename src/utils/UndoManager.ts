@@ -11,7 +11,7 @@ import {
     isDeleted,
     addToDeleteSet,
     Transaction, Doc, Item, GC, DeleteSet, AbstractType, YEvent // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as time from 'lib0/time'
 import * as array from 'lib0/array'

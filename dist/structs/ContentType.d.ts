@@ -1,4 +1,4 @@
-import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction, Item, AbstractType } from 'yjs/dist/src/internals';
+import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction, Item, AbstractType } from '../internals';
 type TypeRef = (decoder: UpdateDecoderV1 | UpdateDecoderV2) => AbstractType<any>;
 export declare const typeRefs: TypeRef[];
 export declare const YArrayRefID = 0;

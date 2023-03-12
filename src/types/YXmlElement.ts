@@ -10,7 +10,7 @@ import {
     typeListForEach,
     YXmlElementRefID,
     YXmlText, ContentType, AbstractType, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Item // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 /**
  * An YXmlElement imitates the behavior of a

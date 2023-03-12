@@ -1,4 +1,4 @@
-import { AbstractStruct, DeleteSet, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, ID, AbstractType, Transaction } from 'yjs/dist/src/internals';
+import { AbstractStruct, DeleteSet, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, ID, AbstractType, Transaction } from '../internals';
 export declare const followRedone: (store: StructStore, id: ID) => {
     item: Item;
     diff: number;

@@ -24,7 +24,7 @@ import {
     addChangedTypeToTransaction,
     isDeleted,
     DeleteSet, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, ContentType, ContentDeleted, StructStore, ID, AbstractType, Transaction // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as error from 'lib0/error'
 import * as binary from 'lib0/binary'

@@ -2,7 +2,7 @@
 import {
     addToDeleteSet,
     UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Item, Transaction // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 export class ContentDeleted {
     constructor(

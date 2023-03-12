@@ -6,7 +6,7 @@ import {
     writeDeleteSet,
     createDeleteSet,
     DSEncoderV1, DSDecoderV1, ID, DeleteSet, YArrayEvent, Transaction, Doc // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import * as decoding from 'lib0/decoding'
 

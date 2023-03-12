@@ -2,7 +2,7 @@ import * as buffer from 'lib0/buffer'
 import * as decoding from 'lib0/decoding'
 import {
     ID, createID
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 export class DSDecoderV1 {
     restDecoder: decoding.Decoder

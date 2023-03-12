@@ -1,4 +1,4 @@
-import { AbstractStruct, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction } from 'yjs/dist/src/internals';
+import { AbstractStruct, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction } from '../internals';
 export declare const structSkipRefNumber = 10;
 export declare class Skip extends AbstractStruct {
     get deleted(): boolean;

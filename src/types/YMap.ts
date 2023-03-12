@@ -14,7 +14,7 @@ import {
     callTypeObservers,
     transact,
     UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item // eslint-disable-line
-} from 'yjs/dist/src/internals'
+} from '../internals'
 
 import {
     AbstractType

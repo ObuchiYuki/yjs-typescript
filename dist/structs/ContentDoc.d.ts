@@ -1,4 +1,4 @@
-import { Doc, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction, Item } from 'yjs/dist/src/internals';
+import { Doc, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, StructStore, Transaction, Item } from '../internals';
 type ContentDocOpts = {
     [K in string]: any;
 };

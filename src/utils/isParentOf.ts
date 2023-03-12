@@ -1,5 +1,5 @@
 
-import { AbstractType, Item } from 'yjs/dist/src/internals' // eslint-disable-line
+import { AbstractType, Item } from '../internals' // eslint-disable-line
 
 /**
  * Check if `parent` is a parent of `child`.
