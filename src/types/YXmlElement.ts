@@ -20,29 +20,23 @@ import {
  * * An YXmlElement has childElements that must inherit from YXmlElement
  */
 export class YXmlElement extends YXmlFragment {
+    nodeName: string
+    _prelimAttrs: Map<string, any> | null = new Map()
+
+
     constructor (nodeName = 'UNDEFINED') {
         super()
         this.nodeName = nodeName
-        /**
-         * @type {Map<string, any>|null}
-         */
-        this._prelimAttrs = new Map()
     }
 
-    /**
-     * @type {YXmlElement|YXmlText|null}
-     */
-    get nextSibling () {
+    get nextSibling(): YXmlElement|YXmlText|null {
         const n = this._item ? this._item.next : null
-        return n ? /** @type {YXmlElement|YXmlText} */ (/** @type {ContentType} */ (n.content).type) : null
+        return n ? ((n.content as ContentType).type as YXmlElement|YXmlText) : null
     }
 
-    /**
-     * @type {YXmlElement|YXmlText|null}
-     */
-    get prevSibling () {
+    get prevSibling(): YXmlElement|YXmlText|null {
         const n = this._item ? this._item.prev : null
-        return n ? /** @type {YXmlElement|YXmlText} */ (/** @type {ContentType} */ (n.content).type) : null
+        return n ? ((n.content as ContentType).type as YXmlElement|YXmlText) : null
     }
 
     /**
@@ -51,38 +45,30 @@ export class YXmlElement extends YXmlFragment {
      * * Save this struct in the os
      * * This type is sent to other client
      * * Observer functions are fired
-     *
-     * @param {Doc} y The Yjs instance
-     * @param {Item} item
      */
-    _integrate (y, item) {
-        super._integrate(y, item)
-        ;(/** @type {Map<string, any>} */ (this._prelimAttrs)).forEach((value, key) => {
+    _integrate(y: Doc, item: Item) {
+        super._integrate(y, item);
+        this._prelimAttrs?.forEach((value, key) => {
             this.setAttribute(key, value)
         })
         this._prelimAttrs = null
     }
 
-    /**
-     * Creates an Item with the same effect as this Item (without position effect)
-     *
-     * @return {YXmlElement}
-     */
-    _copy () {
+    /** Creates an Item with the same effect as this Item (without position effect) */
+    _copy(): YXmlElement {
         return new YXmlElement(this.nodeName)
     }
 
-    /**
-     * @return {YXmlElement}
-     */
-    clone () {
+    clone(): YXmlElement {
         const el = new YXmlElement(this.nodeName)
         const attrs = this.getAttributes()
         for (const key in attrs) {
             el.setAttribute(key, attrs[key])
         }
-        // @ts-ignore
-        el.insert(0, this.toArray().map(item => item instanceof AbstractType ? item.clone() : item))
+
+        el.insert(0, this.toArray().map((item): YXmlText | YXmlElement => {
+            return (item instanceof AbstractType ? item.clone() : item) as YXmlText | YXmlElement
+        }))
         return el
     }
 
@@ -95,7 +81,7 @@ export class YXmlElement extends YXmlFragment {
      *
      * @public
      */
-    toString () {
+    toString(): string {
         const attrs = this.getAttributes()
         const stringBuilder = []
         const keys = []
@@ -120,13 +106,13 @@ export class YXmlElement extends YXmlFragment {
      *
      * @public
      */
-    removeAttribute (attributeName) {
+    removeAttribute (attributeName: string) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
                 typeMapDelete(transaction, this, attributeName)
             })
         } else {
-            /** @type {Map<string,any>} */ (this._prelimAttrs).delete(attributeName)
+            this._prelimAttrs?.delete(attributeName)
         }
     }
 
@@ -138,13 +124,13 @@ export class YXmlElement extends YXmlFragment {
      *
      * @public
      */
-    setAttribute (attributeName, attributeValue) {
+    setAttribute (attributeName: string, attributeValue: string) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
                 typeMapSet(transaction, this, attributeName, attributeValue)
             })
         } else {
-            /** @type {Map<string, any>} */ (this._prelimAttrs).set(attributeName, attributeValue)
+            this._prelimAttrs?.set(attributeName, attributeValue)
         }
     }
 
@@ -157,8 +143,8 @@ export class YXmlElement extends YXmlFragment {
      *
      * @public
      */
-    getAttribute (attributeName) {
-        return /** @type {any} */ (typeMapGet(this, attributeName))
+    getAttribute(attributeName: string): string {
+        return typeMapGet(this, attributeName) as any
     }
 
     /**
@@ -169,18 +155,12 @@ export class YXmlElement extends YXmlFragment {
      *
      * @public
      */
-    hasAttribute (attributeName) {
+    hasAttribute(attributeName: string): boolean {
         return /** @type {any} */ (typeMapHas(this, attributeName))
     }
 
-    /**
-     * Returns all attribute name/value pairs in a JSON Object.
-     *
-     * @return {Object<string, any>} A JSON Object that describes the attributes.
-     *
-     * @public
-     */
-    getAttributes () {
+    /** Returns all attribute name/value pairs in a JSON Object. */
+    getAttributes(): { [s: string]: any } {
         return typeMapGetAll(this)
     }
 
@@ -199,7 +179,7 @@ export class YXmlElement extends YXmlFragment {
      *
      * @public
      */
-    toDOM (_document = document, hooks = {}, binding) {
+    toDOM(_document: Document = document, hooks: { [s: string]: any } = {}, binding: any): Node {
         const dom = _document.createElement(this.nodeName)
         const attrs = this.getAttributes()
         for (const key in attrs) {
@@ -222,7 +202,7 @@ export class YXmlElement extends YXmlFragment {
      *
      * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder The encoder to write data to.
      */
-    _write (encoder) {
+    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2) {
         encoder.writeTypeRef(YXmlElementRefID)
         encoder.writeKey(this.nodeName)
     }
@@ -234,4 +214,6 @@ export class YXmlElement extends YXmlFragment {
  *
  * @function
  */
-export const readYXmlElement = decoder => new YXmlElement(decoder.readKey())
+export const readYXmlElement = (decoder: UpdateDecoderV1 | UpdateDecoderV2): YXmlElement => {
+    return new YXmlElement(decoder.readKey())
+}

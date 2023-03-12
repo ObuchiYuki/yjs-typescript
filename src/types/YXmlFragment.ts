@@ -35,6 +35,8 @@ import * as array from 'lib0/array'
  * @typedef {string} CSS_Selector
  */
 
+type CSS_Selector = string
+
 /**
  * Dom filter function.
  *
@@ -54,40 +56,29 @@ import * as array from 'lib0/array'
  * @implements {Iterable<YXmlElement|YXmlText|YXmlElement|YXmlHook>}
  */
 export class YXmlTreeWalker {
-    /**
-     * @param {YXmlFragment | YXmlElement} root
-     * @param {function(AbstractType<any>):boolean} [f]
-     */
-    constructor (root, f = () => true) {
+    _filter: (type: AbstractType<any>) => boolean
+    _root: YXmlFragment | YXmlElement
+    _currentNode: Item
+    _firstCall: boolean
+
+    constructor(root: YXmlFragment | YXmlElement, f: (type: AbstractType<any>) => boolean = () => true) {
         this._filter = f
         this._root = root
-        /**
-         * @type {Item}
-         */
-        this._currentNode = /** @type {Item} */ (root._start)
+        this._currentNode = root._start as Item
         this._firstCall = true
     }
 
-    [Symbol.iterator] () {
+    [Symbol.iterator]() {
         return this
     }
 
-    /**
-     * Get the next node.
-     *
-     * @return {IteratorResult<YXmlElement|YXmlText|YXmlHook>} The next node.
-     *
-     * @public
-     */
-    next () {
-        /**
-         * @type {Item|null}
-         */
-        let n = this._currentNode
-        let type = n && n.content && /** @type {any} */ (n.content).type
+    /** Get the next node. */
+    next(): IteratorResult<YXmlElement | YXmlText | YXmlHook> {
+        let n: Item|null = this._currentNode
+        let type = n && n.content && (n.content as any).type
         if (n !== null && (!this._firstCall || n.deleted || !this._filter(type))) { // if first call, we check if we can use the first item
             do {
-                type = /** @type {any} */ (n.content).type
+                type = (n.content as any).type
                 if (!n.deleted && (type.constructor === YXmlElement || type.constructor === YXmlFragment) && type._start !== null) {
                     // walk down in the tree
                     n = type._start
@@ -100,11 +91,11 @@ export class YXmlTreeWalker {
                         } else if (n.parent === this._root) {
                             n = null
                         } else {
-                            n = /** @type {AbstractType<any>} */ (n.parent)._item
+                            n = (n.parent as AbstractType<any>)._item
                         }
                     }
                 }
-            } while (n !== null && (n.deleted || !this._filter(/** @type {ContentType} */ (n.content).type)))
+            } while (n !== null && (n.deleted || !this._filter((n.content as ContentType).type)))
         }
         this._firstCall = false
         if (n === null) {
@@ -112,7 +103,7 @@ export class YXmlTreeWalker {
             return { value: undefined, done: true }
         }
         this._currentNode = n
-        return { value: /** @type {any} */ (n.content).type, done: false }
+        return { value: (n.content as any).type, done: false }
     }
 }
 
@@ -122,22 +113,16 @@ export class YXmlTreeWalker {
  * nodeName and it does not have attributes. Though it can be bound to a DOM
  * element - in this case the attributes and the nodeName are not shared.
  *
- * @public
- * @extends AbstractType<YXmlEvent>
  */
-export class YXmlFragment extends AbstractType {
+export class YXmlFragment extends AbstractType<YXmlEvent> {
+    _prelimContent: any[]|null
+
     constructor () {
         super()
-        /**
-         * @type {Array<any>|null}
-         */
         this._prelimContent = []
     }
 
-    /**
-     * @type {YXmlElement|YXmlText|null}
-     */
-    get firstChild () {
+    get firstChild(): YXmlElement|YXmlText|null {
         const first = this._first
         return first ? first.content.getContent()[0] : null
     }
@@ -148,24 +133,18 @@ export class YXmlFragment extends AbstractType {
      * * Save this struct in the os
      * * This type is sent to other client
      * * Observer functions are fired
-     *
-     * @param {Doc} y The Yjs instance
-     * @param {Item} item
      */
-    _integrate (y, item) {
+    _integrate(y: Doc, item: Item) {
         super._integrate(y, item)
-        this.insert(0, /** @type {Array<any>} */ (this._prelimContent))
+        this.insert(0, this._prelimContent as any[])
         this._prelimContent = null
     }
 
-    _copy () {
+    _copy(): YXmlFragment {
         return new YXmlFragment()
     }
 
-    /**
-     * @return {YXmlFragment}
-     */
-    clone () {
+    clone(): YXmlFragment {
         const el = new YXmlFragment()
         // @ts-ignore
         el.insert(0, this.toArray().map(item => item instanceof AbstractType ? item.clone() : item))
@@ -193,7 +172,7 @@ export class YXmlFragment extends AbstractType {
      *
      * @public
      */
-    createTreeWalker (filter) {
+    createTreeWalker(filter: (type: AbstractType<any>) => boolean): YXmlTreeWalker {
         return new YXmlTreeWalker(this, filter)
     }
 
@@ -212,7 +191,7 @@ export class YXmlFragment extends AbstractType {
      *
      * @public
      */
-    querySelector (query) {
+    querySelector(query: CSS_Selector): YXmlElement | YXmlText | YXmlHook | null {
         query = query.toUpperCase()
         // @ts-ignore
         const iterator = new YXmlTreeWalker(this, element => element.nodeName && element.nodeName.toUpperCase() === query)
@@ -235,7 +214,7 @@ export class YXmlFragment extends AbstractType {
      *
      * @public
      */
-    querySelectorAll (query) {
+    querySelectorAll(query: CSS_Selector): Array<YXmlElement | YXmlText | YXmlHook | null> {
         query = query.toUpperCase()
         // @ts-ignore
         return array.from(new YXmlTreeWalker(this, element => element.nodeName && element.nodeName.toUpperCase() === query))
@@ -247,7 +226,7 @@ export class YXmlFragment extends AbstractType {
      * @param {Transaction} transaction
      * @param {Set<null|string>} parentSubs Keys changed on this type. `null` if list was modified.
      */
-    _callObserver (transaction, parentSubs) {
+    _callObserver(transaction: Transaction, parentSubs: Set<null | string>) {
         callTypeObservers(this, transaction, new YXmlEvent(this, parentSubs, transaction))
     }
 
@@ -256,14 +235,14 @@ export class YXmlFragment extends AbstractType {
      *
      * @return {string} The string representation of all children.
      */
-    toString () {
-        return typeListMap(this, xml => xml.toString()).join('')
+    toString (): string {
+        return typeListMap(this, xml => xml!.toString()).join('')
     }
 
     /**
      * @return {string}
      */
-    toJSON () {
+    toJSON(): string {
         return this.toString()
     }
 
@@ -282,7 +261,7 @@ export class YXmlFragment extends AbstractType {
      *
      * @public
      */
-    toDOM (_document = document, hooks = {}, binding) {
+    toDOM(_document: Document = document, hooks: { [s: string]: any } = {}, binding: any): Node {
         const fragment = _document.createDocumentFragment()
         if (binding !== undefined) {
             binding._createAssociation(fragment, this)
@@ -303,7 +282,7 @@ export class YXmlFragment extends AbstractType {
      * @param {number} index The index to insert content at
      * @param {Array<YXmlElement|YXmlText>} content The array of content
      */
-    insert (index, content) {
+    insert(index: number, content: Array<YXmlElement | YXmlText>) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
                 typeListInsertGenerics(transaction, this, index, content)
@@ -324,14 +303,14 @@ export class YXmlFragment extends AbstractType {
      * @param {null|Item|YXmlElement|YXmlText} ref The index to insert content at
      * @param {Array<YXmlElement|YXmlText>} content The array of content
      */
-    insertAfter (ref, content) {
+    insertAfter(ref: null | Item | YXmlElement | YXmlText, content: Array<YXmlElement | YXmlText>) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
                 const refItem = (ref && ref instanceof AbstractType) ? ref._item : ref
                 typeListInsertGenericsAfter(transaction, this, refItem, content)
             })
         } else {
-            const pc = /** @type {Array<any>} */ (this._prelimContent)
+            const pc = this._prelimContent as any[]
             const index = ref === null ? 0 : pc.findIndex(el => el === ref) + 1
             if (index === 0 && ref !== null) {
                 throw error.create('Reference item not found')
@@ -346,7 +325,7 @@ export class YXmlFragment extends AbstractType {
      * @param {number} index Index at which to start deleting elements
      * @param {number} [length=1] The number of elements to remove. Defaults to 1.
      */
-    delete (index, length = 1) {
+    delete(index: number, length: number = 1) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
                 typeListDelete(transaction, this, index, length)
@@ -362,7 +341,7 @@ export class YXmlFragment extends AbstractType {
      *
      * @return {Array<YXmlElement|YXmlText|YXmlHook>}
      */
-    toArray () {
+    toArray(): Array<YXmlElement | YXmlText | YXmlHook> {
         return typeListToArray(this)
     }
 
@@ -371,7 +350,7 @@ export class YXmlFragment extends AbstractType {
      *
      * @param {Array<YXmlElement|YXmlText>} content Array of content to append.
      */
-    push (content) {
+    push(content: Array<YXmlElement | YXmlText>) {
         this.insert(this.length, content)
     }
 
@@ -380,7 +359,7 @@ export class YXmlFragment extends AbstractType {
      *
      * @param {Array<YXmlElement|YXmlText>} content Array of content to preppend.
      */
-    unshift (content) {
+    unshift(content: Array<YXmlElement | YXmlText>) {
         this.insert(0, content)
     }
 
@@ -390,7 +369,7 @@ export class YXmlFragment extends AbstractType {
      * @param {number} index The index of the element to return from the YArray
      * @return {YXmlElement|YXmlText}
      */
-    get (index) {
+    get(index: number): YXmlElement | YXmlText {
         return typeListGet(this, index)
     }
 
@@ -401,7 +380,7 @@ export class YXmlFragment extends AbstractType {
      * @param {number} [end]
      * @return {Array<YXmlElement|YXmlText>}
      */
-    slice (start = 0, end = this.length) {
+    slice(start: number = 0, end: number = this.length): Array<YXmlElement | YXmlText> {
         return typeListSlice(this, start, end)
     }
 
@@ -410,7 +389,7 @@ export class YXmlFragment extends AbstractType {
      *
      * @param {function(YXmlElement|YXmlText,number, typeof self):void} f A function to execute on every element of this YArray.
      */
-    forEach (f) {
+    forEach(f: (arg0: YXmlElement | YXmlText, arg1: number, arg2: typeof self) => void) {
         typeListForEach(this, f)
     }
 
@@ -422,7 +401,7 @@ export class YXmlFragment extends AbstractType {
      *
      * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder The encoder to write data to.
      */
-    _write (encoder) {
+    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2) {
         encoder.writeTypeRef(YXmlFragmentRefID)
     }
 }
@@ -434,4 +413,4 @@ export class YXmlFragment extends AbstractType {
  * @private
  * @function
  */
-export const readYXmlFragment = _decoder => new YXmlFragment()
+export const readYXmlFragment = (_decoder: UpdateDecoderV1 | UpdateDecoderV2): YXmlFragment => new YXmlFragment()

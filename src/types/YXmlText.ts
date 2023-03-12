@@ -10,30 +10,21 @@ import {
  * simple formatting information like bold and italic.
  */
 export class YXmlText extends YText {
-    /**
-     * @type {YXmlElement|YXmlText|null}
-     */
-    get nextSibling () {
+    get nextSibling(): YXmlElement|YXmlText|null {
         const n = this._item ? this._item.next : null
-        return n ? /** @type {YXmlElement|YXmlText} */ (/** @type {ContentType} */ (n.content).type) : null
+        return n ? ((n.content as ContentType).type as YXmlElement|YXmlText) : null
     }
 
-    /**
-     * @type {YXmlElement|YXmlText|null}
-     */
-    get prevSibling () {
+    get prevSibling(): YXmlElement|YXmlText|null {
         const n = this._item ? this._item.prev : null
-        return n ? /** @type {YXmlElement|YXmlText} */ (/** @type {ContentType} */ (n.content).type) : null
+        return n ? ((n.content as ContentType).type as YXmlElement|YXmlText) : null
     }
 
-    _copy () {
+    _copy(): YXmlText {
         return new YXmlText()
     }
 
-    /**
-     * @return {YXmlText}
-     */
-    clone () {
+    clone(): YXmlText {
         const text = new YXmlText()
         text.applyDelta(this.toDelta())
         return text
@@ -54,7 +45,7 @@ export class YXmlText extends YText {
      *
      * @public
      */
-    toDOM (_document = document, hooks, binding) {
+    toDOM(_document: Document = document, hooks: { [s: string]: any }, binding: any): Text {
         const dom = _document.createTextNode(this.toString())
         if (binding !== undefined) {
             binding._createAssociation(dom, this)
@@ -62,7 +53,7 @@ export class YXmlText extends YText {
         return dom
     }
 
-    toString () {
+    toString() {
         // @ts-ignore
         return this.toDelta().map(delta => {
             const nestedNodes = []
@@ -96,17 +87,11 @@ export class YXmlText extends YText {
         }).join('')
     }
 
-    /**
-     * @return {string}
-     */
-    toJSON () {
+    toJSON(): string {
         return this.toString()
     }
 
-    /**
-     * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
-     */
-    _write (encoder) {
+    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2) {
         encoder.writeTypeRef(YXmlTextRefID)
     }
 }
@@ -118,4 +103,6 @@ export class YXmlText extends YText {
  * @private
  * @function
  */
-export const readYXmlText = decoder => new YXmlText()
+export const readYXmlText = (decoder: UpdateEncoderV1 | UpdateEncoderV2) => {
+    return new YXmlText()
+}

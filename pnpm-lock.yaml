@@ -1,12 +1,14 @@
 lockfileVersion: 5.4
 
 specifiers:
+  lib0: ^0.2.65
   lib0-typescript: github:ObuchiYuki/lib0-typescript
   typescript: ^4.9.5
   yjs: ^13.5.48
 
 dependencies:
-  lib0-typescript: github.com/ObuchiYuki/lib0-typescript/bb43e415acdaa4b1a036b617812d6c9f136f37e4
+  lib0: 0.2.65
+  lib0-typescript: github.com/ObuchiYuki/lib0-typescript/7416b3d2fbd241fd1e1a231c0191ec1f21495c9b
   typescript: 4.9.5
   yjs: 13.5.48
 
@@ -2331,8 +2333,8 @@ packages:
     engines: {node: '>=10'}
     dev: false
 
-  github.com/ObuchiYuki/lib0-typescript/bb43e415acdaa4b1a036b617812d6c9f136f37e4:
-    resolution: {tarball: https://codeload.github.com/ObuchiYuki/lib0-typescript/tar.gz/bb43e415acdaa4b1a036b617812d6c9f136f37e4}
+  github.com/ObuchiYuki/lib0-typescript/7416b3d2fbd241fd1e1a231c0191ec1f21495c9b:
+    resolution: {tarball: https://codeload.github.com/ObuchiYuki/lib0-typescript/tar.gz/7416b3d2fbd241fd1e1a231c0191ec1f21495c9b}
     name: lib0-typescript
     version: 1.0.0
     dependencies:

@@ -8,7 +8,14 @@ import {
  * @extends YEvent<YXmlElement|YXmlText|YXmlFragment>
  * An Event that describes changes on a YXml Element or Yxml Fragment
  */
-export class YXmlEvent extends YEvent {
+export class YXmlEvent extends YEvent<YXmlElement|YXmlText|YXmlFragment> {
+
+    /** Whether the children changed. */
+    childListChanged: boolean
+    
+    /** Set of all changed attributes. */
+    attributesChanged: Set<string>
+
     /**
      * @param {YXmlElement|YXmlText|YXmlFragment} target The target on which the event is created.
      * @param {Set<string|null>} subs The set of changed attributes. `null` is included if the
@@ -16,19 +23,12 @@ export class YXmlEvent extends YEvent {
      * @param {Transaction} transaction The transaction instance with wich the
      *                                                                    change was created.
      */
-    constructor (target, subs, transaction) {
+    constructor(target: YXmlElement | YXmlText | YXmlFragment, subs: Set<string | null>, transaction: Transaction) {
         super(target, transaction)
-        /**
-         * Whether the children changed.
-         * @type {Boolean}
-         * @private
-         */
+        
         this.childListChanged = false
-        /**
-         * Set of all changed attributes.
-         * @type {Set<string>}
-         */
         this.attributesChanged = new Set()
+
         subs.forEach((sub) => {
             if (sub === null) {
                 this.childListChanged = true

@@ -34,38 +34,29 @@ import * as object from 'lib0/object'
 import * as map from 'lib0/map'
 import * as error from 'lib0/error'
 
-/**
- * @param {any} a
- * @param {any} b
- * @return {boolean}
- */
-const equalAttrs = (a, b) => a === b || (typeof a === 'object' && typeof b === 'object' && a && b && object.equalFlat(a, b))
+const equalAttrs = (a: any, b: any): boolean => {
+    if (a === b) return true
+    if (typeof a === 'object' && typeof b === 'object') {
+        return (a && b && object.equalFlat(a, b))
+    }
+    return false
+}
 
 export class ItemTextListPosition {
-    /**
-     * @param {Item|null} left
-     * @param {Item|null} right
-     * @param {number} index
-     * @param {Map<string,any>} currentAttributes
-     */
-    constructor (left, right, index, currentAttributes) {
-        this.left = left
-        this.right = right
-        this.index = index
-        this.currentAttributes = currentAttributes
-    }
+    constructor(
+        public left: Item | null,
+        public right: Item | null,
+        public index: number,
+        public currentAttributes: Map<string, any>
+    ) {}
 
-    /**
-     * Only call this if you know that this.right is defined
-     */
-    forward () {
-        if (this.right === null) {
-            error.unexpectedCase()
-        }
+    /** Only call this if you know that this.right is defined */
+    forward() {
+        if (this.right === null) { error.unexpectedCase() }
         switch (this.right.content.constructor) {
             case ContentFormat:
                 if (!this.right.deleted) {
-                    updateCurrentAttributes(this.currentAttributes, /** @type {ContentFormat} */ (this.right.content))
+                    updateCurrentAttributes(this.currentAttributes, this.right.content as ContentFormat)
                 }
                 break
             default:
@@ -88,12 +79,12 @@ export class ItemTextListPosition {
  * @private
  * @function
  */
-const findNextPosition = (transaction, pos, count) => {
+const findNextPosition = (transaction: Transaction, pos: ItemTextListPosition, count: number): ItemTextListPosition => {
     while (pos.right !== null && count > 0) {
         switch (pos.right.content.constructor) {
             case ContentFormat:
                 if (!pos.right.deleted) {
-                    updateCurrentAttributes(pos.currentAttributes, /** @type {ContentFormat} */ (pos.right.content))
+                    updateCurrentAttributes(pos.currentAttributes, pos.right.content as ContentFormat)
                 }
                 break
             default:
@@ -114,16 +105,7 @@ const findNextPosition = (transaction, pos, count) => {
     return pos
 }
 
-/**
- * @param {Transaction} transaction
- * @param {AbstractType<any>} parent
- * @param {number} index
- * @return {ItemTextListPosition}
- *
- * @private
- * @function
- */
-const findPosition = (transaction, parent, index) => {
+const findPosition = (transaction: Transaction, parent: AbstractType<any>, index: number): ItemTextListPosition => {
     const currentAttributes = new Map()
     const marker = findMarker(parent, index)
     if (marker) {
@@ -135,29 +117,22 @@ const findPosition = (transaction, parent, index) => {
     }
 }
 
-/**
- * Negate applied formats
- *
- * @param {Transaction} transaction
- * @param {AbstractType<any>} parent
- * @param {ItemTextListPosition} currPos
- * @param {Map<string,any>} negatedAttributes
- *
- * @private
- * @function
- */
-const insertNegatedAttributes = (transaction, parent, currPos, negatedAttributes) => {
+/** Negate applied formats */
+const insertNegatedAttributes = (transaction: Transaction, parent: AbstractType<any>, currPos: ItemTextListPosition, negatedAttributes: Map<string, any>) => {
     // check if we really need to remove attributes
     while (
         currPos.right !== null && (
             currPos.right.deleted === true || (
                 currPos.right.content.constructor === ContentFormat &&
-                equalAttrs(negatedAttributes.get(/** @type {ContentFormat} */ (currPos.right.content).key), /** @type {ContentFormat} */ (currPos.right.content).value)
+                equalAttrs(
+                    negatedAttributes.get((currPos.right.content as ContentFormat).key),
+                    (currPos.right.content as ContentFormat).value
+                )
             )
         )
     ) {
         if (!currPos.right.deleted) {
-            negatedAttributes.delete(/** @type {ContentFormat} */ (currPos.right.content).key)
+            negatedAttributes.delete((currPos.right.content as ContentFormat).key)
         }
         currPos.forward()
     }
@@ -173,14 +148,7 @@ const insertNegatedAttributes = (transaction, parent, currPos, negatedAttributes
     })
 }
 
-/**
- * @param {Map<string,any>} currentAttributes
- * @param {ContentFormat} format
- *
- * @private
- * @function
- */
-const updateCurrentAttributes = (currentAttributes, format) => {
+const updateCurrentAttributes = (currentAttributes: Map<string, any>, format: ContentFormat) => {
     const { key, value } = format
     if (value === null) {
         currentAttributes.delete(key)
@@ -189,19 +157,12 @@ const updateCurrentAttributes = (currentAttributes, format) => {
     }
 }
 
-/**
- * @param {ItemTextListPosition} currPos
- * @param {Object<string,any>} attributes
- *
- * @private
- * @function
- */
-const minimizeAttributeChanges = (currPos, attributes) => {
+const minimizeAttributeChanges = (currPos: ItemTextListPosition, attributes: { [s: string]: any }) => {
     // go right while attributes[right.key] === right.value (or right is deleted)
     while (true) {
         if (currPos.right === null) {
             break
-        } else if (currPos.right.deleted || (currPos.right.content.constructor === ContentFormat && equalAttrs(attributes[(/** @type {ContentFormat} */ (currPos.right.content)).key] || null, /** @type {ContentFormat} */ (currPos.right.content).value))) {
+        } else if (currPos.right.deleted || (currPos.right.content.constructor === ContentFormat && equalAttrs(attributes[(currPos.right.content as ContentFormat).key] || null, (currPos.right.content as ContentFormat).value))) {
             //
         } else {
             break
@@ -210,17 +171,7 @@ const minimizeAttributeChanges = (currPos, attributes) => {
     }
 }
 
-/**
- * @param {Transaction} transaction
- * @param {AbstractType<any>} parent
- * @param {ItemTextListPosition} currPos
- * @param {Object<string,any>} attributes
- * @return {Map<string,any>}
- *
- * @private
- * @function
- **/
-const insertAttributes = (transaction, parent, currPos, attributes) => {
+const insertAttributes = (transaction: Transaction, parent: AbstractType<any>, currPos: ItemTextListPosition, attributes: { [s: string]: any }): Map<string, any> => {
     const doc = transaction.doc
     const ownClientId = doc.clientID
     const negatedAttributes = new Map()
@@ -240,17 +191,7 @@ const insertAttributes = (transaction, parent, currPos, attributes) => {
     return negatedAttributes
 }
 
-/**
- * @param {Transaction} transaction
- * @param {AbstractType<any>} parent
- * @param {ItemTextListPosition} currPos
- * @param {string|object|AbstractType<any>} text
- * @param {Object<string,any>} attributes
- *
- * @private
- * @function
- **/
-const insertText = (transaction, parent, currPos, text, attributes) => {
+const insertText = (transaction: Transaction, parent: AbstractType<any>, currPos: ItemTextListPosition, text: string | object | AbstractType<any>, attributes: { [s: string]: any }) => {
     currPos.currentAttributes.forEach((_val, key) => {
         if (attributes[key] === undefined) {
             attributes[key] = null
@@ -274,17 +215,7 @@ const insertText = (transaction, parent, currPos, text, attributes) => {
     insertNegatedAttributes(transaction, parent, currPos, negatedAttributes)
 }
 
-/**
- * @param {Transaction} transaction
- * @param {AbstractType<any>} parent
- * @param {ItemTextListPosition} currPos
- * @param {number} length
- * @param {Object<string,any>} attributes
- *
- * @private
- * @function
- */
-const formatText = (transaction, parent, currPos, length, attributes) => {
+const formatText = (transaction: Transaction, parent: AbstractType<any>, currPos: ItemTextListPosition, length: number, attributes: { [s: string]: any }) => {
     const doc = transaction.doc
     const ownClientId = doc.clientID
     minimizeAttributeChanges(currPos, attributes)
@@ -305,7 +236,7 @@ const formatText = (transaction, parent, currPos, length, attributes) => {
         if (!currPos.right.deleted) {
             switch (currPos.right.content.constructor) {
                 case ContentFormat: {
-                    const { key, value } = /** @type {ContentFormat} */ (currPos.right.content)
+                    const { key, value } = currPos.right.content as ContentFormat
                     const attr = attributes[key]
                     if (attr !== undefined) {
                         if (equalAttrs(attr, value)) {
@@ -362,18 +293,12 @@ const formatText = (transaction, parent, currPos, length, attributes) => {
  *
  * @function
  */
-const cleanupFormattingGap = (transaction, start, curr, startAttributes, currAttributes) => {
-    /**
-     * @type {Item|null}
-     */
-    let end = start
-    /**
-     * @type {Map<string,ContentFormat>}
-     */
-    const endFormats = map.create()
+const cleanupFormattingGap = (transaction: Transaction, start: Item, curr: Item | null, startAttributes: Map<string, any>, currAttributes: Map<string, any>): number => {
+    let end: Item | null = start
+    const endFormats: Map<string, ContentFormat> = map.create()
     while (end && (!end.countable || end.deleted)) {
         if (!end.deleted && end.content.constructor === ContentFormat) {
-            const cf = /** @type {ContentFormat} */ (end.content)
+            const cf = end.content as ContentFormat
             endFormats.set(cf.key, cf)
         }
         end = end.right
@@ -388,7 +313,7 @@ const cleanupFormattingGap = (transaction, start, curr, startAttributes, currAtt
             const content = start.content
             switch (content.constructor) {
                 case ContentFormat: {
-                    const { key, value } = /** @type {ContentFormat} */ (content)
+                    const { key, value } = content as ContentFormat
                     const startAttrValue = startAttributes.get(key) || null
                     if (endFormats.get(key) !== content || startAttrValue === value) {
                         // Either this format is overwritten or it is not necessary because the attribute already existed.
@@ -403,22 +328,18 @@ const cleanupFormattingGap = (transaction, start, curr, startAttributes, currAtt
                         }
                     }
                     if (!reachedCurr && !start.deleted) {
-                        updateCurrentAttributes(currAttributes, /** @type {ContentFormat} */ (content))
+                        updateCurrentAttributes(currAttributes, content as ContentFormat)
                     }
                     break
                 }
             }
         }
-        start = /** @type {Item} */ (start.right)
+        start = start.right as Item
     }
     return cleanups
 }
 
-/**
- * @param {Transaction} transaction
- * @param {Item | null} item
- */
-const cleanupContextlessFormattingGap = (transaction, item) => {
+const cleanupContextlessFormattingGap = (transaction: Transaction, item: Item | null) => {
     // iterate until item.right is null or content
     while (item && item.right && (item.right.deleted || !item.right.countable)) {
         item = item.right
@@ -427,7 +348,7 @@ const cleanupContextlessFormattingGap = (transaction, item) => {
     // iterate back until a content item is found
     while (item && (item.deleted || !item.countable)) {
         if (!item.deleted && item.content.constructor === ContentFormat) {
-            const key = /** @type {ContentFormat} */ (item.content).key
+            const key = (item.content as ContentFormat).key
             if (attrs.has(key)) {
                 item.delete(transaction)
             } else {
@@ -450,10 +371,10 @@ const cleanupContextlessFormattingGap = (transaction, item) => {
  * @param {YText} type
  * @return {number} How many formatting attributes have been cleaned up.
  */
-export const cleanupYTextFormatting = type => {
+export const cleanupYTextFormatting = (type: YText): number => {
     let res = 0
-    transact(/** @type {Doc} */ (type.doc), transaction => {
-        let start = /** @type {Item} */ (type._start)
+    transact((type.doc as Doc), transaction => {
+        let start = type._start as Item
         let end = type._start
         let startAttributes = map.create()
         const currentAttributes = map.copy(startAttributes)
@@ -461,7 +382,7 @@ export const cleanupYTextFormatting = type => {
             if (end.deleted === false) {
                 switch (end.content.constructor) {
                     case ContentFormat:
-                        updateCurrentAttributes(currentAttributes, /** @type {ContentFormat} */ (end.content))
+                        updateCurrentAttributes(currentAttributes, end.content as ContentFormat)
                         break
                     default:
                         res += cleanupFormattingGap(transaction, start, end, startAttributes, currentAttributes)
@@ -476,16 +397,7 @@ export const cleanupYTextFormatting = type => {
     return res
 }
 
-/**
- * @param {Transaction} transaction
- * @param {ItemTextListPosition} currPos
- * @param {number} length
- * @return {ItemTextListPosition}
- *
- * @private
- * @function
- */
-const deleteText = (transaction, currPos, length) => {
+const deleteText = (transaction: Transaction, currPos: ItemTextListPosition, length: number): ItemTextListPosition => {
     const startLength = length
     const startAttrs = map.copy(currPos.currentAttributes)
     const start = currPos.right
@@ -508,7 +420,7 @@ const deleteText = (transaction, currPos, length) => {
     if (start) {
         cleanupFormattingGap(transaction, start, currPos.right, startAttrs, currPos.currentAttributes)
     }
-    const parent = /** @type {AbstractType<any>} */ (/** @type {Item} */ (currPos.left || currPos.right).parent)
+    const parent = ((currPos.left || currPos.right as Item).parent as AbstractType<any>)
     if (parent._searchMarker) {
         updateMarkerChanges(parent._searchMarker, currPos.index, -startLength + length)
     }
@@ -538,33 +450,50 @@ const deleteText = (transaction, currPos, length) => {
     *         bold: true,
     *         font-size: '40px'
     *     }
-    *
-    * @typedef {Object} TextAttributes
     */
+export type TextAttributes = {
+    [s: string]: any
+}
 
-/**
- * @extends YEvent<YText>
- * Event that describes the changes on a YText type.
- */
-export class YTextEvent extends YEvent {
+export type YTextEventUpdateAction = 'add'|'update'|'delete'
+export type YTextEventDelta = {
+    insert?: Array<any> | string,
+    delete?: number, 
+    retain?: number,
+    attributes: { [s: string]: any }
+}[]
+
+export type YTextEventChange = {
+    added: Set<Item>, 
+    deleted: Set<Item>, 
+    keys: Map<string, { action: YTextEventUpdateAction, oldValue: any }>,
+    delta: YTextEventDelta
+}
+
+
+/** Event that describes the changes on a YText type. */
+export class YTextEvent extends YEvent<YText> {
+
+    /** Whether the children changed. */
+    childListChanged: boolean
+
+    /** Set of all changed attributes. */
+    keysChanged: Set<string>
+
+    _delta: YTextEventDelta = []
+    _changes: YTextEventChange|null = null
+
     /**
      * @param {YText} ytext
      * @param {Transaction} transaction
      * @param {Set<any>} subs The keys that changed
      */
-    constructor (ytext, transaction, subs) {
+    constructor(ytext: YText, transaction: Transaction, subs: Set<any>) {
         super(ytext, transaction)
-        /**
-         * Whether the children changed.
-         * @type {Boolean}
-         * @private
-         */
+
         this.childListChanged = false
-        /**
-         * Set of all changed attributes.
-         * @type {Set<string>}
-         */
         this.keysChanged = new Set()
+
         subs.forEach((sub) => {
             if (sub === null) {
                 this.childListChanged = true
@@ -574,64 +503,37 @@ export class YTextEvent extends YEvent {
         })
     }
 
-    /**
-     * @type {{added:Set<Item>,deleted:Set<Item>,keys:Map<string,{action:'add'|'update'|'delete',oldValue:any}>,delta:Array<{insert?:Array<any>|string, delete?:number, retain?:number}>}}
-     */
-    get changes () {
+    get changes(): YTextEventChange {
         if (this._changes === null) {
-            /**
-             * @type {{added:Set<Item>,deleted:Set<Item>,keys:Map<string,{action:'add'|'update'|'delete',oldValue:any}>,delta:Array<{insert?:Array<any>|string|AbstractType<any>|object, delete?:number, retain?:number}>}}
-             */
-            const changes = {
-                keys: this.keys,
-                delta: this.delta,
-                added: new Set(),
-                deleted: new Set()
-            }
-            this._changes = changes
+            this._changes = { keys: this.keys, delta: this.delta, added: new Set(), deleted: new Set() }
         }
-        return /** @type {any} */ (this._changes)
+        return this._changes
     }
 
     /**
      * Compute the changes in the delta format.
      * A {@link https://quilljs.com/docs/delta/|Quill Delta}) that represents the changes on the document.
-     *
-     * @type {Array<{insert?:string|object|AbstractType<any>, delete?:number, retain?:number, attributes?: Object<string,any>}>}
-     *
-     * @public
      */
-    get delta () {
+    get delta(): YTextEventDelta {
         if (this._delta === null) {
-            const y = /** @type {Doc} */ (this.target.doc)
-            /**
-             * @type {Array<{insert?:string|object|AbstractType<any>, delete?:number, retain?:number, attributes?: Object<string,any>}>}
-             */
-            const delta = []
+            const y = this.target.doc as Doc
+            
+            const delta: YTextEventDelta = []
+
             transact(y, transaction => {
                 const currentAttributes = new Map() // saves all current attributes for insert
                 const oldAttributes = new Map()
                 let item = this.target._start
-                /**
-                 * @type {string?}
-                 */
-                let action = null
-                /**
-                 * @type {Object<string,any>}
-                 */
-                const attributes = {} // counts added or removed new attributes for retain
-                /**
-                 * @type {string|object}
-                 */
-                let insert = ''
+                let action: string | null = null
+                
+                const attributes: { [s: string]: any } = {} // counts added or removed new attributes for retain
+                
+                let insert: string|object = ''
                 let retain = 0
                 let deleteLen = 0
                 const addOp = () => {
                     if (action !== null) {
-                        /**
-                         * @type {any}
-                         */
-                        let op
+                        let op: any
                         switch (action) {
                             case 'delete':
                                 op = { delete: deleteLen }
@@ -696,7 +598,7 @@ export class YTextEvent extends YEvent {
                                         addOp()
                                         action = 'insert'
                                     }
-                                    insert += /** @type {ContentString} */ (item.content).str
+                                    insert += (item.content as ContentString).str
                                 }
                             } else if (this.deletes(item)) {
                                 if (action !== 'delete') {
@@ -713,7 +615,7 @@ export class YTextEvent extends YEvent {
                             }
                             break
                         case ContentFormat: {
-                            const { key, value } = /** @type {ContentFormat} */ (item.content)
+                            const { key, value } = (item.content as ContentFormat)
                             if (this.adds(item)) {
                                 if (!this.deletes(item)) {
                                     const curVal = currentAttributes.get(key) || null
@@ -761,7 +663,7 @@ export class YTextEvent extends YEvent {
                                 if (action === 'insert') {
                                     addOp()
                                 }
-                                updateCurrentAttributes(currentAttributes, /** @type {ContentFormat} */ (item.content))
+                                updateCurrentAttributes(currentAttributes, (item.content as ContentFormat))
                             }
                             break
                         }
@@ -791,57 +693,41 @@ export class YTextEvent extends YEvent {
  * This type replaces y-richtext as this implementation is able to handle
  * block formats (format information on a paragraph), embeds (complex elements
  * like pictures and videos), and text formats (**bold**, *italic*).
- *
- * @extends AbstractType<YTextEvent>
  */
-export class YText extends AbstractType {
+export class YText extends AbstractType<YTextEvent> {
+    
+    /** Array of pending operations on this type */
+    _pending: (() => void)[] | null
+
     /**
      * @param {String} [string] The initial value of the YText.
      */
-    constructor (string) {
+    constructor(string?: string) {
         super()
-        /**
-         * Array of pending operations on this type
-         * @type {Array<function():void>?}
-         */
+        
         this._pending = string !== undefined ? [() => this.insert(0, string)] : []
-        /**
-         * @type {Array<ArraySearchMarker>}
-         */
         this._searchMarker = []
     }
 
-    /**
-     * Number of characters of this text type.
-     *
-     * @type {number}
-     */
-    get length () {
-        return this._length
-    }
+    /** Number of characters of this text type. */
+    get length(): number { return this._length }
 
-    /**
-     * @param {Doc} y
-     * @param {Item} item
-     */
-    _integrate (y, item) {
+    _integrate(y: Doc, item: Item) {
         super._integrate(y, item)
+
         try {
-            /** @type {Array<function>} */ (this._pending).forEach(f => f())
+            (this._pending)?.forEach(f => f())
         } catch (e) {
             console.error(e)
         }
         this._pending = null
     }
 
-    _copy () {
+    _copy(): YText {
         return new YText()
     }
 
-    /**
-     * @return {YText}
-     */
-    clone () {
+    clone(): YText {
         const text = new YText()
         text.applyDelta(this.toDelta())
         return text
@@ -853,7 +739,7 @@ export class YText extends AbstractType {
      * @param {Transaction} transaction
      * @param {Set<null|string>} parentSubs Keys changed on this type. `null` if list was modified.
      */
-    _callObserver (transaction, parentSubs) {
+    _callObserver(transaction: Transaction, parentSubs: Set<null | string>) {
         super._callObserver(transaction, parentSubs)
         const event = new YTextEvent(this, transaction, parentSubs)
         const doc = transaction.doc
@@ -867,8 +753,8 @@ export class YText extends AbstractType {
                 if (afterClock === clock) {
                     continue
                 }
-                iterateStructs(transaction, /** @type {Array<Item|GC>} */ (doc.store.clients.get(client)), clock, afterClock, item => {
-                    if (!item.deleted && /** @type {Item} */ (item).content.constructor === ContentFormat) {
+                iterateStructs(transaction,(doc.store.clients.get(client) as (Item|GC)[]), clock, afterClock, item => {
+                    if (!item.deleted && (item as Item).content.constructor === ContentFormat) {
                         foundFormattingItem = true
                     }
                 })
@@ -908,33 +794,21 @@ export class YText extends AbstractType {
         }
     }
 
-    /**
-     * Returns the unformatted string representation of this YText type.
-     *
-     * @public
-     */
-    toString () {
+    /** Returns the unformatted string representation of this YText type. */
+    toString(): string {
         let str = ''
-        /**
-         * @type {Item|null}
-         */
-        let n = this._start
+        let n: Item|null = this._start
         while (n !== null) {
             if (!n.deleted && n.countable && n.content.constructor === ContentString) {
-                str += /** @type {ContentString} */ (n.content).str
+                str += (n.content as ContentString).str
             }
             n = n.right
         }
         return str
     }
 
-    /**
-     * Returns the unformatted string representation of this YText type.
-     *
-     * @return {string}
-     * @public
-     */
-    toJSON () {
+    /**Returns the unformatted string representation of this YText type. */
+    toJSON(): string {
         return this.toString()
     }
 
@@ -948,7 +822,7 @@ export class YText extends AbstractType {
      *
      * @public
      */
-    applyDelta (delta, { sanitize = true } = {}) {
+    applyDelta(delta: any, { sanitize = true }: { sanitize?: boolean } = {}) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
                 const currPos = new ItemTextListPosition(null, this._start, 0, new Map())
@@ -972,36 +846,21 @@ export class YText extends AbstractType {
                 }
             })
         } else {
-            /** @type {Array<function>} */ (this._pending).push(() => this.applyDelta(delta))
+            this._pending?.push(() => this.applyDelta(delta))
         }
     }
 
-    /**
-     * Returns the Delta representation of this YText type.
-     *
-     * @param {Snapshot} [snapshot]
-     * @param {Snapshot} [prevSnapshot]
-     * @param {function('removed' | 'added', ID):any} [computeYChange]
-     * @return {any} The Delta representation of this type.
-     *
-     * @public
-     */
-    toDelta (snapshot, prevSnapshot, computeYChange) {
-        /**
-         * @type{Array<any>}
-         */
-        const ops = []
+    /** Returns the Delta representation of this YText type. */
+    toDelta(snapshot?: Snapshot, prevSnapshot?: Snapshot, computeYChange?: (action: 'removed' | 'added', id: ID) => any): any {
+        const ops: any[] = []
         const currentAttributes = new Map()
-        const doc = /** @type {Doc} */ (this.doc)
+        const doc = this.doc as Doc
         let str = ''
         let n = this._start
         function packStr () {
             if (str.length > 0) {
                 // pack str with attributes to ops
-                /**
-                 * @type {Object<string,any>}
-                 */
-                const attributes = {}
+                const attributes: { [Key: string]: any } = {}
                 let addAttributes = false
                 currentAttributes.forEach((value, key) => {
                     addAttributes = true
@@ -1010,7 +869,7 @@ export class YText extends AbstractType {
                 /**
                  * @type {Object<string,any>}
                  */
-                const op = { insert: str }
+                const op: { [Key: string]: any } = { insert: str }
                 if (addAttributes) {
                     op.attributes = attributes
                 }
@@ -1046,20 +905,17 @@ export class YText extends AbstractType {
                                 packStr()
                                 currentAttributes.delete('ychange')
                             }
-                            str += /** @type {ContentString} */ (n.content).str
+                            str += (n.content as ContentString).str
                             break
                         }
                         case ContentType:
                         case ContentEmbed: {
                             packStr()
-                            /**
-                             * @type {Object<string,any>}
-                             */
-                            const op = {
+                            const op: { [Key: string]: any } = {
                                 insert: n.content.getContent()[0]
                             }
                             if (currentAttributes.size > 0) {
-                                const attrs = /** @type {Object<string,any>} */ ({})
+                                const attrs: { [Key: string]: any } = ({})
                                 op.attributes = attrs
                                 currentAttributes.forEach((value, key) => {
                                     attrs[key] = value
@@ -1071,7 +927,7 @@ export class YText extends AbstractType {
                         case ContentFormat:
                             if (isVisible(n, snapshot)) {
                                 packStr()
-                                updateCurrentAttributes(currentAttributes, /** @type {ContentFormat} */ (n.content))
+                                updateCurrentAttributes(currentAttributes, n.content as ContentFormat)
                             }
                             break
                     }
@@ -1093,7 +949,7 @@ export class YText extends AbstractType {
      *                                                                        Text.
      * @public
      */
-    insert (index, text, attributes) {
+    insert(index: number, text: string, attributes?: TextAttributes) {
         if (text.length <= 0) {
             return
         }
@@ -1103,13 +959,12 @@ export class YText extends AbstractType {
                 const pos = findPosition(transaction, this, index)
                 if (!attributes) {
                     attributes = {}
-                    // @ts-ignore
-                    pos.currentAttributes.forEach((v, k) => { attributes[k] = v })
+                    pos.currentAttributes.forEach((v, k) => { attributes![k] = v })
                 }
                 insertText(transaction, this, pos, text, attributes)
             })
         } else {
-            /** @type {Array<function>} */ (this._pending).push(() => this.insert(index, text, attributes))
+            (this._pending)?.push(() => this.insert(index, text, attributes))
         }
     }
 
@@ -1123,7 +978,7 @@ export class YText extends AbstractType {
      *
      * @public
      */
-    insertEmbed (index, embed, attributes = {}) {
+    insertEmbed(index: number, embed: object | AbstractType<any>, attributes: TextAttributes = {}) {
         const y = this.doc
         if (y !== null) {
             transact(y, transaction => {
@@ -1131,7 +986,7 @@ export class YText extends AbstractType {
                 insertText(transaction, this, pos, embed, attributes)
             })
         } else {
-            /** @type {Array<function>} */ (this._pending).push(() => this.insertEmbed(index, embed, attributes))
+            (this._pending)?.push(() => this.insertEmbed(index, embed, attributes))
         }
     }
 
@@ -1143,7 +998,7 @@ export class YText extends AbstractType {
      *
      * @public
      */
-    delete (index, length) {
+    delete(index: number, length: number) {
         if (length === 0) {
             return
         }
@@ -1153,7 +1008,7 @@ export class YText extends AbstractType {
                 deleteText(transaction, findPosition(transaction, this, index), length)
             })
         } else {
-            /** @type {Array<function>} */ (this._pending).push(() => this.delete(index, length))
+            (this._pending)?.push(() => this.delete(index, length))
         }
     }
 
@@ -1167,7 +1022,7 @@ export class YText extends AbstractType {
      *
      * @public
      */
-    format (index, length, attributes) {
+    format(index: number, length: number, attributes: TextAttributes) {
         if (length === 0) {
             return
         }
@@ -1181,7 +1036,7 @@ export class YText extends AbstractType {
                 formatText(transaction, this, pos, length, attributes)
             })
         } else {
-            /** @type {Array<function>} */ (this._pending).push(() => this.format(index, length, attributes))
+            this._pending?.push(() => this.format(index, length, attributes))
         }
     }
 
@@ -1194,13 +1049,13 @@ export class YText extends AbstractType {
      *
      * @public
      */
-    removeAttribute (attributeName) {
+    removeAttribute(attributeName: string) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
                 typeMapDelete(transaction, this, attributeName)
             })
         } else {
-            /** @type {Array<function>} */ (this._pending).push(() => this.removeAttribute(attributeName))
+            this._pending?.push(() => this.removeAttribute(attributeName))
         }
     }
 
@@ -1214,13 +1069,13 @@ export class YText extends AbstractType {
      *
      * @public
      */
-    setAttribute (attributeName, attributeValue) {
+    setAttribute(attributeName: string, attributeValue: any) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
                 typeMapSet(transaction, this, attributeName, attributeValue)
             })
         } else {
-            /** @type {Array<function>} */ (this._pending).push(() => this.setAttribute(attributeName, attributeValue))
+            this._pending?.push(() => this.setAttribute(attributeName, attributeValue))
         }
     }
 
@@ -1235,7 +1090,7 @@ export class YText extends AbstractType {
      *
      * @public
      */
-    getAttribute (attributeName) {
+    getAttribute(attributeName: string): any {
         return /** @type {any} */ (typeMapGet(this, attributeName))
     }
 
@@ -1248,14 +1103,14 @@ export class YText extends AbstractType {
      *
      * @public
      */
-    getAttributes () {
+    getAttributes(): { [s: string]: any } {
         return typeMapGetAll(this)
     }
 
     /**
      * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
      */
-    _write (encoder) {
+    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2) {
         encoder.writeTypeRef(YTextRefID)
     }
 }
@@ -1267,4 +1122,6 @@ export class YText extends AbstractType {
  * @private
  * @function
  */
-export const readYText = _decoder => new YText()
+export const readYText = (_decoder: UpdateDecoderV1 | UpdateDecoderV2): YText => {
+    return new YText()
+}

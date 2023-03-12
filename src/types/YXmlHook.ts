@@ -7,32 +7,26 @@ import {
 
 /**
  * You can manage binding to a custom type with YXmlHook.
- *
- * @extends {YMap<any>}
  */
-export class YXmlHook extends YMap {
+export class YXmlHook extends YMap<any> {
+    hookName: string
+
     /**
      * @param {string} hookName nodeName of the Dom Node.
      */
-    constructor (hookName) {
+    constructor(hookName: string) {
         super()
-        /**
-         * @type {string}
-         */
         this.hookName = hookName
     }
 
     /**
      * Creates an Item with the same effect as this Item (without position effect)
      */
-    _copy () {
+    _copy(): YXmlHook {
         return new YXmlHook(this.hookName)
     }
 
-    /**
-     * @return {YXmlHook}
-     */
-    clone () {
+    clone(): YXmlHook {
         const el = new YXmlHook(this.hookName)
         this.forEach((value, key) => {
             el.set(key, value)
@@ -55,7 +49,7 @@ export class YXmlHook extends YMap {
      *
      * @public
      */
-    toDOM (_document = document, hooks = {}, binding) {
+    toDOM(_document: Document = document, hooks: { [s: string]: any } = {}, binding: any): Element {
         const hook = hooks[this.hookName]
         let dom
         if (hook !== undefined) {
@@ -75,10 +69,8 @@ export class YXmlHook extends YMap {
      * BinaryEncoder.
      *
      * This is called when this Item is sent to a remote peer.
-     *
-     * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder The encoder to write data to.
      */
-    _write (encoder) {
+    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2) {
         encoder.writeTypeRef(YXmlHookRefID)
         encoder.writeKey(this.hookName)
     }
@@ -91,5 +83,6 @@ export class YXmlHook extends YMap {
  * @private
  * @function
  */
-export const readYXmlHook = decoder =>
-    new YXmlHook(decoder.readKey())
+export const readYXmlHook = (decoder: UpdateDecoderV1 | UpdateDecoderV2) => {
+    return new YXmlHook(decoder.readKey())
+}
