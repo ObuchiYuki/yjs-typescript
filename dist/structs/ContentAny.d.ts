@@ -1,7 +1,7 @@
-import { UpdateEncoderV1, UpdateEncoderV2, UpdateDecoderV1, UpdateDecoderV2, Transaction, Item, StructStore } from '../internals';
-export declare class ContentAny {
-    arr: any[];
-    constructor(arr: any[]);
+import { UpdateEncoderAny, Transaction, Item, StructStore, AbstractContent_, AbstractContentDecoder_ } from '../internals';
+export declare class ContentAny implements AbstractContent_ {
+    array: any[];
+    constructor(array: any[]);
     getLength(): number;
     getContent(): any[];
     isCountable(): boolean;
@@ -11,7 +11,7 @@ export declare class ContentAny {
     integrate(transaction: Transaction, item: Item): void;
     delete(transaction: Transaction): void;
     gc(store: StructStore): void;
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number): void;
+    write(encoder: UpdateEncoderAny, offset: number): void;
     getRef(): number;
 }
-export declare const readContentAny: (decoder: UpdateDecoderV1 | UpdateDecoderV2) => ContentAny;
+export declare const readContentAny: AbstractContentDecoder_;

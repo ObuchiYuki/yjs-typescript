@@ -2,47 +2,37 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readContentAny = exports.ContentAny = void 0;
 class ContentAny {
-    constructor(arr) {
-        this.arr = arr;
+    constructor(array) {
+        this.array = array;
     }
-    getLength() {
-        return this.arr.length;
-    }
-    getContent() {
-        return this.arr;
-    }
-    isCountable() {
-        return true;
-    }
-    copy() {
-        return new ContentAny(this.arr);
-    }
+    getLength() { return this.array.length; }
+    getContent() { return this.array; }
+    isCountable() { return true; }
+    copy() { return new ContentAny(this.array); }
     splice(offset) {
-        const right = new ContentAny(this.arr.slice(offset));
-        this.arr = this.arr.slice(0, offset);
+        const right = new ContentAny(this.array.slice(offset));
+        this.array = this.array.slice(0, offset);
         return right;
     }
     mergeWith(right) {
-        this.arr = this.arr.concat(right.arr);
+        this.array = this.array.concat(right.array);
         return true;
     }
     integrate(transaction, item) { }
     delete(transaction) { }
     gc(store) { }
     write(encoder, offset) {
-        const len = this.arr.length;
+        const len = this.array.length;
         encoder.writeLen(len - offset);
         for (let i = offset; i < len; i++) {
-            const c = this.arr[i];
+            const c = this.array[i];
             encoder.writeAny(c);
         }
     }
-    getRef() {
-        return 8;
-    }
+    getRef() { return 8; }
 }
 exports.ContentAny = ContentAny;
-const readContentAny = (decoder) => {
+const readContentAny = decoder => {
     const len = decoder.readLen();
     const cs = [];
     for (let i = 0; i < len; i++) {

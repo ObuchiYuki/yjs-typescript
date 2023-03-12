@@ -1,4 +1,4 @@
-import { Item, Transaction, StructStore, UpdateEncoderAny } from "../internals";
+import { Item, Transaction, StructStore, UpdateEncoderAny, UpdateDecoderAny } from "../internals";
 export interface AbstractContent_ {
     getLength(): number;
     getContent(): any[];
@@ -12,3 +12,4 @@ export interface AbstractContent_ {
     write(encoder: UpdateEncoderAny, offset: number): void;
     getRef(): number;
 }
+export type AbstractContentDecoder_ = (decoder: UpdateDecoderAny) => AbstractContent_;

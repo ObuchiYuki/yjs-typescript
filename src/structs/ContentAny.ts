@@ -1,37 +1,27 @@
 import {
-    UpdateEncoderV1, UpdateEncoderV2, UpdateDecoderV1, UpdateDecoderV2, Transaction, Item, StructStore 
+    UpdateEncoderAny, UpdateDecoderAny, Transaction, Item, StructStore, 
+    AbstractContent_, AbstractContentDecoder_
 } from '../internals'
 
-export class ContentAny {
-    constructor(
-        public arr: any[]
-    ) {}
+export class ContentAny implements AbstractContent_ {
+    constructor(public array: any[]) {}
 
+    getLength(): number { return this.array.length }
 
-    getLength(): number {
-        return this.arr.length
-    }
+    getContent(): any[] { return this.array }
 
-    getContent(): any[] {
-        return this.arr
-    }
+    isCountable(): boolean { return true }
 
-    isCountable(): boolean {
-        return true
-    }
-
-    copy(): ContentAny {
-        return new ContentAny(this.arr)
-    }
+    copy(): ContentAny { return new ContentAny(this.array) }
 
     splice(offset: number): ContentAny {
-        const right = new ContentAny(this.arr.slice(offset))
-        this.arr = this.arr.slice(0, offset)
+        const right = new ContentAny(this.array.slice(offset))
+        this.array = this.array.slice(0, offset)
         return right
     }
 
     mergeWith(right: ContentAny): boolean {
-        this.arr = this.arr.concat(right.arr)
+        this.array = this.array.concat(right.array)
         return true
     }
 
@@ -41,21 +31,19 @@ export class ContentAny {
     
     gc(store: StructStore) {}
     
-    write(encoder: UpdateEncoderV1 | UpdateEncoderV2, offset: number) {
-        const len = this.arr.length
+    write(encoder: UpdateEncoderAny, offset: number) {
+        const len = this.array.length
         encoder.writeLen(len - offset)
         for (let i = offset; i < len; i++) {
-            const c = this.arr[i]
+            const c = this.array[i]
             encoder.writeAny(c)
         }
     }
 
-    getRef(): number {
-        return 8
-    }
+    getRef(): number { return 8 }
 }
 
-export const readContentAny = (decoder: UpdateDecoderV1 | UpdateDecoderV2): ContentAny => {
+export const readContentAny: AbstractContentDecoder_ = decoder => {
     const len = decoder.readLen()
     const cs = []
     for (let i = 0; i < len; i++) {
