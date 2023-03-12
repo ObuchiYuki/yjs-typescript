@@ -15,5 +15,8 @@
     "lib0-typescript": "github:ObuchiYuki/lib0-typescript",
     "typescript": "^4.9.5",
     "yjs": "^13.5.48"
+  },
+  "devDependencies": {
+    "y-protocols": "github:ObuchiYuki/y-protocol-mock"
   }
 }

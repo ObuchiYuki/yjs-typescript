@@ -47,7 +47,7 @@ export type DocOpts = {
  * @extends Observable<string>
  */
 export class Doc extends Observable<string> {
-    gcFilter: (item: Item) => boolean
+    gcFilter: (arg0: Item) => boolean
     gc: boolean
     clientID: number
     guid: string

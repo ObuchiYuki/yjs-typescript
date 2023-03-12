@@ -18,7 +18,7 @@ if (typeof window !== 'undefined') {
  * @param {TestYInstance} y // publish message created by `y` to all other online clients
  * @param {Uint8Array} m
  */
-const broadcastMessage = (y, m) => {
+const broadcastMessage = (y: TestYInstance, m: Uint8Array) => {
   if (y.tc.onlineConns.has(y)) {
     y.tc.onlineConns.forEach(remoteYInstance => {
       if (remoteYInstance !== y) {
@@ -62,11 +62,15 @@ const useV2Encoding = () => {
 }
 
 export class TestYInstance extends Y.Doc {
+  tc: any
+  userID: number
+  receiving: Map<TestYInstance, Array<Uint8Array>>
+  updates: Uint8Array[]
   /**
    * @param {TestConnector} testConnector
    * @param {number} clientID
    */
-  constructor (testConnector, clientID) {
+  constructor (testConnector: TestConnector, clientID: number) {
     super()
     this.userID = clientID // overwriting clientID
     /**
@@ -85,7 +89,7 @@ export class TestYInstance extends Y.Doc {
      */
     this.updates = []
     // set up observe on local model
-    this.on(enc.updateEventName, /** @param {Uint8Array} update @param {any} origin */ (update, origin) => {
+    this.on(enc.updateEventName, /** @param {Uint8Array} update @param {any} origin */ (update: Uint8Array, origin: any) => {
       if (origin !== testConnector) {
         const encoder = encoding.createEncoder()
         syncProtocol.writeUpdate(encoder, update)
@@ -133,7 +137,7 @@ export class TestYInstance extends Y.Doc {
    * @param {Uint8Array} message
    * @param {TestYInstance} remoteClient
    */
-  _receive (message, remoteClient) {
+  _receive (message: Uint8Array, remoteClient: TestYInstance) {
     map.setIfUndefined(this.receiving, remoteClient, () => []).push(message)
   }
 }
@@ -145,10 +149,13 @@ export class TestYInstance extends Y.Doc {
  * I think it makes sense. Deal with it.
  */
 export class TestConnector {
+  allConns: any
+  onlineConns: Set<unknown>
+  prng: prng.PRNG
   /**
    * @param {prng.PRNG} gen
    */
-  constructor (gen) {
+  constructor (gen: prng.PRNG) {
     /**
      * @type {Set<TestYInstance>}
      */
@@ -167,7 +174,7 @@ export class TestConnector {
    * Create a new Y instance and add it to the list of connections
    * @param {number} clientID
    */
-  createY (clientID) {
+  createY (clientID: number) {
     return new TestYInstance(this, clientID)
   }
 
@@ -177,7 +184,7 @@ export class TestConnector {
    * If this function was unable to flush a message, because there are no more messages to flush, it returns false. true otherwise.
    * @return {boolean}
    */
-  flushRandomMessage () {
+  flushRandomMessage (): boolean {
     const gen = this.prng
     const conns = Array.from(this.onlineConns).filter(conn => conn.receiving.size > 0)
     if (conns.length > 0) {
@@ -206,7 +213,7 @@ export class TestConnector {
   /**
    * @return {boolean} True iff this function actually flushed something
    */
-  flushAllMessages () {
+  flushAllMessages (): boolean {
     let didSomething = false
     while (this.flushRandomMessage()) {
       didSomething = true
@@ -230,7 +237,7 @@ export class TestConnector {
   /**
    * @return {boolean} Whether it was possible to disconnect a randon connection.
    */
-  disconnectRandom () {
+  disconnectRandom (): boolean {
     if (this.onlineConns.size === 0) {
       return false
     }
@@ -241,11 +248,11 @@ export class TestConnector {
   /**
    * @return {boolean} Whether it was possible to reconnect a random connection.
    */
-  reconnectRandom () {
+  reconnectRandom (): boolean {
     /**
      * @type {Array<TestYInstance>}
      */
-    const reconnectable = []
+    const reconnectable: Array<TestYInstance> = []
     this.allConns.forEach(conn => {
       if (!this.onlineConns.has(conn)) {
         reconnectable.push(conn)
@@ -266,11 +273,11 @@ export class TestConnector {
  * @param {InitTestObjectCallback<T>} [initTestObject]
  * @return {{testObjects:Array<any>,testConnector:TestConnector,users:Array<TestYInstance>,array0:Y.Array<any>,array1:Y.Array<any>,array2:Y.Array<any>,map0:Y.Map<any>,map1:Y.Map<any>,map2:Y.Map<any>,map3:Y.Map<any>,text0:Y.Text,text1:Y.Text,text2:Y.Text,xml0:Y.XmlElement,xml1:Y.XmlElement,xml2:Y.XmlElement}}
  */
-export const init = (tc, { users = 5 } = {}, initTestObject) => {
+export const init = <T>(tc: t.TestCase, { users = 5 }: { users?: number } = {}, initTestObject: InitTestObjectCallback<T>): { testObjects: Array<any>; testConnector: TestConnector; users: Array<TestYInstance>; array0: Y.Array<any>; array1: Y.Array<any>; array2: Y.Array<any>; map0: Y.Map<any>; map1: Y.Map<any>; map2: Y.Map<any>; map3: Y.Map<any>; text0: Y.Text; text1: Y.Text; text2: Y.Text; xml0: Y.XmlElement; xml1: Y.XmlElement; xml2: Y.XmlElement } => {
   /**
    * @type {Object<string,any>}
    */
-  const result = {
+  const result: { [s: string]: any } = {
     users: []
   }
   const gen = tc.prng
@@ -307,7 +314,7 @@ export const init = (tc, { users = 5 } = {}, initTestObject) => {
  *
  * @param {Array<TestYInstance>} users
  */
-export const compare = users => {
+export const compare = (users: Array<TestYInstance>) => {
   users.forEach(u => u.connect())
   while (users[0].tc.flushAllMessages()) {} // eslint-disable-line
   // For each document, merge all received document updates with Y.mergeUpdates and create a new document which will be added to the list of "users"
@@ -335,7 +342,7 @@ export const compare = users => {
   /**
    * @type {Object<string,any>}
    */
-  const mapRes = {}
+  const mapRes: { [s: string]: any } = {}
   for (const [k, v] of users[0].getMap('map')) {
     mapRes[k] = v instanceof Y.AbstractType ? v.toJSON() : v
   }
@@ -346,7 +353,7 @@ export const compare = users => {
     t.compare(userArrayValues[i], userArrayValues[i + 1])
     t.compare(userMapValues[i], userMapValues[i + 1])
     t.compare(userXmlValues[i], userXmlValues[i + 1])
-    t.compare(userTextValues[i].map(/** @param {any} a */ a => typeof a.insert === 'string' ? a.insert : ' ').join('').length, users[i].getText('text').length)
+    t.compare(userTextValues[i].map(/** @param {any} a */ (a: any) => typeof a.insert === 'string' ? a.insert : ' ').join('').length, users[i].getText('text').length)
     t.compare(userTextValues[i], userTextValues[i + 1], '', (_constructor, a, b) => {
       if (a instanceof Y.AbstractType) {
         t.compare(a.toJSON(), b.toJSON())
@@ -367,13 +374,13 @@ export const compare = users => {
  * @param {Y.Item?} b
  * @return {boolean}
  */
-export const compareItemIDs = (a, b) => a === b || (a !== null && b != null && Y.compareIDs(a.id, b.id))
+export const compareItemIDs = (a: Y.Item | null, b: Y.Item | null): boolean => a === b || (a !== null && b != null && Y.compareIDs(a.id, b.id))
 
 /**
  * @param {import('../src/internals.js').StructStore} ss1
  * @param {import('../src/internals.js').StructStore} ss2
  */
-export const compareStructStores = (ss1, ss2) => {
+export const compareStructStores = (ss1: import('../src/internals.js').StructStore, ss2: import('../src/internals.js').StructStore) => {
   t.assert(ss1.clients.size === ss2.clients.size)
   for (const [client, structs1] of ss1.clients) {
     const structs2 = /** @type {Array<Y.AbstractStruct>} */ (ss2.clients.get(client))
@@ -416,7 +423,7 @@ export const compareStructStores = (ss1, ss2) => {
  * @param {import('../src/internals.js').DeleteSet} ds1
  * @param {import('../src/internals.js').DeleteSet} ds2
  */
-export const compareDS = (ds1, ds2) => {
+export const compareDS = (ds1: import('../src/internals.js').DeleteSet, ds2: import('../src/internals.js').DeleteSet) => {
   t.assert(ds1.clients.size === ds2.clients.size)
   ds1.clients.forEach((deleteItems1, client) => {
     const deleteItems2 = /** @type {Array<import('../src/internals.js').DeleteItem>} */ (ds2.clients.get(client))
@@ -445,7 +452,7 @@ export const compareDS = (ds1, ds2) => {
  * @param {number} iterations
  * @param {InitTestObjectCallback<T>} [initTestObject]
  */
-export const applyRandomTests = (tc, mods, iterations, initTestObject) => {
+export const applyRandomTests = <T>(tc: t.TestCase, mods: Array<((arg0: Y.Doc, arg1: prng.PRNG, arg2: T) => void)>, iterations: number, initTestObject: InitTestObjectCallback<T>) => {
   const gen = tc.prng
   const result = init(tc, { users: 5 }, initTestObject)
   const { testConnector, users } = result
