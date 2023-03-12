@@ -13,12 +13,10 @@ import {
  *
  * @extends {Observable<any>}
  */
-export class AbstractConnector extends Observable {
-    /**
-     * @param {Doc} ydoc
-     * @param {any} awareness
-     */
-    constructor (ydoc, awareness) {
+export class AbstractConnector extends Observable<any> {
+    doc: Doc
+    awareness: any
+    constructor (ydoc: Doc, awareness: any) {
         super()
         this.doc = ydoc
         this.awareness = awareness

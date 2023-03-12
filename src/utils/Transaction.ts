@@ -45,75 +45,51 @@ import { callAll } from 'lib0/function'
  * @public
  */
 export class Transaction {
+
+    /** The Yjs instance. */
+    doc: Doc
+    
+    /** Describes the set of deleted items by ids */
+    deleteSet: DeleteSet = new DeleteSet()
+    
+    /** Holds the state before the transaction started. */
+    beforeState: Map<number, number>
+    
+    /** Holds the state after the transaction. */
+    afterState: Map<number, number> = new Map()
+
     /**
-     * @param {Doc} doc
-     * @param {any} origin
-     * @param {boolean} local
+     * All types that were directly modified (property added or child
+     * inserted/deleted). New types are not included in this Set.
+     * Maps from type to parentSubs (`item.parentSub = null` for YArray)
      */
-    constructor (doc, origin, local) {
-        /**
-         * The Yjs instance.
-         * @type {Doc}
-         */
+    changed: Map<AbstractType<YEvent<any>>, Set<string | null>> = new Map()
+
+    /**
+     * Stores the events for the types that observe also child elements.
+     * It is mainly used by `observeDeep`.
+     */
+    changedParentTypes: Map<AbstractType<YEvent<any>>, Array<YEvent<any>>> = new Map()
+
+    /** Stores meta information on the transaction */
+    meta: Map<any, any> = new Map()
+
+    /** Whether this change originates from this doc. */
+    local: boolean
+
+    subdocsAdded: Set<Doc> = new Set()
+    subdocsRemoved: Set<Doc> = new Set()
+    subdocsLoaded: Set<Doc> = new Set()
+
+    _mergeStructs: AbstractStruct[] = []
+
+    origin: any
+
+    constructor(doc: Doc, origin: any, local: boolean) {
         this.doc = doc
-        /**
-         * Describes the set of deleted items by ids
-         * @type {DeleteSet}
-         */
-        this.deleteSet = new DeleteSet()
-        /**
-         * Holds the state before the transaction started.
-         * @type {Map<Number,Number>}
-         */
         this.beforeState = getStateVector(doc.store)
-        /**
-         * Holds the state after the transaction.
-         * @type {Map<Number,Number>}
-         */
-        this.afterState = new Map()
-        /**
-         * All types that were directly modified (property added or child
-         * inserted/deleted). New types are not included in this Set.
-         * Maps from type to parentSubs (`item.parentSub = null` for YArray)
-         * @type {Map<AbstractType<YEvent<any>>,Set<String|null>>}
-         */
-        this.changed = new Map()
-        /**
-         * Stores the events for the types that observe also child elements.
-         * It is mainly used by `observeDeep`.
-         * @type {Map<AbstractType<YEvent<any>>,Array<YEvent<any>>>}
-         */
-        this.changedParentTypes = new Map()
-        /**
-         * @type {Array<AbstractStruct>}
-         */
-        this._mergeStructs = []
-        /**
-         * @type {any}
-         */
         this.origin = origin
-        /**
-         * Stores meta information on the transaction
-         * @type {Map<any,any>}
-         */
-        this.meta = new Map()
-        /**
-         * Whether this change originates from this doc.
-         * @type {boolean}
-         */
         this.local = local
-        /**
-         * @type {Set<Doc>}
-         */
-        this.subdocsAdded = new Set()
-        /**
-         * @type {Set<Doc>}
-         */
-        this.subdocsRemoved = new Set()
-        /**
-         * @type {Set<Doc>}
-         */
-        this.subdocsLoaded = new Set()
     }
 }
 
@@ -122,7 +98,7 @@ export class Transaction {
  * @param {Transaction} transaction
  * @return {boolean} Whether data was written.
  */
-export const writeUpdateMessageFromTransaction = (encoder, transaction) => {
+export const writeUpdateMessageFromTransaction = (encoder: UpdateEncoderV1 | UpdateEncoderV2, transaction: Transaction): boolean => {
     if (transaction.deleteSet.clients.size === 0 && !map.any(transaction.afterState, (clock, client) => transaction.beforeState.get(client) !== clock)) {
         return false
     }
@@ -138,7 +114,7 @@ export const writeUpdateMessageFromTransaction = (encoder, transaction) => {
  * @private
  * @function
  */
-export const nextID = transaction => {
+export const nextID = (transaction: Transaction) => {
     const y = transaction.doc
     return createID(y.clientID, getState(y.store, y.clientID))
 }
@@ -151,7 +127,7 @@ export const nextID = transaction => {
  * @param {AbstractType<YEvent<any>>} type
  * @param {string|null} parentSub
  */
-export const addChangedTypeToTransaction = (transaction, type, parentSub) => {
+export const addChangedTypeToTransaction = (transaction: Transaction, type: AbstractType<YEvent<any>>, parentSub: string | null) => {
     const item = type._item
     if (item === null || (item.id.clock < (transaction.beforeState.get(item.id.client) || 0) && !item.deleted)) {
         map.setIfUndefined(transaction.changed, type, set.create).add(parentSub)
@@ -162,14 +138,14 @@ export const addChangedTypeToTransaction = (transaction, type, parentSub) => {
  * @param {Array<AbstractStruct>} structs
  * @param {number} pos
  */
-const tryToMergeWithLeft = (structs, pos) => {
+const tryToMergeWithLeft = (structs: Array<AbstractStruct>, pos: number) => {
     const left = structs[pos - 1]
     const right = structs[pos]
     if (left.deleted === right.deleted && left.constructor === right.constructor) {
         if (left.mergeWith(right)) {
             structs.splice(pos, 1)
-            if (right instanceof Item && right.parentSub !== null && /** @type {AbstractType<any>} */ (right.parent)._map.get(right.parentSub) === right) {
-                /** @type {AbstractType<any>} */ (right.parent)._map.set(right.parentSub, /** @type {Item} */ (left))
+            if (right instanceof Item && right.parentSub !== null && (right.parent as AbstractType<any>)._map.get(right.parentSub) === right) {
+                (right.parent as AbstractType<any>)._map.set(right.parentSub, left as Item)
             }
         }
     }
@@ -180,9 +156,9 @@ const tryToMergeWithLeft = (structs, pos) => {
  * @param {StructStore} store
  * @param {function(Item):boolean} gcFilter
  */
-const tryGcDeleteSet = (ds, store, gcFilter) => {
+const tryGcDeleteSet = (ds: DeleteSet, store: StructStore, gcFilter: (arg0: Item) => boolean) => {
     for (const [client, deleteItems] of ds.clients.entries()) {
-        const structs = /** @type {Array<GC|Item>} */ (store.clients.get(client))
+        const structs = (store.clients.get(client) as Array<GC|Item>)
         for (let di = deleteItems.length - 1; di >= 0; di--) {
             const deleteItem = deleteItems[di]
             const endDeleteItemClock = deleteItem.clock + deleteItem.len
@@ -207,11 +183,11 @@ const tryGcDeleteSet = (ds, store, gcFilter) => {
  * @param {DeleteSet} ds
  * @param {StructStore} store
  */
-const tryMergeDeleteSet = (ds, store) => {
+const tryMergeDeleteSet = (ds: DeleteSet, store: StructStore) => {
     // try to merge deleted / gc'd items
     // merge from right to left for better efficiecy and so we don't miss any merge targets
     ds.clients.forEach((deleteItems, client) => {
-        const structs = /** @type {Array<GC|Item>} */ (store.clients.get(client))
+        const structs = store.clients.get(client) as Array<GC|Item>
         for (let di = deleteItems.length - 1; di >= 0; di--) {
             const deleteItem = deleteItems[di]
             // start with merging the item next to the last deleted item
@@ -232,7 +208,7 @@ const tryMergeDeleteSet = (ds, store) => {
  * @param {StructStore} store
  * @param {function(Item):boolean} gcFilter
  */
-export const tryGc = (ds, store, gcFilter) => {
+export const tryGc = (ds: DeleteSet, store: StructStore, gcFilter: (arg0: Item) => boolean) => {
     tryGcDeleteSet(ds, store, gcFilter)
     tryMergeDeleteSet(ds, store)
 }
@@ -241,7 +217,7 @@ export const tryGc = (ds, store, gcFilter) => {
  * @param {Array<Transaction>} transactionCleanups
  * @param {number} i
  */
-const cleanupTransactions = (transactionCleanups, i) => {
+const cleanupTransactions = (transactionCleanups: Array<Transaction>, i: number) => {
     if (i < transactionCleanups.length) {
         const transaction = transactionCleanups[i]
         const doc = transaction.doc
@@ -307,7 +283,7 @@ const cleanupTransactions = (transactionCleanups, i) => {
             transaction.afterState.forEach((clock, client) => {
                 const beforeClock = transaction.beforeState.get(client) || 0
                 if (beforeClock !== clock) {
-                    const structs = /** @type {Array<GC|Item>} */ (store.clients.get(client))
+                    const structs = store.clients.get(client) as Array<GC|Item>
                     // we iterate from right to left so we can safely remove entries
                     const firstChangePos = math.max(findIndexSS(structs, beforeClock), 1)
                     for (let i = structs.length - 1; i >= firstChangePos; i--) {
@@ -320,7 +296,7 @@ const cleanupTransactions = (transactionCleanups, i) => {
             //                but at the moment DS does not handle duplicates
             for (let i = 0; i < mergeStructs.length; i++) {
                 const { client, clock } = mergeStructs[i].id
-                const structs = /** @type {Array<GC|Item>} */ (store.clients.get(client))
+                const structs = store.clients.get(client) as Array<GC|Item>
                 const replacedStructPos = findIndexSS(structs, clock)
                 if (replacedStructPos + 1 < structs.length) {
                     tryToMergeWithLeft(structs, replacedStructPos + 1)
@@ -382,7 +358,7 @@ const cleanupTransactions = (transactionCleanups, i) => {
  *
  * @function
  */
-export const transact = (doc, f, origin = null, local = true) => {
+export const transact = (doc: Doc, f: (arg0: Transaction) => void, origin: any = null, local = true) => {
     const transactionCleanups = doc._transactionCleanups
     let initialCall = false
     if (doc._transaction === null) {

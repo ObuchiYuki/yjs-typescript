@@ -41,24 +41,20 @@ import * as error from 'lib0/error'
  *
  */
 export class RelativePosition {
+    type: ID|null
+    tname: string|null
+    item: ID | null
+    assoc: number
+
     /**
      * @param {ID|null} type
      * @param {string|null} tname
      * @param {ID|null} item
      * @param {number} assoc
      */
-    constructor (type, tname, item, assoc = 0) {
-        /**
-         * @type {ID|null}
-         */
+    constructor(type: ID | null, tname: string | null, item: ID | null, assoc: number = 0) {
         this.type = type
-        /**
-         * @type {string|null}
-         */
         this.tname = tname
-        /**
-         * @type {ID | null}
-         */
         this.item = item
         /**
          * A relative position is associated to a specific character. By default
@@ -68,8 +64,6 @@ export class RelativePosition {
          *
          * If assoc < 0, then the relative position is associated to the caharacter
          * before the meant position.
-         *
-         * @type {number}
          */
         this.assoc = assoc
     }
@@ -79,8 +73,8 @@ export class RelativePosition {
  * @param {RelativePosition} rpos
  * @return {any}
  */
-export const relativePositionToJSON = rpos => {
-    const json = {}
+export const relativePositionToJSON = (rpos: RelativePosition): any => {
+    const json: any = {}
     if (rpos.type) {
         json.type = rpos.type
     }
@@ -102,22 +96,17 @@ export const relativePositionToJSON = rpos => {
  *
  * @function
  */
-export const createRelativePositionFromJSON = json => new RelativePosition(json.type == null ? null : createID(json.type.client, json.type.clock), json.tname || null, json.item == null ? null : createID(json.item.client, json.item.clock), json.assoc == null ? 0 : json.assoc)
+export const createRelativePositionFromJSON = (json: any): RelativePosition => {
+    return new RelativePosition(json.type == null ? null : createID(json.type.client, json.type.clock), json.tname || null, json.item == null ? null : createID(json.item.client, json.item.clock), json.assoc == null ? 0 : json.assoc)
+}
 
 export class AbsolutePosition {
-    /**
-     * @param {AbstractType<any>} type
-     * @param {number} index
-     * @param {number} [assoc]
-     */
-    constructor (type, index, assoc = 0) {
-        /**
-         * @type {AbstractType<any>}
-         */
+    type: AbstractType<any>
+    index: number
+    assoc: number
+
+    constructor(type: AbstractType<any>, index: number, assoc: number = 0) {
         this.type = type
-        /**
-         * @type {number}
-         */
         this.index = index
         this.assoc = assoc
     }
@@ -130,7 +119,9 @@ export class AbsolutePosition {
  *
  * @function
  */
-export const createAbsolutePosition = (type, index, assoc = 0) => new AbsolutePosition(type, index, assoc)
+export const createAbsolutePosition = (type: AbstractType<any>, index: number, assoc: number = 0) => {
+    return new AbsolutePosition(type, index, assoc)
+}
 
 /**
  * @param {AbstractType<any>} type
@@ -139,7 +130,7 @@ export const createAbsolutePosition = (type, index, assoc = 0) => new AbsolutePo
  *
  * @function
  */
-export const createRelativePosition = (type, item, assoc) => {
+export const createRelativePosition = (type: AbstractType<any>, item: ID | null, assoc: number) => {
     let typeid = null
     let tname = null
     if (type._item === null) {
@@ -160,7 +151,7 @@ export const createRelativePosition = (type, item, assoc) => {
  *
  * @function
  */
-export const createRelativePositionFromTypeIndex = (type, index, assoc = 0) => {
+export const createRelativePositionFromTypeIndex = (type: AbstractType<any>, index: number, assoc: number = 0): RelativePosition => {
     let t = type._start
     if (assoc < 0) {
         // associated to the left character or the beginning of a type, increment index if possible.
@@ -192,7 +183,7 @@ export const createRelativePositionFromTypeIndex = (type, index, assoc = 0) => {
  *
  * @function
  */
-export const writeRelativePosition = (encoder, rpos) => {
+export const writeRelativePosition = (encoder: encoding.Encoder, rpos: RelativePosition) => {
     const { type, tname, item, assoc } = rpos
     if (item !== null) {
         encoding.writeVarUint(encoder, 0)
@@ -216,7 +207,7 @@ export const writeRelativePosition = (encoder, rpos) => {
  * @param {RelativePosition} rpos
  * @return {Uint8Array}
  */
-export const encodeRelativePosition = rpos => {
+export const encodeRelativePosition = (rpos: RelativePosition): Uint8Array => {
     const encoder = encoding.createEncoder()
     writeRelativePosition(encoder, rpos)
     return encoding.toUint8Array(encoder)
@@ -228,7 +219,7 @@ export const encodeRelativePosition = rpos => {
  *
  * @function
  */
-export const readRelativePosition = decoder => {
+export const readRelativePosition = (decoder: decoding.Decoder): RelativePosition => {
     let type = null
     let tname = null
     let itemID = null
@@ -254,7 +245,7 @@ export const readRelativePosition = decoder => {
  * @param {Uint8Array} uint8Array
  * @return {RelativePosition}
  */
-export const decodeRelativePosition = uint8Array => readRelativePosition(decoding.createDecoder(uint8Array))
+export const decodeRelativePosition = (uint8Array: Uint8Array): RelativePosition => readRelativePosition(decoding.createDecoder(uint8Array))
 
 /**
  * @param {RelativePosition} rpos
@@ -263,7 +254,7 @@ export const decodeRelativePosition = uint8Array => readRelativePosition(decodin
  *
  * @function
  */
-export const createAbsolutePositionFromRelativePosition = (rpos, doc) => {
+export const createAbsolutePositionFromRelativePosition = (rpos: RelativePosition, doc: Doc): AbsolutePosition | null => {
     const store = doc.store
     const rightID = rpos.item
     const typeID = rpos.type
@@ -280,7 +271,7 @@ export const createAbsolutePositionFromRelativePosition = (rpos, doc) => {
         if (!(right instanceof Item)) {
             return null
         }
-        type = /** @type {AbstractType<any>} */ (right.parent)
+        type = right.parent as AbstractType<any>
         if (type._item === null || !type._item.deleted) {
             index = (right.deleted || !right.countable) ? 0 : (res.diff + (assoc >= 0 ? 0 : 1)) // adjust position based on left association if necessary
             let n = right.left
@@ -325,6 +316,6 @@ export const createAbsolutePositionFromRelativePosition = (rpos, doc) => {
  *
  * @function
  */
-export const compareRelativePositions = (a, b) => a === b || (
+export const compareRelativePositions = (a: RelativePosition | null, b: RelativePosition | null): boolean => a === b || (
     a !== null && b !== null && a.tname === b.tname && compareIDs(a.item, b.item) && compareIDs(a.type, b.type) && a.assoc === b.assoc
 )

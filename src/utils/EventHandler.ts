@@ -7,13 +7,10 @@ import * as f from 'lib0/function'
  *
  * @private
  */
-export class EventHandler {
-    constructor () {
-        /**
-         * @type {Array<function(ARG0, ARG1):void>}
-         */
-        this.l = []
-    }
+export class EventHandler<ARG0, ARG1> {
+    l: ((arg0: ARG0, arg1: ARG1) => void)[] = []
+    
+    constructor() { this.l = [] }
 }
 
 /**
@@ -23,7 +20,7 @@ export class EventHandler {
  * @private
  * @function
  */
-export const createEventHandler = () => new EventHandler()
+export const createEventHandler = <ARG0, ARG1>(): EventHandler<ARG0, ARG1> => new EventHandler()
 
 /**
  * Adds an event listener that is called when
@@ -36,7 +33,7 @@ export const createEventHandler = () => new EventHandler()
  * @private
  * @function
  */
-export const addEventHandlerListener = (eventHandler, f) =>
+export const addEventHandlerListener = <ARG0, ARG1>(eventHandler: EventHandler<ARG0, ARG1>, f: (arg0: ARG0, arg1: ARG1) => void) =>
     eventHandler.l.push(f)
 
 /**
@@ -50,7 +47,7 @@ export const addEventHandlerListener = (eventHandler, f) =>
  * @private
  * @function
  */
-export const removeEventHandlerListener = (eventHandler, f) => {
+export const removeEventHandlerListener = <ARG0, ARG1>(eventHandler: EventHandler<ARG0, ARG1>, f: (arg0: ARG0, arg1: ARG1) => void) => {
     const l = eventHandler.l
     const len = l.length
     eventHandler.l = l.filter(g => f !== g)
@@ -67,7 +64,7 @@ export const removeEventHandlerListener = (eventHandler, f) => {
  * @private
  * @function
  */
-export const removeAllEventHandlerListeners = eventHandler => {
+export const removeAllEventHandlerListeners = <ARG0, ARG1>(eventHandler: EventHandler<ARG0, ARG1>) => {
     eventHandler.l.length = 0
 }
 
@@ -83,5 +80,6 @@ export const removeAllEventHandlerListeners = eventHandler => {
  * @private
  * @function
  */
-export const callEventHandlerListeners = (eventHandler, arg0, arg1) =>
-    f.callAll(eventHandler.l, [arg0, arg1])
+export const callEventHandlerListeners = <ARG0, ARG1>(eventHandler: EventHandler<ARG0, ARG1>, arg0: ARG0, arg1: ARG1) => {
+    return f.callAll(eventHandler.l, [arg0, arg1])
+}

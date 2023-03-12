@@ -10,7 +10,7 @@ import {
  *
  * @param {AbstractType<any>} type
  */
-export const logType = type => {
+export const logType = (type: AbstractType<any>) => {
     const res = []
     let n = type._start
     while (n) {

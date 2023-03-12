@@ -4,24 +4,19 @@ import {
     GC,
     splitItem,
     Transaction, ID, Item, DSDecoderV2 // eslint-disable-line
-} from 'yjs/src/internals.js'
+} from 'yjs/dist/src/internals'
 
 import * as math from 'lib0/math'
 import * as error from 'lib0/error'
 
 export class StructStore {
-    constructor () {
-        /**
-         * @type {Map<number,Array<GC|Item>>}
-         */
+    clients: Map<number,Array<GC|Item>>
+    pendingStructs: null | { missing: Map<number, number>, update: Uint8Array }
+    pendingDs: null | Uint8Array
+
+    constructor() {
         this.clients = new Map()
-        /**
-         * @type {null | { missing: Map<number, number>, update: Uint8Array }}
-         */
         this.pendingStructs = null
-        /**
-         * @type {null | Uint8Array}
-         */
         this.pendingDs = null
     }
 }
@@ -36,7 +31,7 @@ export class StructStore {
  * @public
  * @function
  */
-export const getStateVector = store => {
+export const getStateVector = (store: StructStore): Map<number, number> => {
     const sm = new Map()
     store.clients.forEach((structs, client) => {
         const struct = structs[structs.length - 1]
@@ -53,7 +48,7 @@ export const getStateVector = store => {
  * @public
  * @function
  */
-export const getState = (store, client) => {
+export const getState = (store: StructStore, client: number): number => {
     const structs = store.clients.get(client)
     if (structs === undefined) {
         return 0
@@ -68,7 +63,7 @@ export const getState = (store, client) => {
  * @private
  * @function
  */
-export const integretyCheck = store => {
+export const integretyCheck = (store: StructStore) => {
     store.clients.forEach(structs => {
         for (let i = 1; i < structs.length; i++) {
             const l = structs[i - 1]
@@ -87,7 +82,7 @@ export const integretyCheck = store => {
  * @private
  * @function
  */
-export const addStruct = (store, struct) => {
+export const addStruct = (store: StructStore, struct: GC | Item) => {
     let structs = store.clients.get(struct.id.client)
     if (structs === undefined) {
         structs = []
@@ -110,7 +105,7 @@ export const addStruct = (store, struct) => {
  * @private
  * @function
  */
-export const findIndexSS = (structs, clock) => {
+export const findIndexSS = (structs: Array<Item | GC>, clock: number): number => {
     let left = 0
     let right = structs.length - 1
     let mid = structs[right]
@@ -150,12 +145,8 @@ export const findIndexSS = (structs, clock) => {
  * @private
  * @function
  */
-export const find = (store, id) => {
-    /**
-     * @type {Array<GC|Item>}
-     */
-    // @ts-ignore
-    const structs = store.clients.get(id.client)
+export const find = (store: StructStore, id: ID): GC | Item => {
+    const structs = store.clients.get(id.client) as Array<GC|Item>
     return structs[findIndexSS(structs, id.clock)]
 }
 
@@ -171,7 +162,7 @@ export const getItem = /** @type {function(StructStore,ID):Item} */ (find)
  * @param {Array<Item|GC>} structs
  * @param {number} clock
  */
-export const findIndexCleanStart = (transaction, structs, clock) => {
+export const findIndexCleanStart = (transaction: Transaction, structs: Array<Item | GC>, clock: number) => {
     const index = findIndexSS(structs, clock)
     const struct = structs[index]
     if (struct.id.clock < clock && struct instanceof Item) {
@@ -191,8 +182,8 @@ export const findIndexCleanStart = (transaction, structs, clock) => {
  * @private
  * @function
  */
-export const getItemCleanStart = (transaction, id) => {
-    const structs = /** @type {Array<Item>} */ (transaction.doc.store.clients.get(id.client))
+export const getItemCleanStart = (transaction: Transaction, id: ID): Item => {
+    const structs = transaction.doc.store.clients.get(id.client) as Array<Item>
     return structs[findIndexCleanStart(transaction, structs, id.clock)]
 }
 
@@ -207,12 +198,8 @@ export const getItemCleanStart = (transaction, id) => {
  * @private
  * @function
  */
-export const getItemCleanEnd = (transaction, store, id) => {
-    /**
-     * @type {Array<Item>}
-     */
-    // @ts-ignore
-    const structs = store.clients.get(id.client)
+export const getItemCleanEnd = (transaction: Transaction, store: StructStore, id: ID): Item => {
+    const structs = store.clients.get(id.client) as Array<Item>
     const index = findIndexSS(structs, id.clock)
     const struct = structs[index]
     if (id.clock !== struct.id.clock + struct.length - 1 && struct.constructor !== GC) {
@@ -230,8 +217,8 @@ export const getItemCleanEnd = (transaction, store, id) => {
  * @private
  * @function
  */
-export const replaceStruct = (store, struct, newStruct) => {
-    const structs = /** @type {Array<GC|Item>} */ (store.clients.get(struct.id.client))
+export const replaceStruct = (store: StructStore, struct: GC | Item, newStruct: GC | Item) => {
+    const structs = store.clients.get(struct.id.client) as Array<GC|Item>
     structs[findIndexSS(structs, struct.id.clock)] = newStruct
 }
 
@@ -246,7 +233,7 @@ export const replaceStruct = (store, struct, newStruct) => {
  *
  * @function
  */
-export const iterateStructs = (transaction, structs, clockStart, len, f) => {
+export const iterateStructs = (transaction: Transaction, structs: Array<Item | GC>, clockStart: number, len: number, f: (arg0: GC | Item) => void) => {
     if (len === 0) {
         return
     }

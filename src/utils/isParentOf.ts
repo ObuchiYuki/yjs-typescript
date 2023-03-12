@@ -11,12 +11,12 @@ import { AbstractType, Item } from 'yjs/dist/src/internals' // eslint-disable-li
  * @private
  * @function
  */
-export const isParentOf = (parent, child) => {
+export const isParentOf = (parent: AbstractType<any>, child: Item | null): boolean => {
     while (child !== null) {
         if (child.parent === parent) {
             return true
         }
-        child = /** @type {AbstractType<any>} */ (child.parent)._item
+        child = (child.parent as AbstractType<any>)._item
     }
     return false
 }

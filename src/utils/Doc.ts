@@ -32,15 +32,44 @@ export const generateNewClientId = random.uint32
  * @property {boolean} [DocOpts.shouldLoad] Whether the document should be synced by the provider now. This is toggled to true when you call ydoc.load()
  */
 
+export type DocOpts = {
+    gc?: boolean,
+    gcFilter?: (item: Item) => boolean,
+    guid?: string,
+    collectionid?: string | null,
+    meta?: any,
+    autoLoad?: boolean,
+    shouldLoad?: boolean
+}
+
 /**
  * A Yjs instance handles the state of shared data.
  * @extends Observable<string>
  */
-export class Doc extends Observable {
+export class Doc extends Observable<string> {
+    gcFilter: (item: Item) => boolean
+    gc: boolean
+    clientID: number
+    guid: string
+    collectionid: string | null
+    share: Map<string, AbstractType<YEvent<any>>>
+    store: StructStore
+    _transaction: Transaction | null
+    _transactionCleanups: Transaction[]
+    subdocs: Set<Doc>
+    _item: Item | null
+    shouldLoad: boolean
+    autoLoad: boolean
+    meta: any
+    isLoaded: boolean
+    isSynced: boolean
+    whenLoaded: Promise<Doc>
+    whenSynced: Promise<void>
+    
     /**
      * @param {DocOpts} opts configuration
      */
-    constructor ({ guid = random.uuidv4(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true } = {}) {
+    constructor ({ guid = random.uuidv4(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true }: DocOpts = {}) {
         super()
         this.gc = gc
         this.gcFilter = gcFilter
@@ -96,11 +125,11 @@ export class Doc extends Observable {
                 resolve(this)
             })
         })
-        const provideSyncedPromise = () => promise.create(resolve => {
+        const provideSyncedPromise = () => new Promise<void>(resolve => {
             /**
              * @param {boolean} isSynced
              */
-            const eventHandler = (isSynced) => {
+            const eventHandler = (isSynced: boolean | undefined) => {
                 if (isSynced === undefined || isSynced === true) {
                     this.off('sync', eventHandler)
                     resolve()
@@ -108,7 +137,7 @@ export class Doc extends Observable {
             }
             this.on('sync', eventHandler)
         })
-        this.on('sync', isSynced => {
+        this.on('sync', (isSynced: boolean | undefined) => {
             if (isSynced === false && this.isSynced) {
                 this.whenSynced = provideSyncedPromise()
             }
@@ -135,7 +164,7 @@ export class Doc extends Observable {
     load () {
         const item = this._item
         if (item !== null && !this.shouldLoad) {
-            transact(/** @type {any} */ (item.parent).doc, transaction => {
+            transact((item.parent as any).doc, transaction => {
                 transaction.subdocsLoaded.add(this)
             }, null, true)
         }
@@ -161,7 +190,7 @@ export class Doc extends Observable {
      *
      * @public
      */
-    transact (f, origin = null) {
+    transact (f: (arg0: Transaction) => void, origin: any = null) {
         transact(this, f, origin)
     }
 
@@ -191,7 +220,7 @@ export class Doc extends Observable {
      *
      * @public
      */
-    get (name, TypeConstructor = AbstractType) {
+    get (name: string, TypeConstructor: Function = AbstractType): AbstractType<any> {
         const type = map.setIfUndefined(this.share, name, () => {
             // @ts-ignore
             const t = new TypeConstructor()
@@ -204,7 +233,7 @@ export class Doc extends Observable {
                 // @ts-ignore
                 const t = new TypeConstructor()
                 t._map = type._map
-                type._map.forEach(/** @param {Item?} n */ n => {
+                type._map.forEach(/** @param {Item?} n */ (n: Item | null) => {
                     for (; n !== null; n = n.left) {
                         // @ts-ignore
                         n.parent = t
@@ -232,7 +261,7 @@ export class Doc extends Observable {
      *
      * @public
      */
-    getArray (name = '') {
+    getArray <T>(name: string = ''): YArray<T> {
         // @ts-ignore
         return this.get(name, YArray)
     }
@@ -243,7 +272,7 @@ export class Doc extends Observable {
      *
      * @public
      */
-    getText (name = '') {
+    getText (name: string = ''): YText {
         // @ts-ignore
         return this.get(name, YText)
     }
@@ -255,7 +284,7 @@ export class Doc extends Observable {
      *
      * @public
      */
-    getMap (name = '') {
+    getMap <T>(name: string = ''): YMap<T> {
         // @ts-ignore
         return this.get(name, YMap)
     }
@@ -266,7 +295,7 @@ export class Doc extends Observable {
      *
      * @public
      */
-    getXmlFragment (name = '') {
+    getXmlFragment (name: string = ''): YXmlFragment {
         // @ts-ignore
         return this.get(name, YXmlFragment)
     }
@@ -279,11 +308,11 @@ export class Doc extends Observable {
      *
      * @return {Object<string, any>}
      */
-    toJSON () {
+    toJSON (): { [s: string]: any } {
         /**
          * @type {Object<string, any>}
          */
-        const doc = {}
+        const doc: { [s: string]: any } = {}
 
         this.share.forEach((value, key) => {
             doc[key] = value.toJSON()
@@ -300,10 +329,10 @@ export class Doc extends Observable {
         const item = this._item
         if (item !== null) {
             this._item = null
-            const content = /** @type {ContentDoc} */ (item.content)
+            const content = item.content as ContentDoc
             content.doc = new Doc({ guid: this.guid, ...content.opts, shouldLoad: false })
             content.doc._item = item
-            transact(/** @type {any} */ (item).parent.doc, transaction => {
+            transact((item as any).parent.doc, transaction => {
                 const doc = content.doc
                 if (!item.deleted) {
                     transaction.subdocsAdded.add(doc)
@@ -320,7 +349,7 @@ export class Doc extends Observable {
      * @param {string} eventName
      * @param {function(...any):any} f
      */
-    on (eventName, f) {
+    on (eventName: string, f: Function) {
         super.on(eventName, f)
     }
 
@@ -328,7 +357,7 @@ export class Doc extends Observable {
      * @param {string} eventName
      * @param {function} f
      */
-    off (eventName, f) {
+    off (eventName: string, f: Function) {
         super.off(eventName, f)
     }
 }

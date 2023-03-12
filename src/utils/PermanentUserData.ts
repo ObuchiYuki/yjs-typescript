@@ -10,39 +10,39 @@ import {
 
 import * as decoding from 'lib0/decoding'
 
-import { mergeDeleteSets, isDeleted } from './DeleteSet.js'
+import { mergeDeleteSets, isDeleted } from 'yjs/dist/src/utils/DeleteSet.js'
 
 export class PermanentUserData {
+    yusers: YMap<any>
+    doc: Doc
+
+    /** Maps from clientid to userDescription */
+    clients: Map<number, string>
+
+    dss: Map<string, DeleteSet>
+
     /**
      * @param {Doc} doc
      * @param {YMap<any>} [storeType]
      */
-    constructor (doc, storeType = doc.getMap('users')) {
-        /**
-         * @type {Map<string,DeleteSet>}
-         */
-        const dss = new Map()
+    constructor(doc: Doc, storeType: YMap<any> = doc.getMap('users')) {
+        const dss = new Map<string,DeleteSet>()
         this.yusers = storeType
         this.doc = doc
-        /**
-         * Maps from clientid to userDescription
-         *
-         * @type {Map<number,string>}
-         */
         this.clients = new Map()
         this.dss = dss
         /**
          * @param {YMap<any>} user
          * @param {string} userDescription
          */
-        const initUser = (user, userDescription) => {
+        const initUser = (user: YMap<any>, userDescription: string) => {
             /**
              * @type {YArray<Uint8Array>}
              */
             const ds = user.get('ds')
             const ids = user.get('ids')
-            const addClientId = /** @param {number} clientid */ clientid => this.clients.set(clientid, userDescription)
-            ds.observe(/** @param {YArrayEvent<any>} event */ event => {
+            const addClientId = (clientid: number) => this.clients.set(clientid, userDescription)
+            ds.observe((event: YArrayEvent<any>) => {
                 event.changes.added.forEach(item => {
                     item.content.getContent().forEach(encodedDs => {
                         if (encodedDs instanceof Uint8Array) {
@@ -51,8 +51,8 @@ export class PermanentUserData {
                     })
                 })
             })
-            this.dss.set(userDescription, mergeDeleteSets(ds.map(encodedDs => readDeleteSet(new DSDecoderV1(decoding.createDecoder(encodedDs))))))
-            ids.observe(/** @param {YArrayEvent<any>} event */ event =>
+            this.dss.set(userDescription, mergeDeleteSets(ds.map((encodedDs: Uint8Array) => readDeleteSet(new DSDecoderV1(decoding.createDecoder(encodedDs))))))
+            ids.observe((event: YArrayEvent<any>) =>
                 event.changes.added.forEach(item => item.content.getContent().forEach(addClientId))
             )
             ids.forEach(addClientId)
@@ -74,7 +74,9 @@ export class PermanentUserData {
      * @param {Object} conf
      * @param {function(Transaction, DeleteSet):boolean} [conf.filter]
      */
-    setUserMapping (doc, clientid, userDescription, { filter = () => true } = {}) {
+    setUserMapping(doc: Doc, clientid: number, userDescription: string,
+        { filter = () => true }: { filter?: (transaction: Transaction, deleteSet: DeleteSet) => boolean } = {}
+    ) {
         const users = this.yusers
         let user = users.get(userDescription)
         if (!user) {
@@ -106,7 +108,7 @@ export class PermanentUserData {
                 }
             }, 0)
         })
-        doc.on('afterTransaction', /** @param {Transaction} transaction */ transaction => {
+        doc.on('afterTransaction', (transaction: Transaction) => {
             setTimeout(() => {
                 const yds = user.get('ds')
                 const ds = transaction.deleteSet
@@ -123,7 +125,7 @@ export class PermanentUserData {
      * @param {number} clientid
      * @return {any}
      */
-    getUserByClientId (clientid) {
+    getUserByClientId(clientid: number): any {
         return this.clients.get(clientid) || null
     }
 
@@ -131,7 +133,7 @@ export class PermanentUserData {
      * @param {ID} id
      * @return {string | null}
      */
-    getUserByDeletedId (id) {
+    getUserByDeletedId(id: ID): string | null {
         for (const [userDescription, ds] of this.dss.entries()) {
             if (isDeleted(ds, id)) {
                 return userDescription

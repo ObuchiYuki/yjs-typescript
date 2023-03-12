@@ -20,7 +20,7 @@ import {
 /**
  * @param {UpdateDecoderV1 | UpdateDecoderV2} decoder
  */
-function * lazyStructReaderGenerator (decoder) {
+function * lazyStructReaderGenerator (decoder: UpdateDecoderV1 | UpdateDecoderV2) {
     const numOfStateUpdates = decoding.readVarUint(decoder.restDecoder)
     for (let i = 0; i < numOfStateUpdates; i++) {
         const numberOfStructs = decoding.readVarUint(decoder.restDecoder)
@@ -62,11 +62,15 @@ function * lazyStructReaderGenerator (decoder) {
 }
 
 export class LazyStructReader {
+    gen: Generator<Item | Skip | GC, void, unknown>
+    curr: null | Item | Skip | GC
+    done: boolean
+    filterSkips: boolean
     /**
      * @param {UpdateDecoderV1 | UpdateDecoderV2} decoder
      * @param {boolean} filterSkips
      */
-    constructor (decoder, filterSkips) {
+    constructor (decoder: UpdateDecoderV1 | UpdateDecoderV2, filterSkips: boolean) {
         this.gen = lazyStructReaderGenerator(decoder)
         /**
          * @type {null | Item | Skip | GC}
@@ -80,7 +84,7 @@ export class LazyStructReader {
     /**
      * @return {Item | GC | Skip |null}
      */
-    next () {
+    next (): Item | GC | Skip | null {
         // ignore "Skip" structs
         do {
             this.curr = this.gen.next().value || null
@@ -93,14 +97,14 @@ export class LazyStructReader {
  * @param {Uint8Array} update
  *
  */
-export const logUpdate = update => logUpdateV2(update, UpdateDecoderV1)
+export const logUpdate = (update: Uint8Array) => logUpdateV2(update, UpdateDecoderV1)
 
 /**
  * @param {Uint8Array} update
  * @param {typeof UpdateDecoderV2 | typeof UpdateDecoderV1} [YDecoder]
  *
  */
-export const logUpdateV2 = (update, YDecoder = UpdateDecoderV2) => {
+export const logUpdateV2 = (update: Uint8Array, YDecoder: typeof UpdateDecoderV2 | typeof UpdateDecoderV1 = UpdateDecoderV2) => {
     const structs = []
     const updateDecoder = new YDecoder(decoding.createDecoder(update))
     const lazyDecoder = new LazyStructReader(updateDecoder, false)
@@ -116,14 +120,14 @@ export const logUpdateV2 = (update, YDecoder = UpdateDecoderV2) => {
  * @param {Uint8Array} update
  *
  */
-export const decodeUpdate = (update) => decodeUpdateV2(update, UpdateDecoderV1)
+export const decodeUpdate = (update: Uint8Array) => decodeUpdateV2(update, UpdateDecoderV1)
 
 /**
  * @param {Uint8Array} update
  * @param {typeof UpdateDecoderV2 | typeof UpdateDecoderV1} [YDecoder]
  *
  */
-export const decodeUpdateV2 = (update, YDecoder = UpdateDecoderV2) => {
+export const decodeUpdateV2 = (update: Uint8Array, YDecoder: typeof UpdateDecoderV2 | typeof UpdateDecoderV1 = UpdateDecoderV2) => {
     const structs = []
     const updateDecoder = new YDecoder(decoding.createDecoder(update))
     const lazyDecoder = new LazyStructReader(updateDecoder, false)
@@ -137,10 +141,15 @@ export const decodeUpdateV2 = (update, YDecoder = UpdateDecoderV2) => {
 }
 
 export class LazyStructWriter {
+    currClient: number
+    startClock: number
+    written: number
+    encoder: UpdateEncoderV1 | UpdateEncoderV2
+    clientStructs: Array<{ written: number, restEncoder: Uint8Array }>
     /**
      * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
      */
-    constructor (encoder) {
+    constructor (encoder: UpdateEncoderV1 | UpdateEncoderV2) {
         this.currClient = 0
         this.startClock = 0
         this.written = 0
@@ -163,7 +172,7 @@ export class LazyStructWriter {
  * @param {Array<Uint8Array>} updates
  * @return {Uint8Array}
  */
-export const mergeUpdates = updates => mergeUpdatesV2(updates, UpdateDecoderV1, UpdateEncoderV1)
+export const mergeUpdates = (updates: Array<Uint8Array>): Uint8Array => mergeUpdatesV2(updates, UpdateDecoderV1, UpdateEncoderV1)
 
 /**
  * @param {Uint8Array} update
@@ -171,7 +180,7 @@ export const mergeUpdates = updates => mergeUpdatesV2(updates, UpdateDecoderV1, 
  * @param {typeof UpdateDecoderV1 | typeof UpdateDecoderV2} YDecoder
  * @return {Uint8Array}
  */
-export const encodeStateVectorFromUpdateV2 = (update, YEncoder = DSEncoderV2, YDecoder = UpdateDecoderV2) => {
+export const encodeStateVectorFromUpdateV2 = (update: Uint8Array, YEncoder: typeof DSEncoderV1 | typeof DSEncoderV2 = DSEncoderV2, YDecoder: typeof UpdateDecoderV1 | typeof UpdateDecoderV2 = UpdateDecoderV2): Uint8Array => {
     const encoder = new YEncoder()
     const updateDecoder = new LazyStructReader(new YDecoder(decoding.createDecoder(update)), false)
     let curr = updateDecoder.curr
@@ -223,22 +232,22 @@ export const encodeStateVectorFromUpdateV2 = (update, YEncoder = DSEncoderV2, YD
  * @param {Uint8Array} update
  * @return {Uint8Array}
  */
-export const encodeStateVectorFromUpdate = update => encodeStateVectorFromUpdateV2(update, DSEncoderV1, UpdateDecoderV1)
+export const encodeStateVectorFromUpdate = (update: Uint8Array): Uint8Array => encodeStateVectorFromUpdateV2(update, DSEncoderV1, UpdateDecoderV1)
 
 /**
  * @param {Uint8Array} update
  * @param {typeof UpdateDecoderV1 | typeof UpdateDecoderV2} YDecoder
  * @return {{ from: Map<number,number>, to: Map<number,number> }}
  */
-export const parseUpdateMetaV2 = (update, YDecoder = UpdateDecoderV2) => {
+export const parseUpdateMetaV2 = (update: Uint8Array, YDecoder: typeof UpdateDecoderV1 | typeof UpdateDecoderV2 = UpdateDecoderV2): { from: Map<number, number>; to: Map<number, number> } => {
     /**
      * @type {Map<number, number>}
      */
-    const from = new Map()
+    const from: Map<number, number> = new Map()
     /**
      * @type {Map<number, number>}
      */
-    const to = new Map()
+    const to: Map<number, number> = new Map()
     const updateDecoder = new LazyStructReader(new YDecoder(decoding.createDecoder(update)), false)
     let curr = updateDecoder.curr
     if (curr !== null) {
@@ -268,7 +277,7 @@ export const parseUpdateMetaV2 = (update, YDecoder = UpdateDecoderV2) => {
  * @param {Uint8Array} update
  * @return {{ from: Map<number,number>, to: Map<number,number> }}
  */
-export const parseUpdateMeta = update => parseUpdateMetaV2(update, UpdateDecoderV1)
+export const parseUpdateMeta = (update: Uint8Array): { from: Map<number, number>; to: Map<number, number> } => parseUpdateMetaV2(update, UpdateDecoderV1)
 
 /**
  * This method is intended to slice any kind of struct and retrieve the right part.
@@ -278,7 +287,7 @@ export const parseUpdateMeta = update => parseUpdateMetaV2(update, UpdateDecoder
  * @param {number} diff
  * @return {Item | GC}
  */
-const sliceStruct = (left, diff) => {
+const sliceStruct = (left: Item | GC | Skip, diff: number): Item | GC => {
     if (left.constructor === GC) {
         const { client, clock } = left.id
         return new GC(createID(client, clock + diff), left.length - diff)
@@ -286,7 +295,7 @@ const sliceStruct = (left, diff) => {
         const { client, clock } = left.id
         return new Skip(createID(client, clock + diff), left.length - diff)
     } else {
-        const leftItem = /** @type {Item} */ (left)
+        const leftItem = left as Item
         const { client, clock } = leftItem.id
         return new Item(
             createID(client, clock + diff),
@@ -310,7 +319,7 @@ const sliceStruct = (left, diff) => {
  * @param {typeof UpdateEncoderV1 | typeof UpdateEncoderV2} [YEncoder]
  * @return {Uint8Array}
  */
-export const mergeUpdatesV2 = (updates, YDecoder = UpdateDecoderV2, YEncoder = UpdateEncoderV2) => {
+export const mergeUpdatesV2 = (updates: Array<Uint8Array>, YDecoder: typeof UpdateDecoderV1 | typeof UpdateDecoderV2 = UpdateDecoderV2, YEncoder: typeof UpdateEncoderV1 | typeof UpdateEncoderV2 = UpdateEncoderV2): Uint8Array => {
     if (updates.length === 1) {
         return updates[0]
     }
@@ -321,7 +330,7 @@ export const mergeUpdatesV2 = (updates, YDecoder = UpdateDecoderV2, YEncoder = U
      * @todo we don't need offset because we always slice before
      * @type {null | { struct: Item | GC | Skip, offset: number }}
      */
-    let currWrite = null
+    let currWrite: null | { struct: Item | GC | Skip; offset: number } = null
 
     const updateEncoder = new YEncoder()
     // write structs lazily
@@ -335,7 +344,7 @@ export const mergeUpdatesV2 = (updates, YDecoder = UpdateDecoderV2, YEncoder = U
         // Write higher clients first ⇒ sort by clientID & clock and remove decoders without content
         lazyStructDecoders = lazyStructDecoders.filter(dec => dec.curr !== null)
         lazyStructDecoders.sort(
-            /** @type {function(any,any):number} */ (dec1, dec2) => {
+            (dec1: any, dec2: any): number => {
                 if (dec1.curr.id.client === dec2.curr.id.client) {
                     const clockDiff = dec1.curr.id.clock - dec2.curr.id.clock
                     if (clockDiff === 0) {
@@ -357,10 +366,10 @@ export const mergeUpdatesV2 = (updates, YDecoder = UpdateDecoderV2, YEncoder = U
         const currDecoder = lazyStructDecoders[0]
         // write from currDecoder until the next operation is from another client or if filler-struct
         // then we need to reorder the decoders and find the next operation to write
-        const firstClient = /** @type {Item | GC} */ (currDecoder.curr).id.client
+        const firstClient = (currDecoder.curr as Item | GC).id.client
 
         if (currWrite !== null) {
-            let curr = /** @type {Item | GC | null} */ (currDecoder.curr)
+            let curr = (currDecoder.curr) as Item | GC | null
             let iterated = false
 
             // iterate until we find something that we haven't written already
@@ -393,7 +402,7 @@ export const mergeUpdatesV2 = (updates, YDecoder = UpdateDecoderV2, YEncoder = U
                         /**
                          * @type {Skip}
                          */
-                        const struct = new Skip(createID(firstClient, currWrite.struct.id.clock + currWrite.struct.length), diff)
+                        const struct: Skip = new Skip(createID(firstClient, currWrite.struct.id.clock + currWrite.struct.length), diff)
                         currWrite = { struct, offset: 0 }
                     }
                 } else { // if (currWrite.struct.id.clock + currWrite.struct.length >= curr.id.clock) {
@@ -406,7 +415,7 @@ export const mergeUpdatesV2 = (updates, YDecoder = UpdateDecoderV2, YEncoder = U
                             curr = sliceStruct(curr, diff)
                         }
                     }
-                    if (!currWrite.struct.mergeWith(/** @type {any} */ (curr))) {
+                    if (!currWrite.struct.mergeWith(curr as any)) {
                         writeStructToLazyStructWriter(lazyStructEncoder, currWrite.struct, currWrite.offset)
                         currWrite = { struct: curr, offset: 0 }
                         currDecoder.next()
@@ -414,7 +423,7 @@ export const mergeUpdatesV2 = (updates, YDecoder = UpdateDecoderV2, YEncoder = U
                 }
             }
         } else {
-            currWrite = { struct: /** @type {Item | GC} */ (currDecoder.curr), offset: 0 }
+            currWrite = { struct: (currDecoder.curr as Item | GC), offset: 0 }
             currDecoder.next()
         }
         for (
@@ -444,7 +453,7 @@ export const mergeUpdatesV2 = (updates, YDecoder = UpdateDecoderV2, YEncoder = U
  * @param {typeof UpdateDecoderV1 | typeof UpdateDecoderV2} [YDecoder]
  * @param {typeof UpdateEncoderV1 | typeof UpdateEncoderV2} [YEncoder]
  */
-export const diffUpdateV2 = (update, sv, YDecoder = UpdateDecoderV2, YEncoder = UpdateEncoderV2) => {
+export const diffUpdateV2 = (update: Uint8Array, sv: Uint8Array, YDecoder: typeof UpdateDecoderV1 | typeof UpdateDecoderV2 = UpdateDecoderV2, YEncoder: typeof UpdateEncoderV1 | typeof UpdateEncoderV2 = UpdateEncoderV2) => {
     const state = decodeStateVector(sv)
     const encoder = new YEncoder()
     const lazyStructWriter = new LazyStructWriter(encoder)
@@ -484,12 +493,12 @@ export const diffUpdateV2 = (update, sv, YDecoder = UpdateDecoderV2, YEncoder = 
  * @param {Uint8Array} update
  * @param {Uint8Array} sv
  */
-export const diffUpdate = (update, sv) => diffUpdateV2(update, sv, UpdateDecoderV1, UpdateEncoderV1)
+export const diffUpdate = (update: Uint8Array, sv: Uint8Array) => diffUpdateV2(update, sv, UpdateDecoderV1, UpdateEncoderV1)
 
 /**
  * @param {LazyStructWriter} lazyWriter
  */
-const flushLazyStructWriter = lazyWriter => {
+const flushLazyStructWriter = (lazyWriter: LazyStructWriter) => {
     if (lazyWriter.written > 0) {
         lazyWriter.clientStructs.push({ written: lazyWriter.written, restEncoder: encoding.toUint8Array(lazyWriter.encoder.restEncoder) })
         lazyWriter.encoder.restEncoder = encoding.createEncoder()
@@ -502,7 +511,7 @@ const flushLazyStructWriter = lazyWriter => {
  * @param {Item | GC} struct
  * @param {number} offset
  */
-const writeStructToLazyStructWriter = (lazyWriter, struct, offset) => {
+const writeStructToLazyStructWriter = (lazyWriter: LazyStructWriter, struct: Item | GC, offset: number) => {
     // flush curr if we start another client
     if (lazyWriter.written > 0 && lazyWriter.currClient !== struct.id.client) {
         flushLazyStructWriter(lazyWriter)
@@ -524,7 +533,7 @@ const writeStructToLazyStructWriter = (lazyWriter, struct, offset) => {
  *
  * @param {LazyStructWriter} lazyWriter
  */
-const finishLazyStructWriting = (lazyWriter) => {
+const finishLazyStructWriting = (lazyWriter: LazyStructWriter) => {
     flushLazyStructWriter(lazyWriter)
 
     // this is a fresh encoder because we called flushCurr
@@ -555,7 +564,7 @@ const finishLazyStructWriting = (lazyWriter) => {
  * @param {typeof UpdateDecoderV2 | typeof UpdateDecoderV1} YDecoder
  * @param {typeof UpdateEncoderV2 | typeof UpdateEncoderV1 } YEncoder
  */
-export const convertUpdateFormat = (update, YDecoder, YEncoder) => {
+export const convertUpdateFormat = (update: Uint8Array, YDecoder: typeof UpdateDecoderV2 | typeof UpdateDecoderV1, YEncoder: typeof UpdateEncoderV2 | typeof UpdateEncoderV1) => {
     const updateDecoder = new YDecoder(decoding.createDecoder(update))
     const lazyDecoder = new LazyStructReader(updateDecoder, false)
     const updateEncoder = new YEncoder()
@@ -573,9 +582,9 @@ export const convertUpdateFormat = (update, YDecoder, YEncoder) => {
 /**
  * @param {Uint8Array} update
  */
-export const convertUpdateFormatV1ToV2 = update => convertUpdateFormat(update, UpdateDecoderV1, UpdateEncoderV2)
+export const convertUpdateFormatV1ToV2 = (update: Uint8Array) => convertUpdateFormat(update, UpdateDecoderV1, UpdateEncoderV2)
 
 /**
  * @param {Uint8Array} update
  */
-export const convertUpdateFormatV2ToV1 = update => convertUpdateFormat(update, UpdateDecoderV2, UpdateEncoderV1)
+export const convertUpdateFormatV2ToV1 = (update: Uint8Array) => convertUpdateFormat(update, UpdateDecoderV2, UpdateEncoderV1)

@@ -55,7 +55,7 @@ import * as array from 'lib0/array'
  *
  * @function
  */
-const writeStructs = (encoder, structs, client, clock) => {
+const writeStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, structs: Array<GC | Item>, client: number, clock: number) => {
     // write first id
     clock = math.max(clock, structs[0].id.clock) // make sure the first id exists
     const startNewStructs = findIndexSS(structs, clock)
@@ -79,7 +79,7 @@ const writeStructs = (encoder, structs, client, clock) => {
  * @private
  * @function
  */
-export const writeClientsStructs = (encoder, store, _sm) => {
+export const writeClientsStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, store: StructStore, _sm: Map<number, number>) => {
     // we filter all valid _sm entries into sm
     const sm = new Map()
     _sm.forEach((clock, client) => {
@@ -111,18 +111,18 @@ export const writeClientsStructs = (encoder, store, _sm) => {
  * @private
  * @function
  */
-export const readClientsStructRefs = (decoder, doc) => {
+export const readClientsStructRefs = (decoder: UpdateDecoderV1 | UpdateDecoderV2, doc: Doc): Map<number, { i: number; refs: Array<Item | GC> }> => {
     /**
      * @type {Map<number, { i: number, refs: Array<Item | GC> }>}
      */
-    const clientRefs = map.create()
+    const clientRefs: Map<number, { i: number; refs: Array<Item | GC> }> = map.create()
     const numOfStateUpdates = decoding.readVarUint(decoder.restDecoder)
     for (let i = 0; i < numOfStateUpdates; i++) {
         const numberOfStructs = decoding.readVarUint(decoder.restDecoder)
         /**
          * @type {Array<GC|Item>}
          */
-        const refs = new Array(numberOfStructs)
+        const refs: Array<GC | Item> = new Array(numberOfStructs)
         const client = decoder.readClient()
         let clock = decoding.readVarUint(decoder.restDecoder)
         // const start = performance.now()
@@ -226,11 +226,11 @@ export const readClientsStructRefs = (decoder, doc) => {
  * @private
  * @function
  */
-const integrateStructs = (transaction, store, clientsStructRefs) => {
+const integrateStructs = (transaction: Transaction, store: StructStore, clientsStructRefs: Map<number, { i: number; refs: (GC | Item)[] }>): null | { update: Uint8Array; missing: Map<number, number> } => {
     /**
      * @type {Array<Item | GC>}
      */
-    const stack = []
+    const stack: Array<Item | GC> = []
     // sort them so that we take the higher id first, in case of conflicts the lower id will probably not conflict with the id from the higher user.
     let clientsStructRefsIds = array.from(clientsStructRefs.keys()).sort((a, b) => a - b)
     if (clientsStructRefsIds.length === 0) {
@@ -240,11 +240,11 @@ const integrateStructs = (transaction, store, clientsStructRefs) => {
         if (clientsStructRefsIds.length === 0) {
             return null
         }
-        let nextStructsTarget = /** @type {{i:number,refs:Array<GC|Item>}} */ (clientsStructRefs.get(clientsStructRefsIds[clientsStructRefsIds.length - 1]))
+        let nextStructsTarget = (clientsStructRefs.get(clientsStructRefsIds[clientsStructRefsIds.length - 1]) as { i: number, refs: Array<GC|Item> })
         while (nextStructsTarget.refs.length === nextStructsTarget.i) {
             clientsStructRefsIds.pop()
             if (clientsStructRefsIds.length > 0) {
-                nextStructsTarget = /** @type {{i:number,refs:Array<GC|Item>}} */ (clientsStructRefs.get(clientsStructRefsIds[clientsStructRefsIds.length - 1]))
+                nextStructsTarget = (clientsStructRefs.get(clientsStructRefsIds[clientsStructRefsIds.length - 1])) as { i: number, refs: Array<GC|Item> }
             } else {
                 return null
             }
@@ -259,13 +259,13 @@ const integrateStructs = (transaction, store, clientsStructRefs) => {
     /**
      * @type {StructStore}
      */
-    const restStructs = new StructStore()
+    const restStructs: StructStore = new StructStore()
     const missingSV = new Map()
     /**
      * @param {number} client
      * @param {number} clock
      */
-    const updateMissingSv = (client, clock) => {
+    const updateMissingSv = (client: number, clock: number) => {
         const mclock = missingSV.get(client)
         if (mclock == null || mclock > clock) {
             missingSV.set(client, clock)
@@ -274,7 +274,7 @@ const integrateStructs = (transaction, store, clientsStructRefs) => {
     /**
      * @type {GC|Item}
      */
-    let stackHead = /** @type {any} */ (curStructsTarget).refs[/** @type {any} */ (curStructsTarget).i++]
+    let stackHead: GC | Item = (curStructsTarget as any).refs[(curStructsTarget as any).i++]
     // caching the state because it is used very often
     const state = new Map()
 
@@ -318,7 +318,7 @@ const integrateStructs = (transaction, store, clientsStructRefs) => {
                     /**
                      * @type {{ refs: Array<GC|Item>, i: number }}
                      */
-                    const structRefs = clientsStructRefs.get(/** @type {number} */ (missing)) || { refs: [], i: 0 }
+                    const structRefs: { refs: Array<GC | Item>; i: number } = clientsStructRefs.get(/** @type {number} */ (missing)) || { refs: [], i: 0 }
                     if (structRefs.refs.length === structRefs.i) {
                         // This update message causally depends on another update message that doesn't exist yet
                         updateMissingSv(/** @type {number} */ (missing), getState(store, missing))
@@ -336,16 +336,16 @@ const integrateStructs = (transaction, store, clientsStructRefs) => {
         }
         // iterate to next stackHead
         if (stack.length > 0) {
-            stackHead = /** @type {GC|Item} */ (stack.pop())
+            stackHead =  (stack.pop()) as GC|Item
         } else if (curStructsTarget !== null && curStructsTarget.i < curStructsTarget.refs.length) {
-            stackHead = /** @type {GC|Item} */ (curStructsTarget.refs[curStructsTarget.i++])
+            stackHead = (curStructsTarget.refs[curStructsTarget.i++]) as GC|Item
         } else {
             curStructsTarget = getNextStructTarget()
             if (curStructsTarget === null) {
                 // we are done!
                 break
             } else {
-                stackHead = /** @type {GC|Item} */ (curStructsTarget.refs[curStructsTarget.i++])
+                stackHead = (curStructsTarget.refs[curStructsTarget.i++]) as GC|Item
             }
         }
     }
@@ -367,7 +367,7 @@ const integrateStructs = (transaction, store, clientsStructRefs) => {
  * @private
  * @function
  */
-export const writeStructsFromTransaction = (encoder, transaction) => writeClientsStructs(encoder, transaction.doc.store, transaction.beforeState)
+export const writeStructsFromTransaction = (encoder: UpdateEncoderV1 | UpdateEncoderV2, transaction: Transaction) => writeClientsStructs(encoder, transaction.doc.store, transaction.beforeState)
 
 /**
  * Read and apply a document update.
@@ -381,7 +381,7 @@ export const writeStructsFromTransaction = (encoder, transaction) => writeClient
  *
  * @function
  */
-export const readUpdateV2 = (decoder, ydoc, transactionOrigin, structDecoder = new UpdateDecoderV2(decoder)) =>
+export const readUpdateV2 = (decoder: decoding.Decoder, ydoc: Doc, transactionOrigin: any, structDecoder: UpdateDecoderV1 | UpdateDecoderV2 = new UpdateDecoderV2(decoder)) =>
     transact(ydoc, transaction => {
         // force that transaction.local is set to non-local
         transaction.local = false
@@ -444,7 +444,7 @@ export const readUpdateV2 = (decoder, ydoc, transactionOrigin, structDecoder = n
         // console.log('time to resume delete readers: ', performance.now() - start) // @todo remove
         // start = performance.now()
         if (retry) {
-            const update = /** @type {{update: Uint8Array}} */ (store.pendingStructs).update
+            const update = (store.pendingStructs as {update: Uint8Array}).update
             store.pendingStructs = null
             applyUpdateV2(transaction.doc, update)
         }
@@ -461,7 +461,7 @@ export const readUpdateV2 = (decoder, ydoc, transactionOrigin, structDecoder = n
  *
  * @function
  */
-export const readUpdate = (decoder, ydoc, transactionOrigin) => readUpdateV2(decoder, ydoc, transactionOrigin, new UpdateDecoderV1(decoder))
+export const readUpdate = (decoder: decoding.Decoder, ydoc: Doc, transactionOrigin: any) => readUpdateV2(decoder, ydoc, transactionOrigin, new UpdateDecoderV1(decoder))
 
 /**
  * Apply a document update created by, for example, `y.on('update', update => ..)` or `update = encodeStateAsUpdate()`.
@@ -475,7 +475,7 @@ export const readUpdate = (decoder, ydoc, transactionOrigin) => readUpdateV2(dec
  *
  * @function
  */
-export const applyUpdateV2 = (ydoc, update, transactionOrigin, YDecoder = UpdateDecoderV2) => {
+export const applyUpdateV2 = (ydoc: Doc, update: Uint8Array, transactionOrigin?: any, YDecoder: typeof UpdateDecoderV1 | typeof UpdateDecoderV2 = UpdateDecoderV2) => {
     const decoder = decoding.createDecoder(update)
     readUpdateV2(decoder, ydoc, transactionOrigin, new YDecoder(decoder))
 }
@@ -491,7 +491,7 @@ export const applyUpdateV2 = (ydoc, update, transactionOrigin, YDecoder = Update
  *
  * @function
  */
-export const applyUpdate = (ydoc, update, transactionOrigin) => applyUpdateV2(ydoc, update, transactionOrigin, UpdateDecoderV1)
+export const applyUpdate = (ydoc: Doc, update: Uint8Array, transactionOrigin: any) => applyUpdateV2(ydoc, update, transactionOrigin, UpdateDecoderV1)
 
 /**
  * Write all the document as a single update message. If you specify the state of the remote client (`targetStateVector`) it will
@@ -503,7 +503,7 @@ export const applyUpdate = (ydoc, update, transactionOrigin) => applyUpdateV2(yd
  *
  * @function
  */
-export const writeStateAsUpdate = (encoder, doc, targetStateVector = new Map()) => {
+export const writeStateAsUpdate = (encoder: UpdateEncoderV1 | UpdateEncoderV2, doc: Doc, targetStateVector: Map<number, number> = new Map()) => {
     writeClientsStructs(encoder, doc.store, targetStateVector)
     writeDeleteSet(encoder, createDeleteSetFromStructStore(doc.store))
 }
@@ -521,7 +521,7 @@ export const writeStateAsUpdate = (encoder, doc, targetStateVector = new Map()) 
  *
  * @function
  */
-export const encodeStateAsUpdateV2 = (doc, encodedTargetStateVector = new Uint8Array([0]), encoder = new UpdateEncoderV2()) => {
+export const encodeStateAsUpdateV2 = (doc: Doc, encodedTargetStateVector: Uint8Array = new Uint8Array([0]), encoder: UpdateEncoderV1 | UpdateEncoderV2 = new UpdateEncoderV2()): Uint8Array => {
     const targetStateVector = decodeStateVector(encodedTargetStateVector)
     writeStateAsUpdate(encoder, doc, targetStateVector)
     const updates = [encoder.toUint8Array()]
@@ -554,7 +554,7 @@ export const encodeStateAsUpdateV2 = (doc, encodedTargetStateVector = new Uint8A
  *
  * @function
  */
-export const encodeStateAsUpdate = (doc, encodedTargetStateVector) => encodeStateAsUpdateV2(doc, encodedTargetStateVector, new UpdateEncoderV1())
+export const encodeStateAsUpdate = (doc: Doc, encodedTargetStateVector: Uint8Array): Uint8Array => encodeStateAsUpdateV2(doc, encodedTargetStateVector, new UpdateEncoderV1())
 
 /**
  * Read state vector from Decoder and return as Map
@@ -564,7 +564,7 @@ export const encodeStateAsUpdate = (doc, encodedTargetStateVector) => encodeStat
  *
  * @function
  */
-export const readStateVector = decoder => {
+export const readStateVector = (decoder: DSDecoderV1 | DSDecoderV2): Map<number, number> => {
     const ss = new Map()
     const ssLength = decoding.readVarUint(decoder.restDecoder)
     for (let i = 0; i < ssLength; i++) {
@@ -593,14 +593,14 @@ export const readStateVector = decoder => {
  *
  * @function
  */
-export const decodeStateVector = decodedState => readStateVector(new DSDecoderV1(decoding.createDecoder(decodedState)))
+export const decodeStateVector = (decodedState: Uint8Array): Map<number, number> => readStateVector(new DSDecoderV1(decoding.createDecoder(decodedState)))
 
 /**
  * @param {DSEncoderV1 | DSEncoderV2} encoder
  * @param {Map<number,number>} sv
  * @function
  */
-export const writeStateVector = (encoder, sv) => {
+export const writeStateVector = (encoder: DSEncoderV1 | DSEncoderV2, sv: Map<number, number>) => {
     encoding.writeVarUint(encoder.restEncoder, sv.size)
     array.from(sv.entries()).sort((a, b) => b[0] - a[0]).forEach(([client, clock]) => {
         encoding.writeVarUint(encoder.restEncoder, client) // @todo use a special client decoder that is based on mapping
@@ -615,7 +615,7 @@ export const writeStateVector = (encoder, sv) => {
  *
  * @function
  */
-export const writeDocumentStateVector = (encoder, doc) => writeStateVector(encoder, getStateVector(doc.store))
+export const writeDocumentStateVector = (encoder: DSEncoderV1 | DSEncoderV2, doc: Doc) => writeStateVector(encoder, getStateVector(doc.store))
 
 /**
  * Encode State as Uint8Array.
@@ -626,7 +626,7 @@ export const writeDocumentStateVector = (encoder, doc) => writeStateVector(encod
  *
  * @function
  */
-export const encodeStateVectorV2 = (doc, encoder = new DSEncoderV2()) => {
+export const encodeStateVectorV2 = (doc: Doc | Map<number, number>, encoder: DSEncoderV1 | DSEncoderV2 = new DSEncoderV2()): Uint8Array => {
     if (doc instanceof Map) {
         writeStateVector(encoder, doc)
     } else {
@@ -643,4 +643,4 @@ export const encodeStateVectorV2 = (doc, encoder = new DSEncoderV2()) => {
  *
  * @function
  */
-export const encodeStateVector = doc => encodeStateVectorV2(doc, new DSEncoderV1())
+export const encodeStateVector = (doc: Doc | Map<number, number>): Uint8Array => encodeStateVectorV2(doc, new DSEncoderV1())

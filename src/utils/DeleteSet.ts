@@ -15,11 +15,13 @@ import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'
 
 export class DeleteItem {
+    clock: number
+    len: number
     /**
      * @param {number} clock
      * @param {number} len
      */
-    constructor (clock, len) {
+    constructor (clock: number, len: number) {
         /**
          * @type {number}
          */
@@ -39,6 +41,8 @@ export class DeleteItem {
  * - We read a DeleteSet as part of a sync/update message. In this case the DeleteSet is already sorted and merged.
  */
 export class DeleteSet {
+    clients: Map<number, DeleteItem[]>
+
     constructor () {
         /**
          * @type {Map<number,Array<DeleteItem>>}
@@ -56,9 +60,9 @@ export class DeleteSet {
  *
  * @function
  */
-export const iterateDeletedStructs = (transaction, ds, f) =>
+export const iterateDeletedStructs = (transaction: Transaction, ds: DeleteSet, f: (arg0: GC | Item) => void) =>
     ds.clients.forEach((deletes, clientid) => {
-        const structs = /** @type {Array<GC|Item>} */ (transaction.doc.store.clients.get(clientid))
+        const structs = (transaction.doc.store.clients.get(clientid)) as Array<GC|Item>
         for (let i = 0; i < deletes.length; i++) {
             const del = deletes[i]
             iterateStructs(transaction, structs, del.clock, del.len, f)
@@ -73,7 +77,7 @@ export const iterateDeletedStructs = (transaction, ds, f) =>
  * @private
  * @function
  */
-export const findIndexDS = (dis, clock) => {
+export const findIndexDS = (dis: Array<DeleteItem>, clock: number): number | null => {
     let left = 0
     let right = dis.length - 1
     while (left <= right) {
@@ -100,7 +104,7 @@ export const findIndexDS = (dis, clock) => {
  * @private
  * @function
  */
-export const isDeleted = (ds, id) => {
+export const isDeleted = (ds: DeleteSet, id: ID): boolean => {
     const dis = ds.clients.get(id.client)
     return dis !== undefined && findIndexDS(dis, id.clock) !== null
 }
@@ -111,7 +115,7 @@ export const isDeleted = (ds, id) => {
  * @private
  * @function
  */
-export const sortAndMergeDeleteSet = ds => {
+export const sortAndMergeDeleteSet = (ds: DeleteSet) => {
     ds.clients.forEach(dels => {
         dels.sort((a, b) => a.clock - b.clock)
         // merge items without filtering or splicing the array
@@ -139,7 +143,7 @@ export const sortAndMergeDeleteSet = ds => {
  * @param {Array<DeleteSet>} dss
  * @return {DeleteSet} A fresh DeleteSet
  */
-export const mergeDeleteSets = dss => {
+export const mergeDeleteSets = (dss: Array<DeleteSet>): DeleteSet => {
     const merged = new DeleteSet()
     for (let dssI = 0; dssI < dss.length; dssI++) {
         dss[dssI].clients.forEach((delsLeft, client) => {
@@ -149,7 +153,7 @@ export const mergeDeleteSets = dss => {
                 /**
                  * @type {Array<DeleteItem>}
                  */
-                const dels = delsLeft.slice()
+                const dels: Array<DeleteItem> = delsLeft.slice()
                 for (let i = dssI + 1; i < dss.length; i++) {
                     array.appendTo(dels, dss[i].clients.get(client) || [])
                 }
@@ -170,8 +174,10 @@ export const mergeDeleteSets = dss => {
  * @private
  * @function
  */
-export const addToDeleteSet = (ds, client, clock, length) => {
-    map.setIfUndefined(ds.clients, client, () => []).push(new DeleteItem(clock, length))
+export const addToDeleteSet = (ds: DeleteSet, client: number, clock: number, length: number) => {
+    
+    map.setIfUndefined(ds.clients, client, () => [] as DeleteItem[])
+        .push(new DeleteItem(clock, length))
 }
 
 export const createDeleteSet = () => new DeleteSet()
@@ -183,13 +189,13 @@ export const createDeleteSet = () => new DeleteSet()
  * @private
  * @function
  */
-export const createDeleteSetFromStructStore = ss => {
+export const createDeleteSetFromStructStore = (ss: StructStore): DeleteSet => {
     const ds = createDeleteSet()
     ss.clients.forEach((structs, client) => {
         /**
          * @type {Array<DeleteItem>}
          */
-        const dsitems = []
+        const dsitems: Array<DeleteItem> = []
         for (let i = 0; i < structs.length; i++) {
             const struct = structs[i]
             if (struct.deleted) {
@@ -217,7 +223,7 @@ export const createDeleteSetFromStructStore = ss => {
  * @private
  * @function
  */
-export const writeDeleteSet = (encoder, ds) => {
+export const writeDeleteSet = (encoder: DSEncoderV1 | DSEncoderV2, ds: DeleteSet) => {
     encoding.writeVarUint(encoder.restEncoder, ds.clients.size)
 
     // Ensure that the delete set is written in a deterministic order
@@ -243,7 +249,7 @@ export const writeDeleteSet = (encoder, ds) => {
  * @private
  * @function
  */
-export const readDeleteSet = decoder => {
+export const readDeleteSet = (decoder: DSDecoderV1 | DSDecoderV2): DeleteSet => {
     const ds = new DeleteSet()
     const numClients = decoding.readVarUint(decoder.restDecoder)
     for (let i = 0; i < numClients; i++) {
@@ -251,7 +257,7 @@ export const readDeleteSet = decoder => {
         const client = decoding.readVarUint(decoder.restDecoder)
         const numberOfDeletes = decoding.readVarUint(decoder.restDecoder)
         if (numberOfDeletes > 0) {
-            const dsField = map.setIfUndefined(ds.clients, client, () => [])
+            const dsField = map.setIfUndefined(ds.clients, client, () => [] as DeleteItem[])
             for (let i = 0; i < numberOfDeletes; i++) {
                 dsField.push(new DeleteItem(decoder.readDsClock(), decoder.readDsLen()))
             }
@@ -273,7 +279,7 @@ export const readDeleteSet = decoder => {
  * @private
  * @function
  */
-export const readAndApplyDeleteSet = (decoder, transaction, store) => {
+export const readAndApplyDeleteSet = (decoder: DSDecoderV1 | DSDecoderV2, transaction: Transaction, store: StructStore): Uint8Array | null => {
     const unappliedDS = new DeleteSet()
     const numClients = decoding.readVarUint(decoder.restDecoder)
     for (let i = 0; i < numClients; i++) {
@@ -295,7 +301,7 @@ export const readAndApplyDeleteSet = (decoder, transaction, store) => {
                  * @type {Item}
                  */
                 // @ts-ignore
-                let struct = structs[index]
+                let struct: Item = structs[index]
                 // split the first item if necessary
                 if (!struct.deleted && struct.id.clock < clock) {
                     structs.splice(index + 1, 0, splitItem(transaction, struct, clock - struct.id.clock))

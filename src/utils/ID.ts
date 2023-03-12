@@ -6,20 +6,18 @@ import * as encoding from 'lib0/encoding'
 import * as error from 'lib0/error'
 
 export class ID {
+    /** Client id */
+    client: number
+
+    /** unique per client id, continuous number */
+    clock: number
+
     /**
      * @param {number} client client id
      * @param {number} clock unique per client id, continuous number
      */
-    constructor (client, clock) {
-        /**
-         * Client id
-         * @type {number}
-         */
+    constructor(client: number, clock: number) {
         this.client = client
-        /**
-         * unique per client id, continuous number
-         * @type {number}
-         */
         this.clock = clock
     }
 }
@@ -31,7 +29,9 @@ export class ID {
  *
  * @function
  */
-export const compareIDs = (a, b) => a === b || (a !== null && b !== null && a.client === b.client && a.clock === b.clock)
+export const compareIDs = (a: ID | null, b: ID | null): boolean => {
+    return a === b || (a !== null && b !== null && a.client === b.client && a.clock === b.clock)
+}
 
 /**
  * @param {number} client
@@ -40,7 +40,9 @@ export const compareIDs = (a, b) => a === b || (a !== null && b !== null && a.cl
  * @private
  * @function
  */
-export const createID = (client, clock) => new ID(client, clock)
+export const createID = (client: number, clock: number) => {
+    return new ID(client, clock)
+}
 
 /**
  * @param {encoding.Encoder} encoder
@@ -49,7 +51,7 @@ export const createID = (client, clock) => new ID(client, clock)
  * @private
  * @function
  */
-export const writeID = (encoder, id) => {
+export const writeID = (encoder: encoding.Encoder, id: ID) => {
     encoding.writeVarUint(encoder, id.client)
     encoding.writeVarUint(encoder, id.clock)
 }
@@ -65,7 +67,7 @@ export const writeID = (encoder, id) => {
  * @private
  * @function
  */
-export const readID = decoder =>
+export const readID = (decoder: decoding.Decoder): ID =>
     createID(decoding.readVarUint(decoder), decoding.readVarUint(decoder))
 
 /**
@@ -79,7 +81,7 @@ export const readID = decoder =>
  * @private
  * @function
  */
-export const findRootTypeKey = type => {
+export const findRootTypeKey = (type: AbstractType<any>): string => {
     // @ts-ignore _y must be defined, otherwise unexpected case
     for (const [key, value] of type.doc.share.entries()) {
         if (value === type) {

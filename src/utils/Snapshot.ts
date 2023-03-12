@@ -15,7 +15,8 @@ import {
     findIndexSS,
     UpdateEncoderV2,
     applyUpdateV2,
-    DSEncoderV1, DSEncoderV2, DSDecoderV1, DSDecoderV2, Transaction, Doc, DeleteSet, Item // eslint-disable-line
+    DSEncoderV1, DSEncoderV2, DSDecoderV1, DSDecoderV2, Transaction, Doc, DeleteSet, Item, // eslint-disable-line
+    StructStore
 } from 'yjs/dist/src/internals'
 
 import * as map from 'lib0/map'
@@ -24,19 +25,17 @@ import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
 
 export class Snapshot {
+    ds: DeleteSet
+    
+    /** State Map  */
+    sv: Map<number, number>
+
     /**
      * @param {DeleteSet} ds
      * @param {Map<number,number>} sv state map
      */
-    constructor (ds, sv) {
-        /**
-         * @type {DeleteSet}
-         */
+    constructor(ds: DeleteSet, sv: Map<number, number>) {
         this.ds = ds
-        /**
-         * State Map
-         * @type {Map<number,number>}
-         */
         this.sv = sv
     }
 }
@@ -46,7 +45,7 @@ export class Snapshot {
  * @param {Snapshot} snap2
  * @return {boolean}
  */
-export const equalSnapshots = (snap1, snap2) => {
+export const equalSnapshots = (snap1: Snapshot, snap2: Snapshot): boolean => {
     const ds1 = snap1.ds.clients
     const ds2 = snap2.ds.clients
     const sv1 = snap1.sv
@@ -80,7 +79,7 @@ export const equalSnapshots = (snap1, snap2) => {
  * @param {DSEncoderV1 | DSEncoderV2} [encoder]
  * @return {Uint8Array}
  */
-export const encodeSnapshotV2 = (snapshot, encoder = new DSEncoderV2()) => {
+export const encodeSnapshotV2 = (snapshot: Snapshot, encoder: DSEncoderV1 | DSEncoderV2 = new DSEncoderV2()): Uint8Array => {
     writeDeleteSet(encoder, snapshot.ds)
     writeStateVector(encoder, snapshot.sv)
     return encoder.toUint8Array()
@@ -90,14 +89,14 @@ export const encodeSnapshotV2 = (snapshot, encoder = new DSEncoderV2()) => {
  * @param {Snapshot} snapshot
  * @return {Uint8Array}
  */
-export const encodeSnapshot = snapshot => encodeSnapshotV2(snapshot, new DSEncoderV1())
+export const encodeSnapshot = (snapshot: Snapshot): Uint8Array => encodeSnapshotV2(snapshot, new DSEncoderV1())
 
 /**
  * @param {Uint8Array} buf
  * @param {DSDecoderV1 | DSDecoderV2} [decoder]
  * @return {Snapshot}
  */
-export const decodeSnapshotV2 = (buf, decoder = new DSDecoderV2(decoding.createDecoder(buf))) => {
+export const decodeSnapshotV2 = (buf: Uint8Array, decoder: DSDecoderV1 | DSDecoderV2 = new DSDecoderV2(decoding.createDecoder(buf))): Snapshot => {
     return new Snapshot(readDeleteSet(decoder), readStateVector(decoder))
 }
 
@@ -105,14 +104,14 @@ export const decodeSnapshotV2 = (buf, decoder = new DSDecoderV2(decoding.createD
  * @param {Uint8Array} buf
  * @return {Snapshot}
  */
-export const decodeSnapshot = buf => decodeSnapshotV2(buf, new DSDecoderV1(decoding.createDecoder(buf)))
+export const decodeSnapshot = (buf: Uint8Array): Snapshot => decodeSnapshotV2(buf, new DSDecoderV1(decoding.createDecoder(buf)))
 
 /**
  * @param {DeleteSet} ds
  * @param {Map<number,number>} sm
  * @return {Snapshot}
  */
-export const createSnapshot = (ds, sm) => new Snapshot(ds, sm)
+export const createSnapshot = (ds: DeleteSet, sm: Map<number, number>): Snapshot => new Snapshot(ds, sm)
 
 export const emptySnapshot = createSnapshot(createDeleteSet(), new Map())
 
@@ -120,7 +119,7 @@ export const emptySnapshot = createSnapshot(createDeleteSet(), new Map())
  * @param {Doc} doc
  * @return {Snapshot}
  */
-export const snapshot = doc => createSnapshot(createDeleteSetFromStructStore(doc.store), getStateVector(doc.store))
+export const snapshot = (doc: { store: StructStore }) => createSnapshot(createDeleteSetFromStructStore(doc.store), getStateVector(doc.store))
 
 /**
  * @param {Item} item
@@ -129,7 +128,7 @@ export const snapshot = doc => createSnapshot(createDeleteSetFromStructStore(doc
  * @protected
  * @function
  */
-export const isVisible = (item, snapshot) => snapshot === undefined
+export const isVisible = (item: Item, snapshot: Snapshot | undefined) => snapshot === undefined
     ? !item.deleted
     : snapshot.sv.has(item.id.client) && (snapshot.sv.get(item.id.client) || 0) > item.id.clock && !isDeleted(snapshot.ds, item.id)
 
@@ -137,7 +136,7 @@ export const isVisible = (item, snapshot) => snapshot === undefined
  * @param {Transaction} transaction
  * @param {Snapshot} snapshot
  */
-export const splitSnapshotAffectedStructs = (transaction, snapshot) => {
+export const splitSnapshotAffectedStructs = (transaction: Transaction, snapshot: Snapshot) => {
     const meta = map.setIfUndefined(transaction.meta, splitSnapshotAffectedStructs, set.create)
     const store = transaction.doc.store
     // check if we already split for this snapshot
@@ -158,7 +157,7 @@ export const splitSnapshotAffectedStructs = (transaction, snapshot) => {
  * @param {Doc} [newDoc] Optionally, you may define the Yjs document that receives the data from originDoc
  * @return {Doc}
  */
-export const createDocFromSnapshot = (originDoc, snapshot, newDoc = new Doc()) => {
+export const createDocFromSnapshot = (originDoc: Doc, snapshot: Snapshot, newDoc: Doc = new Doc()): Doc => {
     if (originDoc.gc) {
         // we should not try to restore a GC-ed document, because some of the restored items might have their content deleted
         throw new Error('originDoc must not be garbage collected')
