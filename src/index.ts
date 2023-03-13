@@ -93,12 +93,12 @@ export {
   UpdateEncoderV1
 } from './internals.js'
 
-const glo = /** @type {any} */ (typeof globalThis !== 'undefined'
+const glo = (typeof globalThis !== 'undefined'
   ? globalThis
   : typeof window !== 'undefined'
     ? window
     // @ts-ignore
-    : typeof global !== 'undefined' ? global : {})
+    : typeof global !== 'undefined' ? global : {}) as any
 
 const importIdentifier = '__ $YJS$ __'
 

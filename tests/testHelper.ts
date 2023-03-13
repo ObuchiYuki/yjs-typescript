@@ -10,8 +10,8 @@ import * as Y from '../src/index.js'
 export * from '../src/index.js'
 
 if (typeof window !== 'undefined') {
-  // @ts-ignore
-  window.Y = Y // eslint-disable-line
+    // @ts-ignore
+    window.Y = Y // eslint-disable-line
 }
 
 /**
@@ -19,127 +19,127 @@ if (typeof window !== 'undefined') {
  * @param {Uint8Array} m
  */
 const broadcastMessage = (y: TestYInstance, m: Uint8Array) => {
-  if (y.tc.onlineConns.has(y)) {
-    y.tc.onlineConns.forEach(remoteYInstance => {
-      if (remoteYInstance !== y) {
-        remoteYInstance._receive(m, y)
-      }
-    })
-  }
+    if (y.tc.onlineConns.has(y)) {
+        y.tc.onlineConns.forEach(remoteYInstance => {
+            if (remoteYInstance !== y) {
+                remoteYInstance._receive(m, y)
+            }
+        })
+    }
 }
 
 export let useV2 = false
 
 export const encV1 = {
-  encodeStateAsUpdate: Y.encodeStateAsUpdate,
-  mergeUpdates: Y.mergeUpdates,
-  applyUpdate: Y.applyUpdate,
-  logUpdate: Y.logUpdate,
-  updateEventName: 'update',
-  diffUpdate: Y.diffUpdate
+    encodeStateAsUpdate: Y.encodeStateAsUpdate,
+    mergeUpdates: Y.mergeUpdates,
+    applyUpdate: Y.applyUpdate,
+    logUpdate: Y.logUpdate,
+    updateEventName: 'update',
+    diffUpdate: Y.diffUpdate
 }
 
 export const encV2 = {
-  encodeStateAsUpdate: Y.encodeStateAsUpdateV2,
-  mergeUpdates: Y.mergeUpdatesV2,
-  applyUpdate: Y.applyUpdateV2,
-  logUpdate: Y.logUpdateV2,
-  updateEventName: 'updateV2',
-  diffUpdate: Y.diffUpdateV2
+    encodeStateAsUpdate: Y.encodeStateAsUpdateV2,
+    mergeUpdates: Y.mergeUpdatesV2,
+    applyUpdate: Y.applyUpdateV2,
+    logUpdate: Y.logUpdateV2,
+    updateEventName: 'updateV2',
+    diffUpdate: Y.diffUpdateV2
 }
 
 export let enc = encV1
 
 const useV1Encoding = () => {
-  useV2 = false
-  enc = encV1
+    useV2 = false
+    enc = encV1
 }
 
 const useV2Encoding = () => {
-  console.error('sync protocol doesnt support v2 protocol yet, fallback to v1 encoding') // @Todo
-  useV2 = false
-  enc = encV1
+    console.error('sync protocol doesnt support v2 protocol yet, fallback to v1 encoding') // @Todo
+    useV2 = false
+    enc = encV1
 }
 
 export class TestYInstance extends Y.Doc {
-  tc: TestConnector
-  userID: number
-  receiving: Map<TestYInstance, Uint8Array[]>
-  updates: Uint8Array[]
-  /**
-   * @param {TestConnector} testConnector
-   * @param {number} clientID
-   */
-  constructor (testConnector: TestConnector, clientID: number) {
-    super()
-    this.userID = clientID // overwriting clientID
+    tc: TestConnector
+    userID: number
+    receiving: Map<TestYInstance, Uint8Array[]>
+    updates: Uint8Array[]
     /**
-     * @type {TestConnector}
+     * @param {TestConnector} testConnector
+     * @param {number} clientID
      */
-    this.tc = testConnector
-    /**
-     * @type {Map<TestYInstance, Array<Uint8Array>>}
-     */
-    this.receiving = new Map()
-    testConnector.allConns.add(this)
-    /**
-     * The list of received updates.
-     * We are going to merge them later using Y.mergeUpdates and check if the resulting document is correct.
-     * @type {Array<Uint8Array>}
-     */
-    this.updates = []
-    // set up observe on local model
-    this.on(enc.updateEventName, /** @param {Uint8Array} update @param {any} origin */ (update: Uint8Array, origin: any) => {
-      if (origin !== testConnector) {
-        const encoder = encoding.createEncoder()
-        syncProtocol.writeUpdate(encoder, update)
-        broadcastMessage(this, encoding.toUint8Array(encoder))
-      }
-      this.updates.push(update)
-    })
-    this.connect()
-  }
-
-  /**
-   * Disconnect from TestConnector.
-   */
-  disconnect () {
-    this.receiving = new Map()
-    this.tc.onlineConns.delete(this)
-  }
-
-  /**
-   * Append yourself to the list of known Y instances in testconnector.
-   * Also initiate sync with all clients.
-   */
-  connect () {
-    if (!this.tc.onlineConns.has(this)) {
-      this.tc.onlineConns.add(this)
-      const encoder = encoding.createEncoder()
-      syncProtocol.writeSyncStep1(encoder, this)
-      // publish SyncStep1
-      broadcastMessage(this, encoding.toUint8Array(encoder))
-      this.tc.onlineConns.forEach(remoteYInstance => {
-        if (remoteYInstance !== this) {
-          // remote instance sends instance to this instance
-          const encoder = encoding.createEncoder()
-          syncProtocol.writeSyncStep1(encoder, remoteYInstance)
-          this._receive(encoding.toUint8Array(encoder), remoteYInstance)
-        }
-      })
+    constructor (testConnector: TestConnector, clientID: number) {
+        super()
+        this.userID = clientID // overwriting clientID
+        /**
+         * @type {TestConnector}
+         */
+        this.tc = testConnector
+        /**
+         * @type {Map<TestYInstance, Array<Uint8Array>>}
+         */
+        this.receiving = new Map()
+        testConnector.allConns.add(this)
+        /**
+         * The list of received updates.
+         * We are going to merge them later using Y.mergeUpdates and check if the resulting document is correct.
+         * @type {Array<Uint8Array>}
+         */
+        this.updates = []
+        // set up observe on local model
+        this.on(enc.updateEventName, /** @param {Uint8Array} update @param {any} origin */ (update: Uint8Array, origin: any) => {
+            if (origin !== testConnector) {
+                const encoder = encoding.createEncoder()
+                syncProtocol.writeUpdate(encoder, update)
+                broadcastMessage(this, encoding.toUint8Array(encoder))
+            }
+            this.updates.push(update)
+        })
+        this.connect()
     }
-  }
 
-  /**
-   * Receive a message from another client. This message is only appended to the list of receiving messages.
-   * TestConnector decides when this client actually reads this message.
-   *
-   * @param {Uint8Array} message
-   * @param {TestYInstance} remoteClient
-   */
-  _receive (message: Uint8Array, remoteClient: TestYInstance) {
-    map.setIfUndefined(this.receiving, remoteClient, () => [] as Uint8Array[]).push(message)
-  }
+    /**
+     * Disconnect from TestConnector.
+     */
+    disconnect () {
+        this.receiving = new Map()
+        this.tc.onlineConns.delete(this)
+    }
+
+    /**
+     * Append yourself to the list of known Y instances in testconnector.
+     * Also initiate sync with all clients.
+     */
+    connect () {
+        if (!this.tc.onlineConns.has(this)) {
+            this.tc.onlineConns.add(this)
+            const encoder = encoding.createEncoder()
+            syncProtocol.writeSyncStep1(encoder, this)
+            // publish SyncStep1
+            broadcastMessage(this, encoding.toUint8Array(encoder))
+            this.tc.onlineConns.forEach(remoteYInstance => {
+                if (remoteYInstance !== this) {
+                    // remote instance sends instance to this instance
+                    const encoder = encoding.createEncoder()
+                    syncProtocol.writeSyncStep1(encoder, remoteYInstance)
+                    this._receive(encoding.toUint8Array(encoder), remoteYInstance)
+                }
+            })
+        }
+    }
+
+    /**
+     * Receive a message from another client. This message is only appended to the list of receiving messages.
+     * TestConnector decides when this client actually reads this message.
+     *
+     * @param {Uint8Array} message
+     * @param {TestYInstance} remoteClient
+     */
+    _receive (message: Uint8Array, remoteClient: TestYInstance) {
+        map.setIfUndefined(this.receiving, remoteClient, () => [] as Uint8Array[]).push(message)
+    }
 }
 
 /**
@@ -149,121 +149,121 @@ export class TestYInstance extends Y.Doc {
  * I think it makes sense. Deal with it.
  */
 export class TestConnector {
-  allConns: Set<TestYInstance>
-  onlineConns: Set<TestYInstance>
-  prng: prng.PRNG
-  /**
-   * @param {prng.PRNG} gen
-   */
-  constructor (gen: prng.PRNG) {
+    allConns: Set<TestYInstance>
+    onlineConns: Set<TestYInstance>
+    prng: prng.PRNG
     /**
-     * @type {Set<TestYInstance>}
+     * @param {prng.PRNG} gen
      */
-    this.allConns = new Set()
+    constructor (gen: prng.PRNG) {
+        /**
+         * @type {Set<TestYInstance>}
+         */
+        this.allConns = new Set()
+        /**
+         * @type {Set<TestYInstance>}
+         */
+        this.onlineConns = new Set()
+        /**
+         * @type {prng.PRNG}
+         */
+        this.prng = gen
+    }
+
     /**
-     * @type {Set<TestYInstance>}
+     * Create a new Y instance and add it to the list of connections
+     * @param {number} clientID
      */
-    this.onlineConns = new Set()
+    createY (clientID: number) {
+        return new TestYInstance(this, clientID)
+    }
+
     /**
-     * @type {prng.PRNG}
+     * Choose random connection and flush a random message from a random sender.
+     *
+     * If this function was unable to flush a message, because there are no more messages to flush, it returns false. true otherwise.
+     * @return {boolean}
      */
-    this.prng = gen
-  }
-
-  /**
-   * Create a new Y instance and add it to the list of connections
-   * @param {number} clientID
-   */
-  createY (clientID: number) {
-    return new TestYInstance(this, clientID)
-  }
-
-  /**
-   * Choose random connection and flush a random message from a random sender.
-   *
-   * If this function was unable to flush a message, because there are no more messages to flush, it returns false. true otherwise.
-   * @return {boolean}
-   */
-  flushRandomMessage (): boolean {
-    const gen = this.prng
-    const conns = Array.from(this.onlineConns).filter(conn => conn.receiving.size > 0)
-    if (conns.length > 0) {
-      const receiver = prng.oneOf(gen, conns)
-      const [sender, messages] = prng.oneOf(gen, Array.from(receiver.receiving))
-      const m = messages.shift()
-      if (messages.length === 0) {
-        receiver.receiving.delete(sender)
-      }
-      if (m === undefined) {
-        return this.flushRandomMessage()
-      }
-      const encoder = encoding.createEncoder()
-      // console.log('receive (' + sender.userID + '->' + receiver.userID + '):\n', syncProtocol.stringifySyncMessage(decoding.createDecoder(m), receiver))
-      // do not publish data created when this function is executed (could be ss2 or update message)
-      syncProtocol.readSyncMessage(decoding.createDecoder(m), encoder, receiver, receiver.tc)
-      if (encoding.length(encoder) > 0) {
-        // send reply message
-        sender._receive(encoding.toUint8Array(encoder), receiver)
-      }
-      return true
+    flushRandomMessage (): boolean {
+        const gen = this.prng
+        const conns = Array.from(this.onlineConns).filter(conn => conn.receiving.size > 0)
+        if (conns.length > 0) {
+            const receiver = prng.oneOf(gen, conns)
+            const [sender, messages] = prng.oneOf(gen, Array.from(receiver.receiving))
+            const m = messages.shift()
+            if (messages.length === 0) {
+                receiver.receiving.delete(sender)
+            }
+            if (m === undefined) {
+                return this.flushRandomMessage()
+            }
+            const encoder = encoding.createEncoder()
+            // console.log('receive (' + sender.userID + '->' + receiver.userID + '):\n', syncProtocol.stringifySyncMessage(decoding.createDecoder(m), receiver))
+            // do not publish data created when this function is executed (could be ss2 or update message)
+            syncProtocol.readSyncMessage(decoding.createDecoder(m), encoder, receiver, receiver.tc)
+            if (encoding.length(encoder) > 0) {
+                // send reply message
+                sender._receive(encoding.toUint8Array(encoder), receiver)
+            }
+            return true
+        }
+        return false
     }
-    return false
-  }
 
-  /**
-   * @return {boolean} True iff this function actually flushed something
-   */
-  flushAllMessages (): boolean {
-    let didSomething = false
-    while (this.flushRandomMessage()) {
-      didSomething = true
-    }
-    return didSomething
-  }
-
-  reconnectAll () {
-    this.allConns.forEach(conn => conn.connect())
-  }
-
-  disconnectAll () {
-    this.allConns.forEach(conn => conn.disconnect())
-  }
-
-  syncAll () {
-    this.reconnectAll()
-    this.flushAllMessages()
-  }
-
-  /**
-   * @return {boolean} Whether it was possible to disconnect a randon connection.
-   */
-  disconnectRandom (): boolean {
-    if (this.onlineConns.size === 0) {
-      return false
-    }
-    prng.oneOf(this.prng, Array.from(this.onlineConns)).disconnect()
-    return true
-  }
-
-  /**
-   * @return {boolean} Whether it was possible to reconnect a random connection.
-   */
-  reconnectRandom (): boolean {
     /**
-     * @type {Array<TestYInstance>}
+     * @return {boolean} True iff this function actually flushed something
      */
-    const reconnectable: Array<TestYInstance> = []
-    this.allConns.forEach(conn => {
-      if (!this.onlineConns.has(conn)) {
-        reconnectable.push(conn)
-      }
-    })
-    if (reconnectable.length === 0) {
-      return false
+    flushAllMessages (): boolean {
+        let didSomething = false
+        while (this.flushRandomMessage()) {
+            didSomething = true
+        }
+        return didSomething
     }
-    prng.oneOf(this.prng, reconnectable).connect()
-    return true
-  }
+
+    reconnectAll () {
+        this.allConns.forEach(conn => conn.connect())
+    }
+
+    disconnectAll () {
+        this.allConns.forEach(conn => conn.disconnect())
+    }
+
+    syncAll () {
+        this.reconnectAll()
+        this.flushAllMessages()
+    }
+
+    /**
+     * @return {boolean} Whether it was possible to disconnect a randon connection.
+     */
+    disconnectRandom (): boolean {
+        if (this.onlineConns.size === 0) {
+            return false
+        }
+        prng.oneOf(this.prng, Array.from(this.onlineConns)).disconnect()
+        return true
+    }
+
+    /**
+     * @return {boolean} Whether it was possible to reconnect a random connection.
+     */
+    reconnectRandom (): boolean {
+        /**
+         * @type {Array<TestYInstance>}
+         */
+        const reconnectable: Array<TestYInstance> = []
+        this.allConns.forEach(conn => {
+            if (!this.onlineConns.has(conn)) {
+                reconnectable.push(conn)
+            }
+        })
+        if (reconnectable.length === 0) {
+            return false
+        }
+        prng.oneOf(this.prng, reconnectable).connect()
+        return true
+    }
 }
 
 /**
@@ -274,56 +274,56 @@ export class TestConnector {
  * @return {{testObjects:Array<any>,testConnector:TestConnector,users:Array<TestYInstance>,array0:Y.Array<any>,array1:Y.Array<any>,array2:Y.Array<any>,map0:Y.Map<any>,map1:Y.Map<any>,map2:Y.Map<any>,map3:Y.Map<any>,text0:Y.Text,text1:Y.Text,text2:Y.Text,xml0:Y.XmlElement,xml1:Y.XmlElement,xml2:Y.XmlElement}}
  */
 export const init = <T>(
-  tc: t.TestCase,
-  { users = 5 }: { users?: number } = {},
-  initTestObject: InitTestObjectCallback<T>
+    tc: t.TestCase,
+    { users = 5 }: { users?: number } = {},
+    initTestObject: InitTestObjectCallback<T>
 ): {
-  testObjects: Array<any>;
-  testConnector: TestConnector;
-  users: Array<TestYInstance>;
-  array0: Y.Array<any>;
-  array1: Y.Array<any>;
-  array2: Y.Array<any>;
-  map0: Y.Map<any>;
-  map1: Y.Map<any>;
-  map2: Y.Map<any>;
-  map3: Y.Map<any>;
-  text0: Y.Text;
-  text1: Y.Text;
-  text2: Y.Text;
-  xml0: Y.XmlElement;
-  xml1: Y.XmlElement;
-  xml2: Y.XmlElement;
+    testObjects: Array<any>;
+    testConnector: TestConnector;
+    users: Array<TestYInstance>;
+    array0: Y.Array<any>;
+    array1: Y.Array<any>;
+    array2: Y.Array<any>;
+    map0: Y.Map<any>;
+    map1: Y.Map<any>;
+    map2: Y.Map<any>;
+    map3: Y.Map<any>;
+    text0: Y.Text;
+    text1: Y.Text;
+    text2: Y.Text;
+    xml0: Y.XmlElement;
+    xml1: Y.XmlElement;
+    xml2: Y.XmlElement;
 } => {
-  /**
-   * @type {Object<string,any>}
-   */
-  const result: { [s: string]: any } = {
-    users: [],
-  };
-  const gen = tc.prng;
-  // choose an encoding approach at random
-  if (prng.bool(gen)) {
-    useV2Encoding();
-  } else {
-    useV1Encoding();
-  }
+    /**
+     * @type {Object<string,any>}
+     */
+    const result: { [s: string]: any } = {
+        users: [],
+    };
+    const gen = tc.prng;
+    // choose an encoding approach at random
+    if (prng.bool(gen)) {
+        useV2Encoding();
+    } else {
+        useV1Encoding();
+    }
 
-  const testConnector = new TestConnector(gen);
-  result.testConnector = testConnector;
-  for (let i = 0; i < users; i++) {
-    const y = testConnector.createY(i);
-    y.clientID = i;
-    result.users.push(y);
-    result["array" + i] = y.getArray("array");
-    result["map" + i] = y.getMap("map");
-    result["xml" + i] = y.get("xml", Y.XmlElement);
-    result["text" + i] = y.getText("text");
-  }
-  testConnector.syncAll();
-  result.testObjects = result.users.map(initTestObject || (() => null));
-  useV1Encoding();
-  return result as any;
+    const testConnector = new TestConnector(gen);
+    result.testConnector = testConnector;
+    for (let i = 0; i < users; i++) {
+        const y = testConnector.createY(i);
+        y.clientID = i;
+        result.users.push(y);
+        result["array" + i] = y.getArray("array");
+        result["map" + i] = y.getMap("map");
+        result["xml" + i] = y.get("xml", Y.XmlElement);
+        result["text" + i] = y.getText("text");
+    }
+    testConnector.syncAll();
+    result.testObjects = result.users.map(initTestObject || (() => null));
+    useV1Encoding();
+    return result as any;
 };
 
 /**
@@ -336,58 +336,58 @@ export const init = <T>(
  * @param {Array<TestYInstance>} users
  */
 export const compare = (users: Array<TestYInstance>) => {
-  users.forEach(u => u.connect())
-  while (users[0].tc.flushAllMessages()) {} // eslint-disable-line
-  // For each document, merge all received document updates with Y.mergeUpdates and create a new document which will be added to the list of "users"
-  // This ensures that mergeUpdates works correctly
-  const mergedDocs = users.map(user => {
-    const ydoc = new Y.Doc()
-    enc.applyUpdate(ydoc, enc.mergeUpdates(user.updates))
-    return ydoc
-  })
-  users.push(...(mergedDocs as any))
-  const userArrayValues = users.map(u => u.getArray('array').toJSON())
-  const userMapValues = users.map(u => u.getMap('map').toJSON())
-  const userXmlValues = users.map(u => u.get('xml', Y.XmlElement).toString())
-  const userTextValues = users.map(u => u.getText('text').toDelta())
-  for (const u of users) {
-    t.assert(u.store.pendingDs === null)
-    t.assert(u.store.pendingStructs === null)
-  }
-  // Test Array iterator
-  t.compare(users[0].getArray('array').toArray(), Array.from(users[0].getArray('array')))
-  // Test Map iterator
-  const ymapkeys = Array.from(users[0].getMap('map').keys())
-  t.assert(ymapkeys.length === Object.keys(userMapValues[0]).length)
-  ymapkeys.forEach(key => t.assert(object.hasProperty(userMapValues[0], key)))
-  /**
-   * @type {Object<string,any>}
-   */
-  const mapRes: { [s: string]: any } = {}
-  for (const [k, v] of users[0].getMap('map')) {
-    mapRes[k] = v instanceof Y.AbstractType ? v.toJSON() : v
-  }
-  t.compare(userMapValues[0], mapRes)
-  // Compare all users
-  for (let i = 0; i < users.length - 1; i++) {
-    t.compare(userArrayValues[i].length, users[i].getArray('array').length)
-    t.compare(userArrayValues[i], userArrayValues[i + 1])
-    t.compare(userMapValues[i], userMapValues[i + 1])
-    t.compare(userXmlValues[i], userXmlValues[i + 1])
-    t.compare(userTextValues[i].map(/** @param {any} a */ (a: any) => typeof a.insert === 'string' ? a.insert : ' ').join('').length, users[i].getText('text').length)
-    t.compare(userTextValues[i], userTextValues[i + 1], '', (_constructor, a, b) => {
-      if (a instanceof Y.AbstractType) {
-        t.compare(a.toJSON(), b.toJSON())
-      } else if (a !== b) {
-        t.fail('Deltas dont match')
-      }
-      return true
+    users.forEach(u => u.connect())
+    while (users[0].tc.flushAllMessages()) {} // eslint-disable-line
+    // For each document, merge all received document updates with Y.mergeUpdates and create a new document which will be added to the list of "users"
+    // This ensures that mergeUpdates works correctly
+    const mergedDocs = users.map(user => {
+        const ydoc = new Y.Doc()
+        enc.applyUpdate(ydoc, enc.mergeUpdates(user.updates))
+        return ydoc
     })
-    t.compare(Y.encodeStateVector(users[i]), Y.encodeStateVector(users[i + 1]))
-    compareDS(Y.createDeleteSetFromStructStore(users[i].store), Y.createDeleteSetFromStructStore(users[i + 1].store))
-    compareStructStores(users[i].store, users[i + 1].store)
-  }
-  users.map(u => u.destroy())
+    users.push(...(mergedDocs as any))
+    const userArrayValues = users.map(u => u.getArray('array').toJSON())
+    const userMapValues = users.map(u => u.getMap('map').toJSON())
+    const userXmlValues = users.map(u => u.get('xml', Y.XmlElement).toString())
+    const userTextValues = users.map(u => u.getText('text').toDelta())
+    for (const u of users) {
+        t.assert(u.store.pendingDs === null)
+        t.assert(u.store.pendingStructs === null)
+    }
+    // Test Array iterator
+    t.compare(users[0].getArray('array').toArray(), Array.from(users[0].getArray('array')))
+    // Test Map iterator
+    const ymapkeys = Array.from(users[0].getMap('map').keys())
+    t.assert(ymapkeys.length === Object.keys(userMapValues[0]).length)
+    ymapkeys.forEach(key => t.assert(object.hasProperty(userMapValues[0], key)))
+    /**
+     * @type {Object<string,any>}
+     */
+    const mapRes: { [s: string]: any } = {}
+    for (const [k, v] of users[0].getMap('map')) {
+        mapRes[k] = v instanceof Y.AbstractType ? v.toJSON() : v
+    }
+    t.compare(userMapValues[0], mapRes)
+    // Compare all users
+    for (let i = 0; i < users.length - 1; i++) {
+        t.compare(userArrayValues[i].length, users[i].getArray('array').length)
+        t.compare(userArrayValues[i], userArrayValues[i + 1])
+        t.compare(userMapValues[i], userMapValues[i + 1])
+        t.compare(userXmlValues[i], userXmlValues[i + 1])
+        t.compare(userTextValues[i].map(/** @param {any} a */ (a: any) => typeof a.insert === 'string' ? a.insert : ' ').join('').length, users[i].getText('text').length)
+        t.compare(userTextValues[i], userTextValues[i + 1], '', (_constructor, a, b) => {
+            if (a instanceof Y.AbstractType) {
+                t.compare(a.toJSON(), b.toJSON())
+            } else if (a !== b) {
+                t.fail('Deltas dont match')
+            }
+            return true
+        })
+        t.compare(Y.encodeStateVector(users[i]), Y.encodeStateVector(users[i + 1]))
+        compareDS(Y.createDeleteSetFromStructStore(users[i].store), Y.createDeleteSetFromStructStore(users[i + 1].store))
+        compareStructStores(users[i].store, users[i + 1].store)
+    }
+    users.map(u => u.destroy())
 }
 
 /**
@@ -402,42 +402,42 @@ export const compareItemIDs = (a: Y.Item | null, b: Y.Item | null): boolean => a
  * @param {import('../src/internals.js').StructStore} ss2
  */
 export const compareStructStores = (ss1: import('../src/internals.js').StructStore, ss2: import('../src/internals.js').StructStore) => {
-  t.assert(ss1.clients.size === ss2.clients.size)
-  for (const [client, structs1] of ss1.clients) {
-    const structs2 = /** @type {Array<Y.AbstractStruct>} */ (ss2.clients.get(client))
-    t.assert(structs2 !== undefined && structs1.length === structs2.length)
-    for (let i = 0; i < structs1.length; i++) {
-      const s1 = structs1[i]
-      const s2 = structs2[i]
-      // checks for abstract struct
-      if (
-        s1.constructor !== s2.constructor ||
-        !Y.compareIDs(s1.id, s2.id) ||
-        s1.deleted !== s2.deleted ||
-        // @ts-ignore
-        s1.length !== s2.length
-      ) {
-        t.fail('Structs dont match')
-      }
-      if (s1 instanceof Y.Item) {
-        if (
-          !(s2 instanceof Y.Item) ||
-          !((s1.left === null && s2.left === null) || (s1.left !== null && s2.left !== null && Y.compareIDs(s1.left.lastId, s2.left.lastId))) ||
-          !compareItemIDs(s1.right, s2.right) ||
-          !Y.compareIDs(s1.origin, s2.origin) ||
-          !Y.compareIDs(s1.rightOrigin, s2.rightOrigin) ||
-          s1.parentSub !== s2.parentSub
-        ) {
-          return t.fail('Items dont match')
+    t.assert(ss1.clients.size === ss2.clients.size)
+    for (const [client, structs1] of ss1.clients) {
+        const structs2 = ss2.clients.get(client) as Y.AbstractStruct[]
+        t.assert(structs2 !== undefined && structs1.length === structs2.length)
+        for (let i = 0; i < structs1.length; i++) {
+            const s1 = structs1[i]
+            const s2 = structs2[i]
+            // checks for abstract struct
+            if (
+                s1.constructor !== s2.constructor ||
+                !Y.compareIDs(s1.id, s2.id) ||
+                s1.deleted !== s2.deleted ||
+                // @ts-ignore
+                s1.length !== s2.length
+            ) {
+                t.fail('Structs dont match')
+            }
+            if (s1 instanceof Y.Item) {
+                if (
+                    !(s2 instanceof Y.Item) ||
+                    !((s1.left === null && s2.left === null) || (s1.left !== null && s2.left !== null && Y.compareIDs(s1.left.lastId, s2.left.lastId))) ||
+                    !compareItemIDs(s1.right, s2.right) ||
+                    !Y.compareIDs(s1.origin, s2.origin) ||
+                    !Y.compareIDs(s1.rightOrigin, s2.rightOrigin) ||
+                    s1.parentSub !== s2.parentSub
+                ) {
+                    return t.fail('Items dont match')
+                }
+                // make sure that items are connected correctly
+                t.assert(s1.left === null || s1.left.right === s1)
+                t.assert(s1.right === null || s1.right.left === s1)
+                t.assert(s2.left === null || s2.left.right === s2)
+                t.assert(s2.right === null || s2.right.left === s2)
+            }
         }
-        // make sure that items are connected correctly
-        t.assert(s1.left === null || s1.left.right === s1)
-        t.assert(s1.right === null || s1.right.left === s1)
-        t.assert(s2.left === null || s2.left.right === s2)
-        t.assert(s2.right === null || s2.right.left === s2)
-      }
     }
-  }
 }
 
 /**
@@ -445,18 +445,18 @@ export const compareStructStores = (ss1: import('../src/internals.js').StructSto
  * @param {import('../src/internals.js').DeleteSet} ds2
  */
 export const compareDS = (ds1: import('../src/internals.js').DeleteSet, ds2: import('../src/internals.js').DeleteSet) => {
-  t.assert(ds1.clients.size === ds2.clients.size)
-  ds1.clients.forEach((deleteItems1, client) => {
-    const deleteItems2 = /** @type {Array<import('../src/internals.js').DeleteItem>} */ (ds2.clients.get(client))
-    t.assert(deleteItems2 !== undefined && deleteItems1.length === deleteItems2.length)
-    for (let i = 0; i < deleteItems1.length; i++) {
-      const di1 = deleteItems1[i]
-      const di2 = deleteItems2[i]
-      if (di1.clock !== di2.clock || di1.len !== di2.len) {
-        t.fail('DeleteSets dont match')
-      }
-    }
-  })
+    t.assert(ds1.clients.size === ds2.clients.size)
+    ds1.clients.forEach((deleteItems1, client) => {
+        const deleteItems2 = (ds2.clients.get(client)) as (import('../src/internals.js').DeleteItem)[]
+        t.assert(deleteItems2 !== undefined && deleteItems1.length === deleteItems2.length)
+        for (let i = 0; i < deleteItems1.length; i++) {
+            const di1 = deleteItems1[i]
+            const di2 = deleteItems2[i]
+            if (di1.clock !== di2.clock || di1.len !== di2.len) {
+                t.fail('DeleteSets dont match')
+            }
+        }
+    })
 }
 
 /**
@@ -476,28 +476,28 @@ type InitTestObjectCallback<T> = (y: TestYInstance) => T
  * @param {InitTestObjectCallback<T>} [initTestObject]
  */
 export const applyRandomTests = <T>(tc: t.TestCase, mods: Array<((arg0: Y.Doc, arg1: prng.PRNG, arg2: T) => void)>, iterations: number, initTestObject: InitTestObjectCallback<T>) => {
-  const gen = tc.prng
-  const result = init(tc, { users: 5 }, initTestObject)
-  const { testConnector, users } = result
-  for (let i = 0; i < iterations; i++) {
-    if (prng.int32(gen, 0, 100) <= 2) {
-      // 2% chance to disconnect/reconnect a random user
-      if (prng.bool(gen)) {
-        testConnector.disconnectRandom()
-      } else {
-        testConnector.reconnectRandom()
-      }
-    } else if (prng.int32(gen, 0, 100) <= 1) {
-      // 1% chance to flush all
-      testConnector.flushAllMessages()
-    } else if (prng.int32(gen, 0, 100) <= 50) {
-      // 50% chance to flush a random message
-      testConnector.flushRandomMessage()
+    const gen = tc.prng
+    const result = init(tc, { users: 5 }, initTestObject)
+    const { testConnector, users } = result
+    for (let i = 0; i < iterations; i++) {
+        if (prng.int32(gen, 0, 100) <= 2) {
+            // 2% chance to disconnect/reconnect a random user
+            if (prng.bool(gen)) {
+                testConnector.disconnectRandom()
+            } else {
+                testConnector.reconnectRandom()
+            }
+        } else if (prng.int32(gen, 0, 100) <= 1) {
+            // 1% chance to flush all
+            testConnector.flushAllMessages()
+        } else if (prng.int32(gen, 0, 100) <= 50) {
+            // 50% chance to flush a random message
+            testConnector.flushRandomMessage()
+        }
+        const user = prng.int32(gen, 0, users.length - 1)
+        const test = prng.oneOf(gen, mods)
+        test(users[user], gen, result.testObjects[user])
     }
-    const user = prng.int32(gen, 0, users.length - 1)
-    const test = prng.oneOf(gen, mods)
-    test(users[user], gen, result.testObjects[user])
-  }
-  compare(users)
-  return result
+    compare(users)
+    return result
 }

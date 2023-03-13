@@ -8,12 +8,19 @@
   "scripts": {
     "clean": "rm -rf dist",
     "build": "npm run clean ; tsc",
-    "push": "make(){ if [[ -z \"$1\" ]]; then echo Commit message should not be empty. ;exit 1; fi; npm run build; git add .; git commit -m \"$1\"; git push; }; make "
+    "prepush": "npm run test.clean; npm run build",
+    "push": "make(){ if [[ -z \"$1\" ]]; then echo Commit message should not be empty. ;exit 1; fi; npm run prepush; git add .; git commit -m \"$1\"; git push; }; make ",
+    "test.clean": "rm -rf tests/dist",
+    "test.build": "npm run test.clean; tsc -p ./tests/tsconfig.json",
+    "test": "npm run test.build; node --stack-size=10000 ./tests/dist/tests/index.js"
   },
   "dependencies": {
     "lib0": "^0.2.66",
     "typescript": "^4.9.5",
     "y-protocols-mock": "github:ObuchiYuki/y-protocols-mock",
     "yjs": "^13.5.50"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.0"
   }
 }

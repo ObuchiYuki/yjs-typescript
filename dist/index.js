@@ -94,7 +94,7 @@ Object.defineProperty(exports, "diffUpdateV2", { enumerable: true, get: function
 Object.defineProperty(exports, "convertUpdateFormatV1ToV2", { enumerable: true, get: function () { return internals_js_1.convertUpdateFormatV1ToV2; } });
 Object.defineProperty(exports, "convertUpdateFormatV2ToV1", { enumerable: true, get: function () { return internals_js_1.convertUpdateFormatV2ToV1; } });
 Object.defineProperty(exports, "UpdateEncoderV1", { enumerable: true, get: function () { return internals_js_1.UpdateEncoderV1; } });
-const glo = /** @type {any} */ (typeof globalThis !== 'undefined'
+const glo = (typeof globalThis !== 'undefined'
     ? globalThis
     : typeof window !== 'undefined'
         ? window

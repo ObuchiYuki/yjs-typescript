@@ -1,6 +1,6 @@
 import * as Y from '../src/index.js'
 import * as t from 'lib0/testing'
-import { init } from './testHelper.js'
+import { init } from './testHelper.js.js'
 
 /**
  * @param {t.TestCase} tc

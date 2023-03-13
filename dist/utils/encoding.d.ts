@@ -81,7 +81,7 @@ export declare const applyUpdateV2: (ydoc: Doc, update: Uint8Array, transactionO
  *
  * @function
  */
-export declare const applyUpdate: (ydoc: Doc, update: Uint8Array, transactionOrigin: any) => void;
+export declare const applyUpdate: (ydoc: Doc, update: Uint8Array, transactionOrigin?: any) => void;
 /**
  * Write all the document as a single update message. If you specify the state of the remote client (`targetStateVector`) it will
  * only write the operations that are missing.
