@@ -119,7 +119,7 @@ export declare const encodeStateAsUpdateV2: (doc: Doc, encodedTargetStateVector?
  *
  * @function
  */
-export declare const encodeStateAsUpdate: (doc: Doc, encodedTargetStateVector: Uint8Array) => Uint8Array;
+export declare const encodeStateAsUpdate: (doc: Doc, encodedTargetStateVector?: Uint8Array) => Uint8Array;
 /**
  * Read state vector from Decoder and return as Map
  *

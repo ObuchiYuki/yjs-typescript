@@ -533,7 +533,9 @@ exports.encodeStateAsUpdateV2 = encodeStateAsUpdateV2;
  *
  * @function
  */
-const encodeStateAsUpdate = (doc, encodedTargetStateVector) => (0, exports.encodeStateAsUpdateV2)(doc, encodedTargetStateVector, new internals_1.UpdateEncoderV1());
+const encodeStateAsUpdate = (doc, encodedTargetStateVector) => {
+    return (0, exports.encodeStateAsUpdateV2)(doc, encodedTargetStateVector, new internals_1.UpdateEncoderV1());
+};
 exports.encodeStateAsUpdate = encodeStateAsUpdate;
 /**
  * Read state vector from Decoder and return as Map
