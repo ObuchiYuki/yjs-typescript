@@ -180,7 +180,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      * @param {Set<null|string>} parentSubs Keys changed on this type. `null` if list was modified.
      */
     _callObserver(transaction, parentSubs) {
-        (0, internals_1.callTypeObservers)(this, transaction, new internals_1.YXmlEvent(this, parentSubs, transaction));
+        this.callObservers(transaction, new internals_1.YXmlEvent(this, parentSubs, transaction));
     }
     /**
      * Get the string representation of all the children of this YXmlFragment.
@@ -188,7 +188,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      * @return {string} The string representation of all children.
      */
     toString() {
-        return (0, internals_1.typeListMap)(this, xml => xml.toString()).join('');
+        return this.listMap(xml => xml.toString()).join('');
     }
     /**
      * @return {string}
@@ -216,7 +216,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
         if (binding !== undefined) {
             binding._createAssociation(fragment, this);
         }
-        (0, internals_1.typeListForEach)(this, xmlType => {
+        this.listForEach(xmlType => {
             fragment.insertBefore(xmlType.toDOM(_document, hooks, binding), null);
         });
         return fragment;
@@ -234,7 +234,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
     insert(index, content) {
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
-                (0, internals_1.typeListInsertGenerics)(transaction, this, index, content);
+                this.listInsertGenerics(transaction, index, content);
             });
         }
         else {
@@ -256,7 +256,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
                 const refItem = (ref && ref instanceof AbstractType_1.AbstractType_) ? ref._item : ref;
-                (0, internals_1.typeListInsertGenericsAfter)(transaction, this, refItem, content);
+                this.listInsertGenericsAfter(transaction, refItem, content);
             });
         }
         else {
@@ -277,7 +277,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
     delete(index, length = 1) {
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
-                (0, internals_1.typeListDelete)(transaction, this, index, length);
+                this.listDelete(transaction, index, length);
             });
         }
         else {
@@ -291,7 +291,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      * @return {Array<YXmlElement|YXmlText|YXmlHook>}
      */
     toArray() {
-        return (0, internals_1.typeListToArray)(this);
+        return this.listToArray();
     }
     /**
      * Appends content to this YArray.
@@ -316,7 +316,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      * @return {YXmlElement|YXmlText}
      */
     get(index) {
-        return (0, internals_1.typeListGet)(this, index);
+        return this.listGet(index);
     }
     /**
      * Transforms this YArray to a JavaScript Array.
@@ -326,15 +326,13 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      * @return {Array<YXmlElement|YXmlText>}
      */
     slice(start = 0, end = this.length) {
-        return (0, internals_1.typeListSlice)(this, start, end);
+        return this.listSlice(start, end);
     }
     /**
      * Executes a provided function on once on overy child element.
-     *
-     * @param {function(YXmlElement|YXmlText,number, typeof self):void} f A function to execute on every element of this YArray.
      */
     forEach(f) {
-        (0, internals_1.typeListForEach)(this, f);
+        this.listForEach(f);
     }
     /**
      * Transform the properties of this type to binary and write it to an

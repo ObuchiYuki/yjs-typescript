@@ -73,7 +73,7 @@ class YMap extends AbstractType_1.AbstractType_ {
      * @param {Set<null|string>} parentSubs Keys changed on this type. `null` if list was modified.
      */
     _callObserver(transaction, parentSubs) {
-        (0, internals_1.callTypeObservers)(this, transaction, new YMapEvent(this, transaction, parentSubs));
+        this.callObservers(transaction, new YMapEvent(this, transaction, parentSubs));
     }
     /** Transforms this Shared Type to a JSON object. */
     toJSON() {
@@ -118,7 +118,7 @@ class YMap extends AbstractType_1.AbstractType_ {
     delete(key) {
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
-                (0, internals_1.typeMapDelete)(transaction, this, key);
+                this.mapDelete(transaction, key);
             });
         }
         else {
@@ -129,7 +129,7 @@ class YMap extends AbstractType_1.AbstractType_ {
     set(key, value) {
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
-                (0, internals_1.typeMapSet)(transaction, this, key, value);
+                this.mapSet(transaction, key, value);
             });
         }
         else {
@@ -139,18 +139,18 @@ class YMap extends AbstractType_1.AbstractType_ {
     }
     /** Returns a specified element from this YMap. */
     get(key) {
-        return (0, internals_1.typeMapGet)(this, key);
+        return this.mapGet(key);
     }
     /** Returns a boolean indicating whether the specified key exists or not. */
     has(key) {
-        return (0, internals_1.typeMapHas)(this, key);
+        return this.mapHas(key);
     }
     /** Removes all elements from this YMap. */
     clear() {
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
                 this.forEach(function (_value, key, map) {
-                    (0, internals_1.typeMapDelete)(transaction, map, key);
+                    map.mapDelete(transaction, key);
                 });
             });
         }

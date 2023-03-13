@@ -1,17 +1,57 @@
-import { Doc, Transaction, EventHandler, YEvent, Item, UpdateEncoderAny_, ArraySearchMarker } from '../internals';
+import { Doc, Transaction, EventHandler, YEvent, Item, UpdateEncoderAny_, ArraySearchMarker_, Snapshot } from '../internals';
+export type Contentable = object | Contentable[] | boolean | number | null | string | Uint8Array;
+export type MapValue = object | number | null | Array<MapValue> | string | Uint8Array | AbstractType_<any> | undefined;
 export declare abstract class AbstractType_<EventType> {
     doc: Doc | null;
+    get parent(): AbstractType_<any> | null;
     _item: Item | null;
     _map: Map<string, Item>;
     _start: Item | null;
     _length: number;
-    /** Event handlers */
-    _eH: EventHandler<EventType, Transaction>;
-    /** Deep event handlers */
-    _dEH: EventHandler<Array<YEvent<any>>, Transaction>;
-    _searchMarker: null | Array<ArraySearchMarker>;
+    _eH: EventHandler<EventType, Transaction>; /** Event handlers */
+    _dEH: EventHandler<Array<YEvent<any>>, Transaction>; /** Deep event handlers */
+    _searchMarker: null | Array<ArraySearchMarker_>;
+    /** The first non-deleted item */
+    get _first(): Item | null;
+    abstract clone(): AbstractType_<EventType>;
+    abstract _copy(): AbstractType_<EventType>;
     constructor();
-    get parent(): AbstractType_<any> | null;
+    /** Accumulate all (list) children of a type and return them as an Array. */
+    getChildren(): Item[];
+    /** Call event listeners with an event. This will also add an event to all parents (for `.observeDeep` handlers). */
+    callObservers<EventType>(this: AbstractType_<any>, transaction: Transaction, event: EventType): void;
+    listSlice(start: number, end: number): any[];
+    listToArray(): any[];
+    listToArraySnapshot(snapshot: Snapshot): any[];
+    /** Executes a provided function on once on overy element of this YArray. */
+    listForEach(body: (element: any, index: number, parent: this) => void): void;
+    listMap<C, R>(body: (element: C, index: number, type: this) => R): R[];
+    listCreateIterator(): IterableIterator<any>;
+    /**
+     * Executes a provided function on once on overy element of this YArray.
+     * Operates on a snapshotted state of the document.
+     */
+    listForEachSnapshot(body: (element: any, index: number, type: this) => void, snapshot: Snapshot): void;
+    listGet(index: number): any;
+    listInsertGenericsAfter(transaction: Transaction, referenceItem: Item | null, contents: Contentable[]): void;
+    listInsertGenerics: (transaction: Transaction, index: number, contents: Contentable[]) => void;
+    /**
+     * this -> parent
+     *
+     * Pushing content is special as we generally want to push after the last item. So we don't have to update
+     * the serach marker.
+    */
+    listPushGenerics(transaction: Transaction, contents: Contentable[]): void;
+    /** this -> parent */
+    listDelete(transaction: Transaction, index: number, length: number): void;
+    mapDelete(transaction: Transaction, key: string): void;
+    mapSet(transaction: Transaction, key: string, value: MapValue): void;
+    mapGet(key: string): MapValue;
+    mapGetAll(): {
+        [s: string]: MapValue;
+    };
+    mapHas(key: string): boolean;
+    mapGetSnapshot(key: string, snapshot: Snapshot): MapValue;
     /**
      * Integrate this type into the Yjs instance.
      *
@@ -20,11 +60,7 @@ export declare abstract class AbstractType_<EventType> {
      * * Observer functions are fired
      */
     _integrate(y: Doc, item: Item | null): void;
-    abstract _copy(): AbstractType_<EventType>;
-    abstract clone(): AbstractType_<EventType>;
     _write(_encoder: UpdateEncoderAny_): void;
-    /** The first non-deleted item */
-    get _first(): Item | null;
     /**
      * Creates YEvent and calls all type observers.
      * Must be implemented by each type.

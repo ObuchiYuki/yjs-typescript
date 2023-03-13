@@ -5,25 +5,18 @@
 
 import {
     YEvent,
-    typeMapDelete,
-    typeMapSet,
-    typeMapGet,
-    typeMapHas,
-    createMapIterator,
     YMapRefID,
-    callTypeObservers,
     transact,
-    UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item // eslint-disable-line
+    Doc, Transaction, Item, // eslint-disable-line,
+    createMapIterator, UpdateEncoderAny_, UpdateDecoderAny_
 } from '../internals'
 
-import {
-    AbstractType_
-} from "./AbstractType_"
+import { AbstractType_, Contentable_ } from "./AbstractType_"
 
 import * as iterator from 'lib0/iterator'
 
 /** Event that describes the changes on a YMap. */
-export class YMapEvent<T> extends YEvent<YMap<T>> {
+export class YMapEvent<T extends Contentable_> extends YEvent<YMap<T>> {
     keysChanged: Set<any>
 
     /**
@@ -31,9 +24,9 @@ export class YMapEvent<T> extends YEvent<YMap<T>> {
      * @param {Transaction} transaction
      * @param {Set<any>} subs The keys that changed.
      */
-    constructor(ymap: YMap<T>, transaction: Transaction, subs: Set<any>) {
+    constructor(ymap: YMap<T>, transaction: Transaction, keysChanged: Set<string | null>) {
         super(ymap, transaction)
-        this.keysChanged = subs
+        this.keysChanged = keysChanged
     }
 }
 
@@ -44,7 +37,7 @@ export class YMapEvent<T> extends YEvent<YMap<T>> {
  * @extends AbstractType_<YMapEvent<MapType>>
  * @implements {Iterable<MapType>}
  */
-export class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> implements Iterable<MapType> {
+export class YMap<MapType extends Contentable_> extends AbstractType_<YMapEvent<MapType>> implements Iterable<MapType> {
     _prelimContent: Map<string, any> | null
 
     /**
@@ -97,7 +90,7 @@ export class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> implements 
      * @param {Set<null|string>} parentSubs Keys changed on this type. `null` if list was modified.
      */
     _callObserver(transaction: Transaction, parentSubs: Set<null | string>) {
-        callTypeObservers(this, transaction, new YMapEvent(this, transaction, parentSubs))
+        this.callObservers(transaction, new YMapEvent(this, transaction, parentSubs))
     }
 
     /** Transforms this Shared Type to a JSON object. */
@@ -150,7 +143,7 @@ export class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> implements 
     delete(key: string) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                typeMapDelete(transaction, this, key)
+                this.mapDelete(transaction, key)
             })
         } else {
             (this._prelimContent as Map<string, any>).delete(key)
@@ -161,7 +154,7 @@ export class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> implements 
     set(key: string, value: MapType) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                typeMapSet(transaction, this, key, value as any)
+                this.mapSet(transaction, key, value as any)
             })
         } else {
             (this._prelimContent as Map<string, any>).set(key, value)
@@ -171,12 +164,12 @@ export class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> implements 
 
     /** Returns a specified element from this YMap. */
     get(key: string): MapType | undefined {
-        return typeMapGet(this, key) as any
+        return this.mapGet(key) as any
     }
 
     /** Returns a boolean indicating whether the specified key exists or not. */
     has(key: string): boolean {
-        return typeMapHas(this, key)
+        return this.mapHas(key)
     }
 
     /** Removes all elements from this YMap. */
@@ -184,7 +177,7 @@ export class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> implements 
         if (this.doc !== null) {
             transact(this.doc, transaction => {
                 this.forEach(function (_value, key, map) {
-                    typeMapDelete(transaction, map, key)
+                    map.mapDelete(transaction, key)
                 })
             })
         } else {
@@ -192,11 +185,11 @@ export class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> implements 
         }
     }
 
-    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2) {
+    _write(encoder: UpdateEncoderAny_) {
         encoder.writeTypeRef(YMapRefID)
     }
 }
 
-export const readYMap = (_decoder: UpdateDecoderV1 | UpdateDecoderV2) => {
+export const readYMap = (_decoder: UpdateDecoderAny_) => {
     return new YMap()
 }

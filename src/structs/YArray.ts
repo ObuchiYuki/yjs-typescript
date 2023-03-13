@@ -1,25 +1,16 @@
-import { AbstractType_ } from "./AbstractType_"
+import { AbstractType_ } from "../types/AbstractType_"
 
 import {
-    YEvent,
-    typeListGet,
-    typeListToArray,
-    typeListForEach,
-    typeListCreateIterator,
-    typeListInsertGenerics,
-    typeListPushGenerics,
-    typeListDelete,
-    typeListMap,
-    YArrayRefID,
-    callTypeObservers,
-    transact,
-    ArraySearchMarker, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item // eslint-disable-line
+    YEvent, YArrayRefID, transact,
+    Doc, Transaction, Item, // eslint-disable-line
+    ArraySearchMarker_,
+    UpdateEncoderAny_,
+    UpdateDecoderAny_, 
+    Contentable_
 } from '../internals'
 
-import { typeListSlice } from './AbstractType'
-
 /** Event that describes the changes on a YArray */
-export class YArrayEvent<T> extends YEvent<YArray<T>> {
+export class YArrayEvent<T extends Contentable_> extends YEvent<YArray<T>> {
     _transaction: Transaction
 
     /**
@@ -33,14 +24,14 @@ export class YArrayEvent<T> extends YEvent<YArray<T>> {
 }
 
 /** A shared Array implementation. */
-export class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable<T> {
+export class YArray<T extends Contentable_> extends AbstractType_<YArrayEvent<T>> implements Iterable<T> {
     _prelimContent: any[]|null = []
-    _searchMarker: ArraySearchMarker[] = []
+    _searchMarker: ArraySearchMarker_[] = []
 
     constructor () { super() }
 
     /** Construct a new YArray containing the specified items. */
-    static from<T>(items: T[]): YArray<T> {
+    static from<T extends Contentable_>(items: T[]): YArray<T> {
         const a = new YArray<T>()
         a.push(items)
         return a
@@ -55,18 +46,20 @@ export class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable
      */
     _integrate(y: Doc, item: Item) {
         super._integrate(y, item)
-        this.insert(0, this._prelimContent as any[])
+        this.insert(0, this._prelimContent ?? [])
         this._prelimContent = null
     }
 
     _copy(): YArray<T> { return new YArray() }
 
     clone(): YArray<T> {
-        const arr = new YArray<T>()
-        arr.insert(0, this.toArray().map(el =>
-            el instanceof AbstractType_ ? (el.clone() as typeof el) : el
+        const array = new YArray<T>()
+        array.insert(0, this.toArray().map(element =>
+            element instanceof AbstractType_ 
+                ? (element.clone() as typeof element)
+                : element
         ))
-        return arr
+        return array
     }
 
     get length(): number {
@@ -81,7 +74,7 @@ export class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable
      */
     _callObserver(transaction: Transaction, parentSubs: Set<null | string>) {
         super._callObserver(transaction, parentSubs)
-        callTypeObservers(this, transaction, new YArrayEvent(this, transaction))
+        this.callObservers(transaction, new YArrayEvent(this, transaction))
     }
 
     /**
@@ -103,7 +96,7 @@ export class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable
     insert(index: number, content: Array<T>) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                typeListInsertGenerics(transaction, this, index, content as any)
+                this.listInsertGenerics(transaction, index, content as any)
             })
         } else {
             (this._prelimContent as any[]).splice(index, 0, ...content)
@@ -120,7 +113,7 @@ export class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable
     push(content: Array<T>) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                typeListPushGenerics(transaction, this, content as any)
+                this.listPushGenerics(transaction, content as any)
             })
         } else {
             (this._prelimContent as any[]).push(...content)
@@ -145,7 +138,7 @@ export class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable
     delete(index: number, length: number = 1) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                typeListDelete(transaction, this, index, length)
+                this.listDelete(transaction, index, length)
             })
         } else {
             (this._prelimContent as any[]).splice(index, length)
@@ -159,17 +152,17 @@ export class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable
      * @return {T}
      */
     get(index: number): T {
-        return typeListGet(this, index)
+        return this.listGet(index)
     }
 
     /** Transforms this YArray to a JavaScript Array. */
     toArray(): T[] {
-        return typeListToArray(this)
+        return this.listToArray()
     }
 
     /** Transforms this YArray to a JavaScript Array. */
     slice(start: number = 0, end: number = this.length): Array<T> {
-        return typeListSlice(this, start, end)
+        return this.listSlice(start, end)
     }
 
     /**
@@ -189,7 +182,7 @@ export class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable
      *                                 callback function
      */
     map<M>(func: (element: T, index: number, array: YArray<T>) => M): Array<M> {
-        return typeListMap(this, func as any)
+        return this.listMap(func as any)
     }
 
     /**
@@ -198,24 +191,18 @@ export class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable
      * @param {function(T,number,YArray<T>):void} f A function to execute on every element of this YArray.
      */
     forEach(f: (element: T, index: number, array: YArray<T>) => void) {
-        typeListForEach(this, f)
+        this.listForEach(f)
     }
 
     [Symbol.iterator](): IterableIterator<T> {
-        return typeListCreateIterator(this)
+        return this.listCreateIterator()
     }
 
-    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2) {
+    _write(encoder: UpdateEncoderAny_) {
         encoder.writeTypeRef(YArrayRefID)
     }
 }
 
-/**
- * @param {UpdateDecoderV1 | UpdateDecoderV2} _decoder
- *
- * @private
- * @function
- */
-export const readYArray = (_decoder: UpdateDecoderV1 | UpdateDecoderV2) => {
+export const readYArray = (_decoder: UpdateDecoderAny_) => {
     return new YArray()
 }

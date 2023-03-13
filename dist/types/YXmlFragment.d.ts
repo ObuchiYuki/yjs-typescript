@@ -1,5 +1,5 @@
 import { AbstractType_ } from "./AbstractType_";
-import { YXmlEvent, YXmlElement, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item, YXmlText, YXmlHook } from '../internals';
+import { YXmlEvent, YXmlElement, Doc, Transaction, Item, YXmlText, YXmlHook, UpdateEncoderAny_, UpdateDecoderAny_ } from '../internals';
 /**
  * Define the elements to which a set of CSS queries apply.
  * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors|CSS_Selectors}
@@ -152,7 +152,7 @@ export declare class YXmlFragment extends AbstractType_<YXmlEvent> {
      * @param {number} index The index to insert content at
      * @param {Array<YXmlElement|YXmlText>} content The array of content
      */
-    insert(index: number, content: Array<YXmlElement | YXmlText>): void;
+    insert(index: number, content: (YXmlElement | YXmlText)[]): void;
     /**
      * Inserts new content at an index.
      *
@@ -206,10 +206,8 @@ export declare class YXmlFragment extends AbstractType_<YXmlEvent> {
     slice(start?: number, end?: number): Array<YXmlElement | YXmlText>;
     /**
      * Executes a provided function on once on overy child element.
-     *
-     * @param {function(YXmlElement|YXmlText,number, typeof self):void} f A function to execute on every element of this YArray.
      */
-    forEach(f: (arg0: YXmlElement | YXmlText, arg1: number, arg2: typeof self) => void): void;
+    forEach(f: (element: YXmlElement | YXmlText, index: number, self: this) => void): void;
     /**
      * Transform the properties of this type to binary and write it to an
      * BinaryEncoder.
@@ -218,7 +216,7 @@ export declare class YXmlFragment extends AbstractType_<YXmlEvent> {
      *
      * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder The encoder to write data to.
      */
-    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2): void;
+    _write(encoder: UpdateEncoderAny_): void;
 }
 /**
  * @param {UpdateDecoderV1 | UpdateDecoderV2} _decoder
@@ -227,5 +225,5 @@ export declare class YXmlFragment extends AbstractType_<YXmlEvent> {
  * @private
  * @function
  */
-export declare const readYXmlFragment: (_decoder: UpdateDecoderV1 | UpdateDecoderV2) => YXmlFragment;
+export declare const readYXmlFragment: (_decoder: UpdateDecoderAny_) => YXmlFragment;
 export {};

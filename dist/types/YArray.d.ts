@@ -1,5 +1,6 @@
 import { AbstractType_ } from "./AbstractType_";
-import { YEvent, ArraySearchMarker, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item } from '../internals';
+import { YEvent, Doc, Transaction, Item, // eslint-disable-line
+ArraySearchMarker_, UpdateEncoderAny_, UpdateDecoderAny_ } from '../internals';
 /** Event that describes the changes on a YArray */
 export declare class YArrayEvent<T> extends YEvent<YArray<T>> {
     _transaction: Transaction;
@@ -12,7 +13,7 @@ export declare class YArrayEvent<T> extends YEvent<YArray<T>> {
 /** A shared Array implementation. */
 export declare class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable<T> {
     _prelimContent: any[] | null;
-    _searchMarker: ArraySearchMarker[];
+    _searchMarker: ArraySearchMarker_[];
     constructor();
     /** Construct a new YArray containing the specified items. */
     static from<T>(items: T[]): YArray<T>;
@@ -104,12 +105,6 @@ export declare class YArray<T> extends AbstractType_<YArrayEvent<T>> implements 
      */
     forEach(f: (element: T, index: number, array: YArray<T>) => void): void;
     [Symbol.iterator](): IterableIterator<T>;
-    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2): void;
+    _write(encoder: UpdateEncoderAny_): void;
 }
-/**
- * @param {UpdateDecoderV1 | UpdateDecoderV2} _decoder
- *
- * @private
- * @function
- */
-export declare const readYArray: (_decoder: UpdateDecoderV1 | UpdateDecoderV2) => YArray<unknown>;
+export declare const readYArray: (_decoder: UpdateDecoderAny_) => YArray<unknown>;

@@ -10,7 +10,8 @@ import {
     YMap,
     YXmlFragment,
     transact,
-    ContentDoc, Item, Transaction, YEvent // eslint-disable-line
+    ContentDoc, Item, Transaction, YEvent, // eslint-disable-line
+    Contentable_
 } from '../internals'
 
 import { Observable } from 'lib0/observable'
@@ -261,7 +262,7 @@ export class Doc extends Observable<string> {
      *
      * @public
      */
-    getArray <T>(name: string = ''): YArray<T> {
+    getArray<T extends Contentable_>(name: string = ''): YArray<T> {
         // @ts-ignore
         return this.get(name, YArray)
     }
@@ -284,7 +285,7 @@ export class Doc extends Observable<string> {
      *
      * @public
      */
-    getMap <T>(name: string = ''): YMap<T> {
+    getMap<T extends Contentable_>(name: string = ''): YMap<T> {
         // @ts-ignore
         return this.get(name, YMap)
     }

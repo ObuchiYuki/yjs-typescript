@@ -1,24 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ArraySearchMarker = void 0;
-const maxSearchMarker = 80;
-/**
- * A unique timestamp that identifies each marker.
- *
- * Time is relative,.. this is more like an ever-increasing clock.
- */
-let globalSearchMarkerTimestamp = 0;
-class ArraySearchMarker {
+exports.ArraySearchMarker_ = void 0;
+class ArraySearchMarker_ {
     constructor(item, index) {
         this.item = item;
         this.index = index;
         if (item) {
             item.marker = true;
         }
-        this.timestamp = globalSearchMarkerTimestamp++;
+        this.timestamp = ArraySearchMarker_.globalSearchMarkerTimestamp++;
     }
     static markPosition(markers, item, index) {
-        if (markers.length >= maxSearchMarker) {
+        if (markers.length >= ArraySearchMarker_.maxSearchMarker) {
             // override oldest marker (we don't want to create more objects)
             const marker = markers.reduce((a, b) => a.timestamp < b.timestamp ? a : b);
             marker.overwrite(item, index);
@@ -26,7 +19,7 @@ class ArraySearchMarker {
         }
         else {
             // create new marker
-            const pm = new ArraySearchMarker(item, index);
+            const pm = new ArraySearchMarker_(item, index);
             markers.push(pm);
             return pm;
         }
@@ -75,16 +68,18 @@ class ArraySearchMarker {
                 pindex -= item.length;
             }
         }
-        if (item != null)
-            if (marker != null && Math.abs(marker.index - pindex) < item.parent.length / maxSearchMarker) {
-                // adjust existing marker
-                marker.overwrite(item, pindex);
-                return marker;
-            }
-            else {
-                // create new marker
-                return ArraySearchMarker.markPosition(yarray._searchMarker, item, pindex);
-            }
+        if (item == null)
+            return;
+        if (marker != null &&
+            Math.abs(marker.index - pindex) < item.parent.length / ArraySearchMarker_.maxSearchMarker) {
+            // adjust existing marker
+            marker.overwrite(item, pindex);
+            return marker;
+        }
+        else {
+            // create new marker
+            return ArraySearchMarker_.markPosition(yarray._searchMarker, item, pindex);
+        }
     }
     /**
      * Update markers when a change happened.
@@ -93,9 +88,9 @@ class ArraySearchMarker {
      */
     static updateChanges(markers, index, len) {
         for (let i = markers.length - 1; i >= 0; i--) {
-            const m = markers[i];
+            const marker = markers[i];
             if (len > 0) {
-                let item = m.item;
+                let item = marker.item;
                 if (item)
                     item.marker = false;
                 // Ideally we just want to do a simple position comparison, but this will only work if
@@ -105,7 +100,7 @@ class ArraySearchMarker {
                     item = item.left;
                     if (item && !item.deleted && item.countable) {
                         // adjust position. the loop should break now
-                        m.index -= item.length;
+                        marker.index -= item.length;
                     }
                 }
                 if (item === null || item.marker === true) {
@@ -113,16 +108,16 @@ class ArraySearchMarker {
                     markers.splice(i, 1);
                     continue;
                 }
-                m.item = item;
+                marker.item = item;
                 item.marker = true;
             }
-            if (index < m.index || (len > 0 && index === m.index)) { // a simple index <= m.index check would actually suffice
-                m.index = Math.max(index, m.index + len);
+            if (index < marker.index || (len > 0 && index === marker.index)) { // a simple index <= m.index check would actually suffice
+                marker.index = Math.max(index, marker.index + len);
             }
         }
     }
     refreshTimestamp() {
-        this.timestamp = globalSearchMarkerTimestamp++;
+        this.timestamp = ArraySearchMarker_.globalSearchMarkerTimestamp++;
     }
     /** This is rather complex so this function is the only thing that should overwrite a marker */
     overwrite(item, index) {
@@ -131,7 +126,13 @@ class ArraySearchMarker {
         this.item = item;
         item.marker = true;
         this.index = index;
-        this.timestamp = globalSearchMarkerTimestamp++;
+        this.timestamp = ArraySearchMarker_.globalSearchMarkerTimestamp++;
     }
 }
-exports.ArraySearchMarker = ArraySearchMarker;
+exports.ArraySearchMarker_ = ArraySearchMarker_;
+/**
+* A unique timestamp that identifies each marker.
+* Time is relative,.. this is more like an ever-increasing clock.
+*/
+ArraySearchMarker_.globalSearchMarkerTimestamp = 0;
+ArraySearchMarker_.maxSearchMarker = 80;

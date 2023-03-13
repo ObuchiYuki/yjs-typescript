@@ -1950,7 +1950,7 @@ export const testFormattingRemoved = (tc: t.TestCase) => {
     const { text0 } = init(tc, { users: 1 })
     text0.insert(0, 'ab', { bold: true })
     text0.delete(0, 2)
-    t.assert(Y.getTypeChildren(text0).length === 1)
+    t.assert(text0.getChildren().length === 1)
 }
 
 /**
@@ -1961,7 +1961,7 @@ export const testFormattingRemovedInMidText = (tc: t.TestCase) => {
     text0.insert(0, '1234')
     text0.insert(2, 'ab', { bold: true })
     text0.delete(2, 2)
-    t.assert(Y.getTypeChildren(text0).length === 3)
+    t.assert(text0.getChildren().length === 3)
 }
 
 /**

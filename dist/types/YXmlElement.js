@@ -90,7 +90,7 @@ class YXmlElement extends internals_1.YXmlFragment {
         var _a;
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
-                (0, internals_1.typeMapDelete)(transaction, this, attributeName);
+                this.mapDelete(transaction, attributeName);
             });
         }
         else {
@@ -109,7 +109,7 @@ class YXmlElement extends internals_1.YXmlFragment {
         var _a;
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
-                (0, internals_1.typeMapSet)(transaction, this, attributeName, attributeValue);
+                this.mapSet(transaction, attributeName, attributeValue);
             });
         }
         else {
@@ -126,7 +126,7 @@ class YXmlElement extends internals_1.YXmlFragment {
      * @public
      */
     getAttribute(attributeName) {
-        return (0, internals_1.typeMapGet)(this, attributeName);
+        return this.mapGet(attributeName);
     }
     /**
      * Returns whether an attribute exists
@@ -137,11 +137,11 @@ class YXmlElement extends internals_1.YXmlFragment {
      * @public
      */
     hasAttribute(attributeName) {
-        return /** @type {any} */ ((0, internals_1.typeMapHas)(this, attributeName));
+        return this.mapHas(attributeName);
     }
     /** Returns all attribute name/value pairs in a JSON Object. */
     getAttributes() {
-        return (0, internals_1.typeMapGetAll)(this);
+        return this.mapGetAll();
     }
     /**
      * Creates a Dom Element that mirrors this YXmlElement.
@@ -164,7 +164,7 @@ class YXmlElement extends internals_1.YXmlFragment {
         for (const key in attrs) {
             dom.setAttribute(key, attrs[key]);
         }
-        (0, internals_1.typeListForEach)(this, yxml => {
+        this.listForEach(yxml => {
             dom.appendChild(yxml.toDOM(_document, hooks, binding));
         });
         if (binding !== undefined) {

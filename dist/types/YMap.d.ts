@@ -1,7 +1,7 @@
 /**
  * @module YMap
  */
-import { YEvent, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item } from '../internals';
+import { YEvent, Doc, Transaction, Item, UpdateEncoderAny_, UpdateDecoderAny_ } from '../internals';
 import { AbstractType_ } from "./AbstractType_";
 /** Event that describes the changes on a YMap. */
 export declare class YMapEvent<T> extends YEvent<YMap<T>> {
@@ -70,6 +70,6 @@ export declare class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> imp
     has(key: string): boolean;
     /** Removes all elements from this YMap. */
     clear(): void;
-    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2): void;
+    _write(encoder: UpdateEncoderAny_): void;
 }
-export declare const readYMap: (_decoder: UpdateDecoderV1 | UpdateDecoderV2) => YMap<unknown>;
+export declare const readYMap: (_decoder: UpdateDecoderAny_) => YMap<unknown>;

@@ -2,12 +2,6 @@
 import {
     YXmlFragment,
     transact,
-    typeMapDelete,
-    typeMapHas,
-    typeMapSet,
-    typeMapGet,
-    typeMapGetAll,
-    typeListForEach,
     YXmlElementRefID,
     YXmlText, ContentType, AbstractType_, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Item // eslint-disable-line
 } from '../internals'
@@ -109,7 +103,7 @@ export class YXmlElement extends YXmlFragment {
     removeAttribute (attributeName: string) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                typeMapDelete(transaction, this, attributeName)
+                this.mapDelete(transaction, attributeName)
             })
         } else {
             this._prelimAttrs?.delete(attributeName)
@@ -127,7 +121,7 @@ export class YXmlElement extends YXmlFragment {
     setAttribute (attributeName: string, attributeValue: string) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                typeMapSet(transaction, this, attributeName, attributeValue)
+                this.mapSet(transaction, attributeName, attributeValue)
             })
         } else {
             this._prelimAttrs?.set(attributeName, attributeValue)
@@ -144,7 +138,7 @@ export class YXmlElement extends YXmlFragment {
      * @public
      */
     getAttribute(attributeName: string): string {
-        return typeMapGet(this, attributeName) as any
+        return this.mapGet(attributeName) as any
     }
 
     /**
@@ -156,12 +150,12 @@ export class YXmlElement extends YXmlFragment {
      * @public
      */
     hasAttribute(attributeName: string): boolean {
-        return /** @type {any} */ (typeMapHas(this, attributeName))
+        return this.mapHas(attributeName)
     }
 
     /** Returns all attribute name/value pairs in a JSON Object. */
     getAttributes(): { [s: string]: any } {
-        return typeMapGetAll(this)
+        return this.mapGetAll()
     }
 
     /**
@@ -185,7 +179,7 @@ export class YXmlElement extends YXmlFragment {
         for (const key in attrs) {
             dom.setAttribute(key, attrs[key])
         }
-        typeListForEach(this, yxml => {
+        this.listForEach(yxml => {
             dom.appendChild(yxml.toDOM(_document, hooks, binding))
         })
         if (binding !== undefined) {

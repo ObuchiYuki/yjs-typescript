@@ -7,7 +7,6 @@ import {
     isVisible,
     createID,
     YTextRefID,
-    callTypeObservers,
     transact,
     ContentEmbed,
     GC,
@@ -16,25 +15,14 @@ import {
     splitSnapshotAffectedStructs,
     iterateDeletedStructs,
     iterateStructs,
-    typeMapDelete,
-    typeMapSet,
-    typeMapGet,
-    typeMapGetAll,
     ContentType,
-    ArraySearchMarker, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, ID, Doc, Item, Snapshot, Transaction // eslint-disable-line
+    ID, Doc, Item, Snapshot, Transaction, // eslint-disable-line
+    ArraySearchMarker_, equalAttributes_, UpdateDecoderAny_, UpdateEncoderAny_
 } from '../internals'
 
-import * as object from 'lib0/object'
 import * as map from 'lib0/map'
 import * as error from 'lib0/error'
 
-const equalAttrs = (a: any, b: any): boolean => {
-    if (a === b) return true
-    if (typeof a === 'object' && typeof b === 'object') {
-        return (a && b && object.equalFlat(a, b))
-    }
-    return false
-}
 
 export class ItemTextListPosition {
     constructor(
@@ -47,68 +35,64 @@ export class ItemTextListPosition {
     /** Only call this if you know that this.right is defined */
     forward() {
         if (this.right === null) { error.unexpectedCase() }
-        switch (this.right.content.constructor) {
-            case ContentFormat:
-                if (!this.right.deleted) {
-                    updateCurrentAttributes(this.currentAttributes, this.right.content as ContentFormat)
-                }
-                break
-            default:
-                if (!this.right.deleted) {
-                    this.index += this.right.length
-                }
-                break
+        if (this.right.content.constructor === ContentFormat) {
+            if (!this.right.deleted) {
+                updateCurrentAttributes(this.currentAttributes, this.right.content as ContentFormat)
+            }
+        } else {
+            if (!this.right.deleted) {
+                this.index += this.right.length
+            }
         }
         this.left = this.right
         this.right = this.right.right
     }
-}
 
-/**
- * @param {Transaction} transaction
- * @param {ItemTextListPosition} pos
- * @param {number} count steps to move forward
- * @return {ItemTextListPosition}
- *
- * @private
- * @function
- */
-const findNextPosition = (transaction: Transaction, pos: ItemTextListPosition, count: number): ItemTextListPosition => {
-    while (pos.right !== null && count > 0) {
-        switch (pos.right.content.constructor) {
-            case ContentFormat:
-                if (!pos.right.deleted) {
-                    updateCurrentAttributes(pos.currentAttributes, pos.right.content as ContentFormat)
+
+    /**
+     * @param {Transaction} transaction
+     * @param {ItemTextListPosition} pos
+     * @param {number} count steps to move forward
+     * @return {ItemTextListPosition}
+     *
+     * @private
+     * @function
+     */
+    findNext(transaction: Transaction, count: number): ItemTextListPosition {
+        while (this.right !== null && count > 0) {
+            if (this.right.content.constructor === ContentFormat) {
+                if (!this.right.deleted) {
+                    updateCurrentAttributes(this.currentAttributes, this.right.content as ContentFormat)
                 }
-                break
-            default:
-                if (!pos.right.deleted) {
-                    if (count < pos.right.length) {
+            } else {
+                if (!this.right.deleted) {
+                    if (count < this.right.length) {
                         // split right
-                        getItemCleanStart(transaction, createID(pos.right.id.client, pos.right.id.clock + count))
+                        getItemCleanStart(transaction, createID(this.right.id.client, this.right.id.clock + count))
                     }
-                    pos.index += pos.right.length
-                    count -= pos.right.length
+                    this.index += this.right.length
+                    count -= this.right.length
                 }
-                break
+            }
+            this.left = this.right
+            this.right = this.right.right
+            // pos.forward() - we don't forward because that would halve the performance because we already do the checks above
         }
-        pos.left = pos.right
-        pos.right = pos.right.right
-        // pos.forward() - we don't forward because that would halve the performance because we already do the checks above
+        return this
     }
-    return pos
-}
 
-const findPosition = (transaction: Transaction, parent: AbstractType_<any>, index: number): ItemTextListPosition => {
-    const currentAttributes = new Map()
-    const marker = ArraySearchMarker.find(parent, index)
-    if (marker && marker.item) {
-        const pos = new ItemTextListPosition(marker.item.left, marker.item, marker.index, currentAttributes)
-        return findNextPosition(transaction, pos, index - marker.index)
-    } else {
-        const pos = new ItemTextListPosition(null, parent._start, 0, currentAttributes)
-        return findNextPosition(transaction, pos, index)
+    static find(transaction: Transaction, parent: AbstractType_<any>, index: number): ItemTextListPosition {
+        const currentAttributes = new Map()
+        const marker = ArraySearchMarker_.find(parent, index)
+        if (marker && marker.item) {
+            const pos = new ItemTextListPosition(marker.item.left, marker.item, marker.index, currentAttributes)
+            return pos.findNext(transaction, index - marker.index)
+        } else {
+            const pos = new ItemTextListPosition(null, parent._start, 0, currentAttributes)
+            return pos.findNext(transaction, index)
+        }
     }
+
 }
 
 /** Negate applied formats */
@@ -118,7 +102,7 @@ const insertNegatedAttributes = (transaction: Transaction, parent: AbstractType_
         currPos.right !== null && (
             currPos.right.deleted === true || (
                 currPos.right.content.constructor === ContentFormat &&
-                equalAttrs(
+                equalAttributes_(
                     negatedAttributes.get((currPos.right.content as ContentFormat).key),
                     (currPos.right.content as ContentFormat).value
                 )
@@ -156,7 +140,7 @@ const minimizeAttributeChanges = (currPos: ItemTextListPosition, attributes: { [
     while (true) {
         if (currPos.right === null) {
             break
-        } else if (currPos.right.deleted || (currPos.right.content.constructor === ContentFormat && equalAttrs(attributes[(currPos.right.content as ContentFormat).key] || null, (currPos.right.content as ContentFormat).value))) {
+        } else if (currPos.right.deleted || (currPos.right.content.constructor === ContentFormat && equalAttributes_(attributes[(currPos.right.content as ContentFormat).key] || null, (currPos.right.content as ContentFormat).value))) {
             //
         } else {
             break
@@ -173,7 +157,7 @@ const insertAttributes = (transaction: Transaction, parent: AbstractType_<any>, 
     for (const key in attributes) {
         const val = attributes[key]
         const currentVal = currPos.currentAttributes.get(key) || null
-        if (!equalAttrs(currentVal, val)) {
+        if (!equalAttributes_(currentVal, val)) {
             // save negated attribute (set null if currentVal undefined)
             negatedAttributes.set(key, currentVal)
             const { left, right } = currPos
@@ -199,7 +183,7 @@ const insertText = (transaction: Transaction, parent: AbstractType_<any>, currPo
     const content = text.constructor === String ? new ContentString((text as string)) : (text instanceof AbstractType_ ? new ContentType(text) : new ContentEmbed(text as object))
     let { left, right, index } = currPos
     if (parent._searchMarker) {
-        ArraySearchMarker.updateChanges(parent._searchMarker, currPos.index, content.getLength())
+        ArraySearchMarker_.updateChanges(parent._searchMarker, currPos.index, content.getLength())
     }
     right = new Item(createID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, content)
     right.integrate(transaction, 0)
@@ -233,7 +217,7 @@ const formatText = (transaction: Transaction, parent: AbstractType_<any>, currPo
                     const { key, value } = currPos.right.content as ContentFormat
                     const attr = attributes[key]
                     if (attr !== undefined) {
-                        if (equalAttrs(attr, value)) {
+                        if (equalAttributes_(attr, value)) {
                             negatedAttributes.delete(key)
                         } else {
                             if (length === 0) {
@@ -416,7 +400,7 @@ const deleteText = (transaction: Transaction, currPos: ItemTextListPosition, len
     }
     const parent = ((currPos.left || currPos.right as Item).parent as AbstractType_<any>)
     if (parent._searchMarker) {
-        ArraySearchMarker.updateChanges(parent._searchMarker, currPos.index, -startLength + length)
+        ArraySearchMarker_.updateChanges(parent._searchMarker, currPos.index, -startLength + length)
     }
     return currPos
 }
@@ -610,11 +594,11 @@ export class YTextEvent extends YEvent<YText> {
                             if (this.adds(item)) {
                                 if (!this.deletes(item)) {
                                     const curVal = currentAttributes.get(key) || null
-                                    if (!equalAttrs(curVal, value)) {
+                                    if (!equalAttributes_(curVal, value)) {
                                         if (action === 'retain') {
                                             addOp()
                                         }
-                                        if (equalAttrs(value, (oldAttributes.get(key) || null))) {
+                                        if (equalAttributes_(value, (oldAttributes.get(key) || null))) {
                                             delete attributes[key]
                                         } else {
                                             attributes[key] = value
@@ -626,7 +610,7 @@ export class YTextEvent extends YEvent<YText> {
                             } else if (this.deletes(item)) {
                                 oldAttributes.set(key, value)
                                 const curVal = currentAttributes.get(key) || null
-                                if (!equalAttrs(curVal, value)) {
+                                if (!equalAttributes_(curVal, value)) {
                                     if (action === 'retain') {
                                         addOp()
                                     }
@@ -636,7 +620,7 @@ export class YTextEvent extends YEvent<YText> {
                                 oldAttributes.set(key, value)
                                 const attr = attributes[key]
                                 if (attr !== undefined) {
-                                    if (!equalAttrs(attr, value)) {
+                                    if (!equalAttributes_(attr, value)) {
                                         if (action === 'retain') {
                                             addOp()
                                         }
@@ -734,7 +718,7 @@ export class YText extends AbstractType_<YTextEvent> {
         super._callObserver(transaction, parentSubs)
         const event = new YTextEvent(this, transaction, parentSubs)
         const doc = transaction.doc
-        callTypeObservers(this, transaction, event)
+        this.callObservers(transaction, event)
         // If a remote change happened, we try to cleanup potential formatting duplicates.
         if (!transaction.local) {
             // check if another formatting item was inserted
@@ -947,7 +931,7 @@ export class YText extends AbstractType_<YTextEvent> {
         const y = this.doc
         if (y !== null) {
             transact(y, transaction => {
-                const pos = findPosition(transaction, this, index)
+                const pos = ItemTextListPosition.find(transaction, this, index)
                 if (!attributes) {
                     attributes = {}
                     pos.currentAttributes.forEach((v, k) => { attributes![k] = v })
@@ -973,7 +957,7 @@ export class YText extends AbstractType_<YTextEvent> {
         const y = this.doc
         if (y !== null) {
             transact(y, transaction => {
-                const pos = findPosition(transaction, this, index)
+                const pos = ItemTextListPosition.find(transaction, this, index)
                 insertText(transaction, this, pos, embed, attributes)
             })
         } else {
@@ -996,7 +980,7 @@ export class YText extends AbstractType_<YTextEvent> {
         const y = this.doc
         if (y !== null) {
             transact(y, transaction => {
-                deleteText(transaction, findPosition(transaction, this, index), length)
+                deleteText(transaction, ItemTextListPosition.find(transaction, this, index), length)
             })
         } else {
             (this._pending)?.push(() => this.delete(index, length))
@@ -1020,7 +1004,7 @@ export class YText extends AbstractType_<YTextEvent> {
         const y = this.doc
         if (y !== null) {
             transact(y, transaction => {
-                const pos = findPosition(transaction, this, index)
+                const pos = ItemTextListPosition.find(transaction, this, index)
                 if (pos.right === null) {
                     return
                 }
@@ -1043,7 +1027,7 @@ export class YText extends AbstractType_<YTextEvent> {
     removeAttribute(attributeName: string) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                typeMapDelete(transaction, this, attributeName)
+                this.mapDelete(transaction, attributeName)
             })
         } else {
             this._pending?.push(() => this.removeAttribute(attributeName))
@@ -1063,7 +1047,7 @@ export class YText extends AbstractType_<YTextEvent> {
     setAttribute(attributeName: string, attributeValue: any) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                typeMapSet(transaction, this, attributeName, attributeValue)
+                this.mapSet(transaction, attributeName, attributeValue)
             })
         } else {
             this._pending?.push(() => this.setAttribute(attributeName, attributeValue))
@@ -1082,7 +1066,7 @@ export class YText extends AbstractType_<YTextEvent> {
      * @public
      */
     getAttribute(attributeName: string): any {
-        return /** @type {any} */ (typeMapGet(this, attributeName))
+        return this.mapGet(attributeName)
     }
 
     /**
@@ -1095,13 +1079,13 @@ export class YText extends AbstractType_<YTextEvent> {
      * @public
      */
     getAttributes(): { [s: string]: any } {
-        return typeMapGetAll(this)
+        return this.mapGetAll()
     }
 
     /**
      * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
      */
-    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2) {
+    _write(encoder: UpdateEncoderAny_) {
         encoder.writeTypeRef(YTextRefID)
     }
 }
@@ -1113,6 +1097,6 @@ export class YText extends AbstractType_<YTextEvent> {
  * @private
  * @function
  */
-export const readYText = (_decoder: UpdateDecoderV1 | UpdateDecoderV2): YText => {
+export const readYText = (_decoder: UpdateDecoderAny_): YText => {
     return new YText()
 }

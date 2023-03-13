@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.readYArray = exports.YArray = exports.YArrayEvent = void 0;
 const AbstractType_1 = require("./AbstractType_");
 const internals_1 = require("../internals");
-const AbstractType_2 = require("./AbstractType");
 /** Event that describes the changes on a YArray */
 class YArrayEvent extends internals_1.YEvent {
     /**
@@ -58,7 +57,7 @@ class YArray extends AbstractType_1.AbstractType_ {
      */
     _callObserver(transaction, parentSubs) {
         super._callObserver(transaction, parentSubs);
-        (0, internals_1.callTypeObservers)(this, transaction, new YArrayEvent(this, transaction));
+        this.callObservers(transaction, new YArrayEvent(this, transaction));
     }
     /**
      * Inserts new content at an index.
@@ -79,7 +78,7 @@ class YArray extends AbstractType_1.AbstractType_ {
     insert(index, content) {
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
-                (0, internals_1.typeListInsertGenerics)(transaction, this, index, content);
+                this.listInsertGenerics(transaction, index, content);
             });
         }
         else {
@@ -96,7 +95,7 @@ class YArray extends AbstractType_1.AbstractType_ {
     push(content) {
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
-                (0, internals_1.typeListPushGenerics)(transaction, this, content);
+                this.listPushGenerics(transaction, content);
             });
         }
         else {
@@ -120,7 +119,7 @@ class YArray extends AbstractType_1.AbstractType_ {
     delete(index, length = 1) {
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
-                (0, internals_1.typeListDelete)(transaction, this, index, length);
+                this.listDelete(transaction, index, length);
             });
         }
         else {
@@ -134,15 +133,15 @@ class YArray extends AbstractType_1.AbstractType_ {
      * @return {T}
      */
     get(index) {
-        return (0, internals_1.typeListGet)(this, index);
+        return this.listGet(index);
     }
     /** Transforms this YArray to a JavaScript Array. */
     toArray() {
-        return (0, internals_1.typeListToArray)(this);
+        return this.listToArray();
     }
     /** Transforms this YArray to a JavaScript Array. */
     slice(start = 0, end = this.length) {
-        return (0, AbstractType_2.typeListSlice)(this, start, end);
+        return this.listSlice(start, end);
     }
     /**
      * Transforms this Shared Type to a JSON object.
@@ -160,7 +159,7 @@ class YArray extends AbstractType_1.AbstractType_ {
      *                                 callback function
      */
     map(func) {
-        return (0, internals_1.typeListMap)(this, func);
+        return this.listMap(func);
     }
     /**
      * Executes a provided function on once on overy element of this YArray.
@@ -168,22 +167,16 @@ class YArray extends AbstractType_1.AbstractType_ {
      * @param {function(T,number,YArray<T>):void} f A function to execute on every element of this YArray.
      */
     forEach(f) {
-        (0, internals_1.typeListForEach)(this, f);
+        this.listForEach(f);
     }
     [Symbol.iterator]() {
-        return (0, internals_1.typeListCreateIterator)(this);
+        return this.listCreateIterator();
     }
     _write(encoder) {
         encoder.writeTypeRef(internals_1.YArrayRefID);
     }
 }
 exports.YArray = YArray;
-/**
- * @param {UpdateDecoderV1 | UpdateDecoderV2} _decoder
- *
- * @private
- * @function
- */
 const readYArray = (_decoder) => {
     return new YArray();
 };

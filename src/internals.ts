@@ -18,8 +18,8 @@ export * from './utils/UndoManager'
 export * from './utils/updates'
 export * from './utils/YEvent'
 
-export * from './types/AbstractType'
-export * from './types/YArray'
+// export * from './types/AbstractType'
+export * from './structs/YArray'
 export * from './types/YMap'
 export * from './types/YText'
 export * from './types/YXmlFragment'
@@ -49,3 +49,7 @@ export * from "./types/AbstractType_"
 export * from "./structs/Content_"
 export * from "./structs/Struct_"
 
+export * from "./types/ArraySearchMarker_"
+
+export * from "./utils/createMapIterator"
+export * from "./utils/equalAttributes"

@@ -3,18 +3,10 @@ import { AbstractType_ } from "./AbstractType_"
 import {
     YXmlEvent,
     YXmlElement,
-    typeListMap,
-    typeListForEach,
-    typeListInsertGenerics,
-    typeListInsertGenericsAfter,
-    typeListDelete,
-    typeListToArray,
     YXmlFragmentRefID,
-    callTypeObservers,
     transact,
-    typeListGet,
-    typeListSlice,
-    UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, ContentType, Transaction, Item, YXmlText, YXmlHook // eslint-disable-line
+    Doc, ContentType, Transaction, Item, YXmlText, YXmlHook, UpdateEncoderAny_, UpdateDecoderAny_, // eslint-disable-line
+
 } from '../internals'
 
 import * as error from 'lib0/error'
@@ -224,7 +216,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      * @param {Set<null|string>} parentSubs Keys changed on this type. `null` if list was modified.
      */
     _callObserver(transaction: Transaction, parentSubs: Set<null | string>) {
-        callTypeObservers(this, transaction, new YXmlEvent(this, parentSubs, transaction))
+        this.callObservers(transaction, new YXmlEvent(this, parentSubs, transaction))
     }
 
     /**
@@ -233,7 +225,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      * @return {string} The string representation of all children.
      */
     toString (): string {
-        return typeListMap(this, xml => xml!.toString()).join('')
+        return this.listMap(xml => xml!.toString()).join('')
     }
 
     /**
@@ -263,7 +255,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
         if (binding !== undefined) {
             binding._createAssociation(fragment, this)
         }
-        typeListForEach(this, xmlType => {
+        this.listForEach(xmlType => {
             fragment.insertBefore(xmlType.toDOM(_document, hooks, binding), null)
         })
         return fragment
@@ -279,10 +271,10 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      * @param {number} index The index to insert content at
      * @param {Array<YXmlElement|YXmlText>} content The array of content
      */
-    insert(index: number, content: Array<YXmlElement | YXmlText>) {
+    insert(index: number, content: (YXmlElement | YXmlText)[]) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                typeListInsertGenerics(transaction, this, index, content)
+                this.listInsertGenerics(transaction, index, content)
             })
         } else {
             // @ts-ignore _prelimContent is defined because this is not yet integrated
@@ -304,7 +296,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
                 const refItem = (ref && ref instanceof AbstractType_) ? ref._item : ref
-                typeListInsertGenericsAfter(transaction, this, refItem, content)
+                this.listInsertGenericsAfter(transaction, refItem, content)
             })
         } else {
             const pc = this._prelimContent as any[]
@@ -325,7 +317,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
     delete(index: number, length: number = 1) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                typeListDelete(transaction, this, index, length)
+                this.listDelete(transaction, index, length)
             })
         } else {
             // @ts-ignore _prelimContent is defined because this is not yet integrated
@@ -339,7 +331,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      * @return {Array<YXmlElement|YXmlText|YXmlHook>}
      */
     toArray(): Array<YXmlElement | YXmlText | YXmlHook> {
-        return typeListToArray(this)
+        return this.listToArray()
     }
 
     /**
@@ -367,7 +359,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      * @return {YXmlElement|YXmlText}
      */
     get(index: number): YXmlElement | YXmlText {
-        return typeListGet(this, index)
+        return this.listGet(index)
     }
 
     /**
@@ -378,16 +370,14 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      * @return {Array<YXmlElement|YXmlText>}
      */
     slice(start: number = 0, end: number = this.length): Array<YXmlElement | YXmlText> {
-        return typeListSlice(this, start, end)
+        return this.listSlice(start, end)
     }
 
     /**
      * Executes a provided function on once on overy child element.
-     *
-     * @param {function(YXmlElement|YXmlText,number, typeof self):void} f A function to execute on every element of this YArray.
      */
-    forEach(f: (arg0: YXmlElement | YXmlText, arg1: number, arg2: typeof self) => void) {
-        typeListForEach(this, f)
+    forEach(f: (element: YXmlElement | YXmlText, index: number, self: this) => void) {
+        this.listForEach(f)
     }
 
     /**
@@ -398,7 +388,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      *
      * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder The encoder to write data to.
      */
-    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2) {
+    _write(encoder: UpdateEncoderAny_) {
         encoder.writeTypeRef(YXmlFragmentRefID)
     }
 }
@@ -410,4 +400,4 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
  * @private
  * @function
  */
-export const readYXmlFragment = (_decoder: UpdateDecoderV1 | UpdateDecoderV2): YXmlFragment => new YXmlFragment()
+export const readYXmlFragment = (_decoder: UpdateDecoderAny_): YXmlFragment => new YXmlFragment()
