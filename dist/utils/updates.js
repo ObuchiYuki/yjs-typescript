@@ -96,7 +96,7 @@ const logUpdateV2 = (update, YDecoder = internals_1.UpdateDecoderV2) => {
         structs.push(curr);
     }
     logging.print('Structs: ', structs);
-    const ds = (0, internals_1.readDeleteSet)(updateDecoder);
+    const ds = internals_1.DeleteSet.decode(updateDecoder);
     logging.print('DeleteSet: ', ds);
 };
 exports.logUpdateV2 = logUpdateV2;
@@ -120,7 +120,7 @@ const decodeUpdateV2 = (update, YDecoder = internals_1.UpdateDecoderV2) => {
     }
     return {
         structs,
-        ds: (0, internals_1.readDeleteSet)(updateDecoder)
+        ds: internals_1.DeleteSet.decode(updateDecoder)
     };
 };
 exports.decodeUpdateV2 = decodeUpdateV2;
@@ -405,9 +405,9 @@ const mergeUpdatesV2 = (updates, YDecoder = internals_1.UpdateDecoderV2, YEncode
         currWrite = null;
     }
     finishLazyStructWriting(lazyStructEncoder);
-    const dss = updateDecoders.map(decoder => (0, internals_1.readDeleteSet)(decoder));
-    const ds = (0, internals_1.mergeDeleteSets)(dss);
-    (0, internals_1.writeDeleteSet)(updateEncoder, ds);
+    const dss = updateDecoders.map(decoder => internals_1.DeleteSet.decode(decoder));
+    const ds = internals_1.DeleteSet.mergeAll(dss);
+    ds.encode(updateEncoder);
     return updateEncoder.toUint8Array();
 };
 exports.mergeUpdatesV2 = mergeUpdatesV2;
@@ -449,8 +449,8 @@ const diffUpdateV2 = (update, sv, YDecoder = internals_1.UpdateDecoderV2, YEncod
     }
     finishLazyStructWriting(lazyStructWriter);
     // write ds
-    const ds = (0, internals_1.readDeleteSet)(decoder);
-    (0, internals_1.writeDeleteSet)(encoder, ds);
+    const ds = internals_1.DeleteSet.decode(decoder);
+    ds.encode(encoder);
     return encoder.toUint8Array();
 };
 exports.diffUpdateV2 = diffUpdateV2;
@@ -532,8 +532,8 @@ const convertUpdateFormat = (update, YDecoder, YEncoder) => {
         writeStructToLazyStructWriter(lazyWriter, curr, 0);
     }
     finishLazyStructWriting(lazyWriter);
-    const ds = (0, internals_1.readDeleteSet)(updateDecoder);
-    (0, internals_1.writeDeleteSet)(updateEncoder, ds);
+    const ds = internals_1.DeleteSet.decode(updateDecoder);
+    ds.encode(updateEncoder);
     return updateEncoder.toUint8Array();
 };
 exports.convertUpdateFormat = convertUpdateFormat;

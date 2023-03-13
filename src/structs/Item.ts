@@ -2,13 +2,12 @@ import { Struct_ } from "./Struct_"
 
 import {
     GC, getState,
-    replaceStruct, addStruct, addToDeleteSet,
+    replaceStruct, addStruct,
     findRootTypeKey,
     compareIDs, createID,
     getItem, getItemCleanEnd, getItemCleanStart,
     readContentDeleted, readContentBinary, readContentJSON, readContentAny, readContentString, readContentEmbed, readContentDoc, readContentFormat, readContentType,
     addChangedTypeToTransaction,
-    isDeleted,
     DeleteSet, ContentType, ContentDeleted, StructStore, ID, AbstractType_, Transaction,
 
     UpdateDecoderAny_, UpdateEncoderAny_, __AbstractStruct, ContentDecoder_, Content_,
@@ -215,7 +214,7 @@ export class Item extends Struct_ {
                 left = this
                 // Iterate right while right is in itemsToDelete
                 // If it is intended to delete right while item is redone, we can expect that item should replace right.
-                while (left !== null && left.right !== null && isDeleted(itemsToDelete, left.right.id)) {
+                while (left !== null && left.right !== null && itemsToDelete.isDeleted(left.right.id)) {
                     left = left.right
                 }
                 // follow redone
@@ -469,7 +468,7 @@ export class Item extends Struct_ {
                 parent._length -= this.length
             }
             this.markDeleted()
-            addToDeleteSet(transaction.deleteSet, this.id.client, this.id.clock, this.length)
+            transaction.deleteSet.add(this.id.client, this.id.clock, this.length)
             addChangedTypeToTransaction(transaction, parent, this.parentSub)
             this.content.delete(transaction)
         }

@@ -2,11 +2,7 @@
 import {
     YArray,
     YMap,
-    readDeleteSet,
-    writeDeleteSet,
-    createDeleteSet,
     DSEncoderV1, DSDecoderV1, ID, DeleteSet, YArrayEvent, Transaction, Doc, // eslint-disable-line
-    mergeDeleteSets, isDeleted
 } from '../internals'
 
 import * as decoding from 'lib0/decoding'
@@ -45,12 +41,12 @@ export class PermanentUserData {
                 event.changes.added.forEach(item => {
                     item.content.getContent().forEach(encodedDs => {
                         if (encodedDs instanceof Uint8Array) {
-                            this.dss.set(userDescription, mergeDeleteSets([this.dss.get(userDescription) || createDeleteSet(), readDeleteSet(new DSDecoderV1(decoding.createDecoder(encodedDs)))]))
+                            this.dss.set(userDescription, DeleteSet.mergeAll([this.dss.get(userDescription) || new DeleteSet(), DeleteSet.decode(new DSDecoderV1(decoding.createDecoder(encodedDs)))]))
                         }
                     })
                 })
             })
-            this.dss.set(userDescription, mergeDeleteSets(ds.map((encodedDs: Uint8Array) => readDeleteSet(new DSDecoderV1(decoding.createDecoder(encodedDs))))))
+            this.dss.set(userDescription, DeleteSet.mergeAll(ds.map((encodedDs: Uint8Array) => DeleteSet.decode(new DSDecoderV1(decoding.createDecoder(encodedDs))))))
             ids.observe((event: YArrayEvent<any>) =>
                 event.changes.added.forEach(item => item.content.getContent().forEach(addClientId))
             )
@@ -101,7 +97,7 @@ export class PermanentUserData {
                     const encoder = new DSEncoderV1()
                     const ds = this.dss.get(userDescription)
                     if (ds) {
-                        writeDeleteSet(encoder, ds)
+                        ds.encode(encoder)
                         user.get('ds').push([encoder.toUint8Array()])
                     }
                 }
@@ -113,7 +109,7 @@ export class PermanentUserData {
                 const ds = transaction.deleteSet
                 if (transaction.local && ds.clients.size > 0 && filter(transaction, ds)) {
                     const encoder = new DSEncoderV1()
-                    writeDeleteSet(encoder, ds)
+                    ds.encode(encoder)
                     yds.push([encoder.toUint8Array()])
                 }
             })
@@ -134,7 +130,7 @@ export class PermanentUserData {
      */
     getUserByDeletedId(id: ID): string | null {
         for (const [userDescription, ds] of this.dss.entries()) {
-            if (isDeleted(ds, id)) {
+            if (ds.isDeleted(id)) {
                 return userDescription
             }
         }

@@ -57,7 +57,7 @@ exports.equalSnapshots = equalSnapshots;
  * @return {Uint8Array}
  */
 const encodeSnapshotV2 = (snapshot, encoder = new internals_1.DSEncoderV2()) => {
-    (0, internals_1.writeDeleteSet)(encoder, snapshot.ds);
+    snapshot.ds.encode(encoder);
     (0, internals_1.writeStateVector)(encoder, snapshot.sv);
     return encoder.toUint8Array();
 };
@@ -74,7 +74,7 @@ exports.encodeSnapshot = encodeSnapshot;
  * @return {Snapshot}
  */
 const decodeSnapshotV2 = (buf, decoder = new internals_1.DSDecoderV2(decoding.createDecoder(buf))) => {
-    return new Snapshot((0, internals_1.readDeleteSet)(decoder), (0, internals_1.readStateVector)(decoder));
+    return new Snapshot(internals_1.DeleteSet.decode(decoder), (0, internals_1.readStateVector)(decoder));
 };
 exports.decodeSnapshotV2 = decodeSnapshotV2;
 /**
@@ -90,12 +90,12 @@ exports.decodeSnapshot = decodeSnapshot;
  */
 const createSnapshot = (ds, sm) => new Snapshot(ds, sm);
 exports.createSnapshot = createSnapshot;
-exports.emptySnapshot = (0, exports.createSnapshot)((0, internals_1.createDeleteSet)(), new Map());
+exports.emptySnapshot = (0, exports.createSnapshot)(new internals_1.DeleteSet(), new Map());
 /**
  * @param {Doc} doc
  * @return {Snapshot}
  */
-const snapshot = (doc) => (0, exports.createSnapshot)((0, internals_1.createDeleteSetFromStructStore)(doc.store), (0, internals_1.getStateVector)(doc.store));
+const snapshot = (doc) => (0, exports.createSnapshot)(internals_1.DeleteSet.createFromStructStore(doc.store), (0, internals_1.getStateVector)(doc.store));
 exports.snapshot = snapshot;
 /**
  * @param {Item} item
@@ -106,7 +106,7 @@ exports.snapshot = snapshot;
  */
 const isVisible = (item, snapshot) => snapshot === undefined
     ? !item.deleted
-    : snapshot.sv.has(item.id.client) && (snapshot.sv.get(item.id.client) || 0) > item.id.clock && !(0, internals_1.isDeleted)(snapshot.ds, item.id);
+    : snapshot.sv.has(item.id.client) && (snapshot.sv.get(item.id.client) || 0) > item.id.clock && !snapshot.ds.isDeleted(item.id);
 exports.isVisible = isVisible;
 /**
  * @param {Transaction} transaction
@@ -122,7 +122,7 @@ const splitSnapshotAffectedStructs = (transaction, snapshot) => {
                 (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(client, clock));
             }
         });
-        (0, internals_1.iterateDeletedStructs)(transaction, snapshot.ds, item => { });
+        snapshot.ds.iterate(transaction, item => { });
         meta.add(snapshot);
     }
 };
@@ -167,7 +167,7 @@ const createDocFromSnapshot = (originDoc, snapshot, newDoc = new internals_1.Doc
                 structs[i].write(encoder, 0);
             }
         }
-        (0, internals_1.writeDeleteSet)(encoder, ds);
+        ds.encode(encoder);
     });
     (0, internals_1.applyUpdateV2)(newDoc, encoder.toUint8Array(), 'snapshot');
     return newDoc;

@@ -148,7 +148,7 @@ class Item extends Struct_1.Struct_ {
                 left = this;
                 // Iterate right while right is in itemsToDelete
                 // If it is intended to delete right while item is redone, we can expect that item should replace right.
-                while (left !== null && left.right !== null && (0, internals_1.isDeleted)(itemsToDelete, left.right.id)) {
+                while (left !== null && left.right !== null && itemsToDelete.isDeleted(left.right.id)) {
                     left = left.right;
                 }
                 // follow redone
@@ -398,7 +398,7 @@ class Item extends Struct_1.Struct_ {
                 parent._length -= this.length;
             }
             this.markDeleted();
-            (0, internals_1.addToDeleteSet)(transaction.deleteSet, this.id.client, this.id.clock, this.length);
+            transaction.deleteSet.add(this.id.client, this.id.clock, this.length);
             (0, internals_1.addChangedTypeToTransaction)(transaction, parent, this.parentSub);
             this.content.delete(transaction);
         }

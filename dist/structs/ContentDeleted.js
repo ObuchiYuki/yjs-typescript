@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readContentDeleted = exports.ContentDeleted = void 0;
-const internals_1 = require("../internals");
 class ContentDeleted {
     constructor(len) {
         this.len = len;
@@ -20,7 +19,7 @@ class ContentDeleted {
         return true;
     }
     integrate(transaction, item) {
-        (0, internals_1.addToDeleteSet)(transaction.deleteSet, item.id.client, item.id.clock, this.len);
+        transaction.deleteSet.add(item.id.client, item.id.clock, this.len);
         item.markDeleted();
     }
     delete(transaction) { }

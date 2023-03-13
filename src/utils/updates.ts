@@ -7,14 +7,12 @@ import * as math from 'lib0/math'
 import {
     createID,
     readItemContent,
-    readDeleteSet,
-    writeDeleteSet,
     Skip,
-    mergeDeleteSets,
     DSEncoderV1,
     DSEncoderV2,
     decodeStateVector,
-    Item, GC, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2 // eslint-disable-line
+    Item, GC, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, // eslint-disable-line
+    DeleteSet
 } from '../internals'
 
 /**
@@ -112,7 +110,7 @@ export const logUpdateV2 = (update: Uint8Array, YDecoder: typeof UpdateDecoderV2
         structs.push(curr)
     }
     logging.print('Structs: ', structs)
-    const ds = readDeleteSet(updateDecoder)
+    const ds = DeleteSet.decode(updateDecoder)
     logging.print('DeleteSet: ', ds)
 }
 
@@ -136,7 +134,7 @@ export const decodeUpdateV2 = (update: Uint8Array, YDecoder: typeof UpdateDecode
     }
     return {
         structs,
-        ds: readDeleteSet(updateDecoder)
+        ds: DeleteSet.decode(updateDecoder)
     }
 }
 
@@ -441,9 +439,9 @@ export const mergeUpdatesV2 = (updates: Array<Uint8Array>, YDecoder: typeof Upda
     }
     finishLazyStructWriting(lazyStructEncoder)
 
-    const dss = updateDecoders.map(decoder => readDeleteSet(decoder))
-    const ds = mergeDeleteSets(dss)
-    writeDeleteSet(updateEncoder, ds)
+    const dss = updateDecoders.map(decoder => DeleteSet.decode(decoder))
+    const ds = DeleteSet.mergeAll(dss)
+    ds.encode(updateEncoder)
     return updateEncoder.toUint8Array()
 }
 
@@ -484,8 +482,8 @@ export const diffUpdateV2 = (update: Uint8Array, sv: Uint8Array, YDecoder: typeo
     }
     finishLazyStructWriting(lazyStructWriter)
     // write ds
-    const ds = readDeleteSet(decoder)
-    writeDeleteSet(encoder, ds)
+    const ds = DeleteSet.decode(decoder)
+    ds.encode(encoder)
     return encoder.toUint8Array()
 }
 
@@ -574,8 +572,8 @@ export const convertUpdateFormat = (update: Uint8Array, YDecoder: typeof UpdateD
         writeStructToLazyStructWriter(lazyWriter, curr, 0)
     }
     finishLazyStructWriting(lazyWriter)
-    const ds = readDeleteSet(updateDecoder)
-    writeDeleteSet(updateEncoder, ds)
+    const ds = DeleteSet.decode(updateDecoder)
+    ds.encode(updateEncoder)
     return updateEncoder.toUint8Array()
 }
 

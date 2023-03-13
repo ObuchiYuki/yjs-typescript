@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.YEvent = void 0;
-const internals_1 = require("../internals");
 const array = require("lib0/array");
 /** YEvent describes the changes on a YType. */
 class YEvent {
@@ -38,7 +37,7 @@ class YEvent {
      * @return {boolean}
      */
     deletes(struct) {
-        return (0, internals_1.isDeleted)(this.transaction.deleteSet, struct.id);
+        return this.transaction.deleteSet.isDeleted(struct.id);
     }
     get keys() {
         if (this._keys != null)
@@ -46,7 +45,7 @@ class YEvent {
         const keys = new Map();
         const target = this.target;
         const changed = this.transaction.changed.get(target);
-        for (const key in changed) {
+        changed.forEach(key => {
             if (key !== null) {
                 const item = target._map.get(key);
                 let action;
@@ -62,7 +61,7 @@ class YEvent {
                             oldValue = array.last(prev.content.getContent());
                         }
                         else {
-                            break;
+                            return;
                         }
                     }
                     else {
@@ -82,12 +81,12 @@ class YEvent {
                         oldValue = array.last(item.content.getContent());
                     }
                     else {
-                        break;
+                        return;
                     }
                 }
                 keys.set(key, { action: action, oldValue: oldValue });
             }
-        }
+        });
         this._keys = keys;
         return keys;
     }
@@ -103,8 +102,8 @@ class YEvent {
         return struct.id.clock >= (this.transaction.beforeState.get(struct.id.client) || 0);
     }
     get changes() {
-        if (this.changes != null)
-            return this.changes;
+        if (this._changes != null)
+            return this._changes;
         const changes = { added: new Set(), deleted: new Set(), delta: [], keys: this.keys };
         const changed = this.transaction.changed.get(this.target);
         if (changed.has(null)) {

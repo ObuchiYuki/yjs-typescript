@@ -1,7 +1,7 @@
 import * as t from 'lib0/testing'
 import { init, compare } from '../testHelper' // eslint-disable-line
 import * as Y from '../../src/index'
-import { readClientsStructRefs, readDeleteSet, UpdateDecoderV2, UpdateEncoderV2, writeDeleteSet } from '../../src/internals'
+import { readClientsStructRefs, UpdateDecoderV2, UpdateEncoderV2 } from '../../src/internals'
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'
 
@@ -206,10 +206,10 @@ const checkUpdateCases = (ydoc: Y.Doc, updates: Array<Uint8Array>, enc: Enc, has
           const decoder = decoding.createDecoder(diffed)
           const updateDecoder = new UpdateDecoderV2(decoder)
           readClientsStructRefs(updateDecoder, new Y.Doc())
-          const ds = readDeleteSet(updateDecoder)
+          const ds = Y.DeleteSet.decode(updateDecoder)
           const updateEncoder = new UpdateEncoderV2()
           encoding.writeVarUint(updateEncoder.restEncoder, 0) // 0 structs
-          writeDeleteSet(updateEncoder, ds)
+          ds.encode(updateEncoder)
           const deletesUpdate = updateEncoder.toUint8Array()
           const mergedDeletes = Y.mergeUpdatesV2([deletesUpdate, partMerged])
           if (!hasDeletes || enc !== encDoc) {

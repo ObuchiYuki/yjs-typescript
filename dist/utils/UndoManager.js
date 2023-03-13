@@ -28,7 +28,7 @@ class StackItem {
     }
 }
 const clearUndoManagerStackItem = (tr, um, stackItem) => {
-    (0, internals_1.iterateDeletedStructs)(tr, stackItem.deletions, item => {
+    stackItem.deletions.iterate(tr, item => {
         if (item instanceof internals_1.Item && um.scope.some(type => (0, internals_1.isParentOf)(type, item))) {
             internals_1.Item.keepRecursive(item, false);
         }
@@ -48,7 +48,7 @@ const popStackItem = (undoManager, stack, eventType) => {
             const itemsToRedo = new Set();
             const itemsToDelete = [];
             let performedChange = false;
-            (0, internals_1.iterateDeletedStructs)(transaction, stackItem.insertions, struct => {
+            stackItem.insertions.iterate(transaction, struct => {
                 if (struct instanceof internals_1.Item) {
                     if (struct.redone !== null) {
                         let { item, diff } = (0, exports.followRedone)(store, struct.id);
@@ -62,11 +62,11 @@ const popStackItem = (undoManager, stack, eventType) => {
                     }
                 }
             });
-            (0, internals_1.iterateDeletedStructs)(transaction, stackItem.deletions, struct => {
+            stackItem.deletions.iterate(transaction, struct => {
                 if (struct instanceof internals_1.Item &&
                     scope.some(type => (0, internals_1.isParentOf)(type, struct)) &&
                     // Never redo structs in stackItem.insertions because they were created and deleted in the same capture interval.
-                    !(0, internals_1.isDeleted)(stackItem.insertions, struct.id)) {
+                    !stackItem.insertions.isDeleted(struct.id)) {
                     itemsToRedo.add(struct);
                 }
             });
@@ -158,7 +158,7 @@ class UndoManager extends observable_1.Observable {
                 const startClock = transaction.beforeState.get(client) || 0;
                 const len = endClock - startClock;
                 if (len > 0) {
-                    (0, internals_1.addToDeleteSet)(insertions, client, startClock, len);
+                    insertions.add(client, startClock, len);
                 }
             });
             const now = time.getUnixTime();
@@ -166,8 +166,8 @@ class UndoManager extends observable_1.Observable {
             if (this.lastChange > 0 && now - this.lastChange < this.captureTimeout && stack.length > 0 && !undoing && !redoing) {
                 // append change to last stack op
                 const lastOp = stack[stack.length - 1];
-                lastOp.deletions = (0, internals_1.mergeDeleteSets)([lastOp.deletions, transaction.deleteSet]);
-                lastOp.insertions = (0, internals_1.mergeDeleteSets)([lastOp.insertions, insertions]);
+                lastOp.deletions = internals_1.DeleteSet.mergeAll([lastOp.deletions, transaction.deleteSet]);
+                lastOp.insertions = internals_1.DeleteSet.mergeAll([lastOp.insertions, insertions]);
             }
             else {
                 // create a new stack op
@@ -178,7 +178,7 @@ class UndoManager extends observable_1.Observable {
                 this.lastChange = now;
             }
             // make sure that deleted structs are not gc'd
-            (0, internals_1.iterateDeletedStructs)(transaction, transaction.deleteSet, /** @param {Item|GC} item */ /** @param {Item|GC} item */ item => {
+            transaction.deleteSet.iterate(transaction, item => {
                 if (item instanceof internals_1.Item && this.scope.some(type => (0, internals_1.isParentOf)(type, item))) {
                     internals_1.Item.keepRecursive(item, true);
                 }

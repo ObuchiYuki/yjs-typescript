@@ -396,12 +396,12 @@ const readUpdateV2 = (decoder, ydoc, transactionOrigin, structDecoder = new inte
     }
     // console.log('time to integrate: ', performance.now() - start) // @todo remove
     // start = performance.now()
-    const dsRest = (0, internals_1.readAndApplyDeleteSet)(structDecoder, transaction, store);
+    const dsRest = internals_1.DeleteSet.decodeAndApply(structDecoder, transaction, store);
     if (store.pendingDs) {
         // @todo we could make a lower-bound state-vector check as we do above
         const pendingDSUpdate = new internals_1.UpdateDecoderV2(decoding.createDecoder(store.pendingDs));
         decoding.readVarUint(pendingDSUpdate.restDecoder); // read 0 structs, because we only encode deletes in pendingdsupdate
-        const dsRest2 = (0, internals_1.readAndApplyDeleteSet)(pendingDSUpdate, transaction, store);
+        const dsRest2 = internals_1.DeleteSet.decodeAndApply(pendingDSUpdate, transaction, store);
         if (dsRest && dsRest2) {
             // case 1: ds1 != null && ds2 != null
             store.pendingDs = (0, internals_1.mergeUpdatesV2)([dsRest, dsRest2]);
@@ -483,7 +483,7 @@ exports.applyUpdate = applyUpdate;
  */
 const writeStateAsUpdate = (encoder, doc, targetStateVector = new Map()) => {
     (0, exports.writeClientsStructs)(encoder, doc.store, targetStateVector);
-    (0, internals_1.writeDeleteSet)(encoder, (0, internals_1.createDeleteSetFromStructStore)(doc.store));
+    internals_1.DeleteSet.createFromStructStore(doc.store).encode(encoder);
 };
 exports.writeStateAsUpdate = writeStateAsUpdate;
 /**

@@ -70,10 +70,10 @@ export declare class YTextEvent extends YEvent<YText> {
     /**
      * @param {YText} ytext
      * @param {Transaction} transaction
-     * @param {Set<string>} subs The keys that changed
+     * @param {Set<string>} keysChanged The keys that changed
      */
-    constructor(ytext: YText, transaction: Transaction, keysChanged: Set<null | string>);
-    get changes(): import("../internals").YEventChange;
+    constructor(ytext: YText, transaction: Transaction, subs: Set<null | string>);
+    get changes(): any;
     /**
      * Compute the changes in the delta format.
      * A {@link https://quilljs.com/docs/delta/|Quill Delta}) that represents the changes on the document.

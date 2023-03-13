@@ -70,9 +70,9 @@ const writeUpdateMessageFromTransaction = (encoder, transaction) => {
     if (transaction.deleteSet.clients.size === 0 && !map.any(transaction.afterState, (clock, client) => transaction.beforeState.get(client) !== clock)) {
         return false;
     }
-    (0, internals_1.sortAndMergeDeleteSet)(transaction.deleteSet);
+    transaction.deleteSet.sortAndMerge();
     (0, internals_1.writeStructsFromTransaction)(encoder, transaction);
-    (0, internals_1.writeDeleteSet)(encoder, transaction.deleteSet);
+    transaction.deleteSet.encode(encoder);
     return true;
 };
 exports.writeUpdateMessageFromTransaction = writeUpdateMessageFromTransaction;
@@ -182,7 +182,7 @@ const cleanupTransactions = (transactionCleanups, i) => {
         const ds = transaction.deleteSet;
         const mergeStructs = transaction._mergeStructs;
         try {
-            (0, internals_1.sortAndMergeDeleteSet)(ds);
+            ds.sortAndMerge();
             transaction.afterState = (0, internals_1.getStateVector)(transaction.doc.store);
             doc.emit('beforeObserverCalls', [transaction, doc]);
             /**

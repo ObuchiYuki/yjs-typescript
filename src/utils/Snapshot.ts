@@ -1,15 +1,9 @@
 
 import {
-    isDeleted,
-    createDeleteSetFromStructStore,
     getStateVector,
     getItemCleanStart,
-    iterateDeletedStructs,
-    writeDeleteSet,
     writeStateVector,
-    readDeleteSet,
     readStateVector,
-    createDeleteSet,
     createID,
     getState,
     findIndexSS,
@@ -80,7 +74,7 @@ export const equalSnapshots = (snap1: Snapshot, snap2: Snapshot): boolean => {
  * @return {Uint8Array}
  */
 export const encodeSnapshotV2 = (snapshot: Snapshot, encoder: DSEncoderV1 | DSEncoderV2 = new DSEncoderV2()): Uint8Array => {
-    writeDeleteSet(encoder, snapshot.ds)
+    snapshot.ds.encode(encoder)
     writeStateVector(encoder, snapshot.sv)
     return encoder.toUint8Array()
 }
@@ -97,7 +91,7 @@ export const encodeSnapshot = (snapshot: Snapshot): Uint8Array => encodeSnapshot
  * @return {Snapshot}
  */
 export const decodeSnapshotV2 = (buf: Uint8Array, decoder: DSDecoderV1 | DSDecoderV2 = new DSDecoderV2(decoding.createDecoder(buf))): Snapshot => {
-    return new Snapshot(readDeleteSet(decoder), readStateVector(decoder))
+    return new Snapshot(DeleteSet.decode(decoder), readStateVector(decoder))
 }
 
 /**
@@ -113,13 +107,13 @@ export const decodeSnapshot = (buf: Uint8Array): Snapshot => decodeSnapshotV2(bu
  */
 export const createSnapshot = (ds: DeleteSet, sm: Map<number, number>): Snapshot => new Snapshot(ds, sm)
 
-export const emptySnapshot = createSnapshot(createDeleteSet(), new Map())
+export const emptySnapshot = createSnapshot(new DeleteSet(), new Map())
 
 /**
  * @param {Doc} doc
  * @return {Snapshot}
  */
-export const snapshot = (doc: { store: StructStore }) => createSnapshot(createDeleteSetFromStructStore(doc.store), getStateVector(doc.store))
+export const snapshot = (doc: { store: StructStore }) => createSnapshot(DeleteSet.createFromStructStore(doc.store), getStateVector(doc.store))
 
 /**
  * @param {Item} item
@@ -130,7 +124,7 @@ export const snapshot = (doc: { store: StructStore }) => createSnapshot(createDe
  */
 export const isVisible = (item: Item, snapshot: Snapshot | undefined) => snapshot === undefined
     ? !item.deleted
-    : snapshot.sv.has(item.id.client) && (snapshot.sv.get(item.id.client) || 0) > item.id.clock && !isDeleted(snapshot.ds, item.id)
+    : snapshot.sv.has(item.id.client) && (snapshot.sv.get(item.id.client) || 0) > item.id.clock && !snapshot.ds.isDeleted(item.id)
 
 /**
  * @param {Transaction} transaction
@@ -146,7 +140,7 @@ export const splitSnapshotAffectedStructs = (transaction: Transaction, snapshot:
                 getItemCleanStart(transaction, createID(client, clock))
             }
         })
-        iterateDeletedStructs(transaction, snapshot.ds, item => {})
+        snapshot.ds.iterate(transaction, item => {})
         meta.add(snapshot)
     }
 }
@@ -192,7 +186,7 @@ export const createDocFromSnapshot = (originDoc: Doc, snapshot: Snapshot, newDoc
                 structs[i].write(encoder, 0)
             }
         }
-        writeDeleteSet(encoder, ds)
+        ds.encode(encoder)
     })
 
     applyUpdateV2(newDoc, encoder.toUint8Array(), 'snapshot')

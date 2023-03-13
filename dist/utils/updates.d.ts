@@ -1,4 +1,5 @@
-import { Skip, DSEncoderV1, DSEncoderV2, Item, GC, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2 } from '../internals';
+import { Skip, DSEncoderV1, DSEncoderV2, Item, GC, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, // eslint-disable-line
+DeleteSet } from '../internals';
 export declare class LazyStructReader {
     gen: Generator<Item | Skip | GC, void, unknown>;
     curr: null | Item | Skip | GC;
@@ -31,7 +32,7 @@ export declare const logUpdateV2: (update: Uint8Array, YDecoder?: typeof UpdateD
  */
 export declare const decodeUpdate: (update: Uint8Array) => {
     structs: (GC | Item | Skip)[];
-    ds: import("./DeleteSet").DeleteSet;
+    ds: DeleteSet;
 };
 /**
  * @param {Uint8Array} update
@@ -40,7 +41,7 @@ export declare const decodeUpdate: (update: Uint8Array) => {
  */
 export declare const decodeUpdateV2: (update: Uint8Array, YDecoder?: typeof UpdateDecoderV2 | typeof UpdateDecoderV1) => {
     structs: (GC | Item | Skip)[];
-    ds: import("./DeleteSet").DeleteSet;
+    ds: DeleteSet;
 };
 export declare class LazyStructWriter {
     currClient: number;

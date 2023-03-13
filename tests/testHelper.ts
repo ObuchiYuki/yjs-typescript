@@ -384,7 +384,7 @@ export const compare = (users: Array<TestYInstance>) => {
             return true
         })
         t.compare(Y.encodeStateVector(users[i]), Y.encodeStateVector(users[i + 1]))
-        compareDS(Y.createDeleteSetFromStructStore(users[i].store), Y.createDeleteSetFromStructStore(users[i + 1].store))
+        compareDS(Y.DeleteSet.createFromStructStore(users[i].store), Y.DeleteSet.createFromStructStore(users[i + 1].store))
         compareStructStores(users[i].store, users[i + 1].store)
     }
     users.map(u => u.destroy())

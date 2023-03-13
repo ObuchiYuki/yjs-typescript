@@ -39,8 +39,6 @@ export {
   getState,
   Snapshot,
   createSnapshot,
-  createDeleteSet,
-  createDeleteSetFromStructStore,
   cleanupYTextFormatting,
   snapshot,
   emptySnapshot,
@@ -48,7 +46,6 @@ export {
   findIndexSS,
   getItem,
   createDocFromSnapshot,
-  iterateDeletedStructs,
   applyUpdate,
   applyUpdateV2,
   readUpdate,
@@ -67,7 +64,6 @@ export {
   decodeUpdate,
   decodeUpdateV2,
   relativePositionToJSON,
-  isDeleted,
   isParentOf,
   equalSnapshots,
   PermanentUserData, // @TODO experimental
@@ -87,7 +83,8 @@ export {
   diffUpdateV2,
   convertUpdateFormatV1ToV2,
   convertUpdateFormatV2ToV1,
-  UpdateEncoderV1
+  UpdateEncoderV1,
+  DeleteSet
 } from './internals'
 
 const glo = (typeof globalThis !== 'undefined'

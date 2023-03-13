@@ -375,24 +375,25 @@ class YTextEvent extends internals_1.YEvent {
     /**
      * @param {YText} ytext
      * @param {Transaction} transaction
-     * @param {Set<string>} subs The keys that changed
+     * @param {Set<string>} keysChanged The keys that changed
      */
-    constructor(ytext, transaction, keysChanged) {
+    constructor(ytext, transaction, subs) {
         super(ytext, transaction);
         this.childListChanged = false;
         this.keysChanged = new Set();
-        keysChanged.forEach((key) => {
-            if (key === null) {
+        subs.forEach((sub) => {
+            if (sub === null) {
                 this.childListChanged = true;
             }
             else {
-                this.keysChanged.add(key);
+                this.keysChanged.add(sub);
             }
         });
     }
     get changes() {
         if (this._changes === null) {
-            this._changes = { keys: this.keys, delta: this.delta, added: new Set(), deleted: new Set() };
+            const changes = { keys: this.keys, delta: this.delta, added: new Set(), deleted: new Set() };
+            this._changes = changes;
         }
         return this._changes;
     }
@@ -640,7 +641,7 @@ class YText extends AbstractType_1.AbstractType_ {
                 }
             }
             if (!foundFormattingItem) {
-                (0, internals_1.iterateDeletedStructs)(transaction, transaction.deleteSet, item => {
+                transaction.deleteSet.iterate(transaction, item => {
                     if (item instanceof internals_1.GC || foundFormattingItem) {
                         return;
                     }
@@ -659,7 +660,7 @@ class YText extends AbstractType_1.AbstractType_ {
                     // If no formatting attribute was inserted, we can make due with contextless
                     // formatting cleanups.
                     // Contextless: it is not necessary to compute currentAttributes for the affected position.
-                    (0, internals_1.iterateDeletedStructs)(t, t.deleteSet, item => {
+                    t.deleteSet.iterate(t, item => {
                         if (item instanceof internals_1.GC) {
                             return;
                         }

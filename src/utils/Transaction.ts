@@ -2,9 +2,7 @@
 import {
     getState,
     writeStructsFromTransaction,
-    writeDeleteSet,
     DeleteSet,
-    sortAndMergeDeleteSet,
     getStateVector,
     findIndexSS,
     callEventHandlerListeners,
@@ -102,9 +100,9 @@ export const writeUpdateMessageFromTransaction = (encoder: UpdateEncoderV1 | Upd
     if (transaction.deleteSet.clients.size === 0 && !map.any(transaction.afterState, (clock, client) => transaction.beforeState.get(client) !== clock)) {
         return false
     }
-    sortAndMergeDeleteSet(transaction.deleteSet)
+    transaction.deleteSet.sortAndMerge()
     writeStructsFromTransaction(encoder, transaction)
-    writeDeleteSet(encoder, transaction.deleteSet)
+    transaction.deleteSet.encode(encoder)
     return true
 }
 
@@ -225,7 +223,7 @@ const cleanupTransactions = (transactionCleanups: Array<Transaction>, i: number)
         const ds = transaction.deleteSet
         const mergeStructs = transaction._mergeStructs
         try {
-            sortAndMergeDeleteSet(ds)
+            ds.sortAndMerge()
             transaction.afterState = getStateVector(transaction.doc.store)
             doc.emit('beforeObserverCalls', [transaction, doc])
             /**

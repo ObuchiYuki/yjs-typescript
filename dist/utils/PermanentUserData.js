@@ -29,12 +29,12 @@ class PermanentUserData {
                 event.changes.added.forEach(item => {
                     item.content.getContent().forEach(encodedDs => {
                         if (encodedDs instanceof Uint8Array) {
-                            this.dss.set(userDescription, (0, internals_1.mergeDeleteSets)([this.dss.get(userDescription) || (0, internals_1.createDeleteSet)(), (0, internals_1.readDeleteSet)(new internals_1.DSDecoderV1(decoding.createDecoder(encodedDs)))]));
+                            this.dss.set(userDescription, internals_1.DeleteSet.mergeAll([this.dss.get(userDescription) || new internals_1.DeleteSet(), internals_1.DeleteSet.decode(new internals_1.DSDecoderV1(decoding.createDecoder(encodedDs)))]));
                         }
                     });
                 });
             });
-            this.dss.set(userDescription, (0, internals_1.mergeDeleteSets)(ds.map((encodedDs) => (0, internals_1.readDeleteSet)(new internals_1.DSDecoderV1(decoding.createDecoder(encodedDs))))));
+            this.dss.set(userDescription, internals_1.DeleteSet.mergeAll(ds.map((encodedDs) => internals_1.DeleteSet.decode(new internals_1.DSDecoderV1(decoding.createDecoder(encodedDs))))));
             ids.observe((event) => event.changes.added.forEach(item => item.content.getContent().forEach(addClientId)));
             ids.forEach(addClientId);
         };
@@ -78,7 +78,7 @@ class PermanentUserData {
                     const encoder = new internals_1.DSEncoderV1();
                     const ds = this.dss.get(userDescription);
                     if (ds) {
-                        (0, internals_1.writeDeleteSet)(encoder, ds);
+                        ds.encode(encoder);
                         user.get('ds').push([encoder.toUint8Array()]);
                     }
                 }
@@ -90,7 +90,7 @@ class PermanentUserData {
                 const ds = transaction.deleteSet;
                 if (transaction.local && ds.clients.size > 0 && filter(transaction, ds)) {
                     const encoder = new internals_1.DSEncoderV1();
-                    (0, internals_1.writeDeleteSet)(encoder, ds);
+                    ds.encode(encoder);
                     yds.push([encoder.toUint8Array()]);
                 }
             });
@@ -109,7 +109,7 @@ class PermanentUserData {
      */
     getUserByDeletedId(id) {
         for (const [userDescription, ds] of this.dss.entries()) {
-            if ((0, internals_1.isDeleted)(ds, id)) {
+            if (ds.isDeleted(id)) {
                 return userDescription;
             }
         }

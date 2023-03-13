@@ -1,6 +1,5 @@
 
 import {
-    addToDeleteSet,
     UpdateEncoderAny_, StructStore, Item, Transaction,
     Content_, ContentDecoder_
 } from '../internals'
@@ -28,7 +27,7 @@ export class ContentDeleted implements Content_ {
     }
 
     integrate(transaction: Transaction, item: Item) {
-        addToDeleteSet(transaction.deleteSet, item.id.client, item.id.clock, this.len)
+        transaction.deleteSet.add(item.id.client, item.id.clock, this.len)
         item.markDeleted()
     }
 

@@ -13,7 +13,6 @@ import {
     ContentFormat,
     ContentString,
     splitSnapshotAffectedStructs,
-    iterateDeletedStructs,
     iterateStructs,
     ContentType,
     ID, Doc, Item, Snapshot, Transaction, // eslint-disable-line
@@ -684,7 +683,7 @@ export class YText extends AbstractType_<YTextEvent> {
                 }
             }
             if (!foundFormattingItem) {
-                iterateDeletedStructs(transaction, transaction.deleteSet, item => {
+                transaction.deleteSet.iterate(transaction, item => {
                     if (item instanceof GC || foundFormattingItem) {
                         return
                     }
@@ -702,7 +701,7 @@ export class YText extends AbstractType_<YTextEvent> {
                     // If no formatting attribute was inserted, we can make due with contextless
                     // formatting cleanups.
                     // Contextless: it is not necessary to compute currentAttributes for the affected position.
-                    iterateDeletedStructs(t, t.deleteSet, item => {
+                    t.deleteSet.iterate(t, item => {
                         if (item instanceof GC) {
                             return
                         }

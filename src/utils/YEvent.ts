@@ -1,6 +1,5 @@
 
 import {
-    isDeleted,
     Item, AbstractType_, Transaction, __AbstractStruct, // eslint-disable-line
     Struct_
 } from '../internals'
@@ -72,7 +71,7 @@ export class YEvent<T extends AbstractType_<any>> {
      * @return {boolean}
      */
     deletes(struct: Struct_): boolean {
-        return isDeleted(this.transaction.deleteSet, struct.id)
+        return this.transaction.deleteSet.isDeleted(struct.id)
     }
 
     get keys(): Map<string, YEventKey> {

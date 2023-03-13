@@ -1,8 +1,8 @@
 "use strict";
 /** eslint-env browser */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.applyUpdateV2 = exports.applyUpdate = exports.iterateDeletedStructs = exports.createDocFromSnapshot = exports.getItem = exports.findIndexSS = exports.findRootTypeKey = exports.emptySnapshot = exports.snapshot = exports.cleanupYTextFormatting = exports.createDeleteSetFromStructStore = exports.createDeleteSet = exports.createSnapshot = exports.Snapshot = exports.getState = exports.compareIDs = exports.createID = exports.ID = exports.RelativePosition = exports.AbsolutePosition = exports.compareRelativePositions = exports.createAbsolutePositionFromRelativePosition = exports.createRelativePositionFromJSON = exports.createRelativePositionFromTypeIndex = exports.AbstractType_ = exports.ContentType = exports.ContentString = exports.ContentAny = exports.ContentJSON = exports.ContentFormat = exports.ContentEmbed = exports.ContentDeleted = exports.ContentBinary = exports.GC = exports.Struct_ = exports.Item = exports.YEvent = exports.YTextEvent = exports.YArrayEvent = exports.YMapEvent = exports.YXmlEvent = exports.XmlFragment = exports.XmlElement = exports.XmlHook = exports.XmlText = exports.Text = exports.Map = exports.Array = exports.Transaction = exports.Doc = void 0;
-exports.UpdateEncoderV1 = exports.convertUpdateFormatV2ToV1 = exports.convertUpdateFormatV1ToV2 = exports.diffUpdateV2 = exports.diffUpdate = exports.decodeRelativePosition = exports.encodeRelativePosition = exports.encodeStateVectorFromUpdateV2 = exports.encodeStateVectorFromUpdate = exports.parseUpdateMetaV2 = exports.parseUpdateMeta = exports.mergeUpdatesV2 = exports.mergeUpdates = exports.logType = exports.AbstractConnector = exports.transact = exports.tryGc = exports.PermanentUserData = exports.equalSnapshots = exports.isParentOf = exports.isDeleted = exports.relativePositionToJSON = exports.decodeUpdateV2 = exports.decodeUpdate = exports.logUpdateV2 = exports.logUpdate = exports.decodeStateVector = exports.encodeSnapshotV2 = exports.decodeSnapshotV2 = exports.encodeSnapshot = exports.decodeSnapshot = exports.UndoManager = exports.encodeStateVector = exports.encodeStateAsUpdateV2 = exports.encodeStateAsUpdate = exports.readUpdateV2 = exports.readUpdate = void 0;
+exports.encodeStateAsUpdate = exports.readUpdateV2 = exports.readUpdate = exports.applyUpdateV2 = exports.applyUpdate = exports.createDocFromSnapshot = exports.getItem = exports.findIndexSS = exports.findRootTypeKey = exports.emptySnapshot = exports.snapshot = exports.cleanupYTextFormatting = exports.createSnapshot = exports.Snapshot = exports.getState = exports.compareIDs = exports.createID = exports.ID = exports.RelativePosition = exports.AbsolutePosition = exports.compareRelativePositions = exports.createAbsolutePositionFromRelativePosition = exports.createRelativePositionFromJSON = exports.createRelativePositionFromTypeIndex = exports.AbstractType_ = exports.ContentType = exports.ContentString = exports.ContentAny = exports.ContentJSON = exports.ContentFormat = exports.ContentEmbed = exports.ContentDeleted = exports.ContentBinary = exports.GC = exports.Struct_ = exports.Item = exports.YEvent = exports.YTextEvent = exports.YArrayEvent = exports.YMapEvent = exports.YXmlEvent = exports.XmlFragment = exports.XmlElement = exports.XmlHook = exports.XmlText = exports.Text = exports.Map = exports.Array = exports.Transaction = exports.Doc = void 0;
+exports.DeleteSet = exports.UpdateEncoderV1 = exports.convertUpdateFormatV2ToV1 = exports.convertUpdateFormatV1ToV2 = exports.diffUpdateV2 = exports.diffUpdate = exports.decodeRelativePosition = exports.encodeRelativePosition = exports.encodeStateVectorFromUpdateV2 = exports.encodeStateVectorFromUpdate = exports.parseUpdateMetaV2 = exports.parseUpdateMeta = exports.mergeUpdatesV2 = exports.mergeUpdates = exports.logType = exports.AbstractConnector = exports.transact = exports.tryGc = exports.PermanentUserData = exports.equalSnapshots = exports.isParentOf = exports.relativePositionToJSON = exports.decodeUpdateV2 = exports.decodeUpdate = exports.logUpdateV2 = exports.logUpdate = exports.decodeStateVector = exports.encodeSnapshotV2 = exports.decodeSnapshotV2 = exports.encodeSnapshot = exports.decodeSnapshot = exports.UndoManager = exports.encodeStateVector = exports.encodeStateAsUpdateV2 = void 0;
 var internals_1 = require("./internals");
 Object.defineProperty(exports, "Doc", { enumerable: true, get: function () { return internals_1.Doc; } });
 Object.defineProperty(exports, "Transaction", { enumerable: true, get: function () { return internals_1.Transaction; } });
@@ -42,8 +42,6 @@ Object.defineProperty(exports, "compareIDs", { enumerable: true, get: function (
 Object.defineProperty(exports, "getState", { enumerable: true, get: function () { return internals_1.getState; } });
 Object.defineProperty(exports, "Snapshot", { enumerable: true, get: function () { return internals_1.Snapshot; } });
 Object.defineProperty(exports, "createSnapshot", { enumerable: true, get: function () { return internals_1.createSnapshot; } });
-Object.defineProperty(exports, "createDeleteSet", { enumerable: true, get: function () { return internals_1.createDeleteSet; } });
-Object.defineProperty(exports, "createDeleteSetFromStructStore", { enumerable: true, get: function () { return internals_1.createDeleteSetFromStructStore; } });
 Object.defineProperty(exports, "cleanupYTextFormatting", { enumerable: true, get: function () { return internals_1.cleanupYTextFormatting; } });
 Object.defineProperty(exports, "snapshot", { enumerable: true, get: function () { return internals_1.snapshot; } });
 Object.defineProperty(exports, "emptySnapshot", { enumerable: true, get: function () { return internals_1.emptySnapshot; } });
@@ -51,7 +49,6 @@ Object.defineProperty(exports, "findRootTypeKey", { enumerable: true, get: funct
 Object.defineProperty(exports, "findIndexSS", { enumerable: true, get: function () { return internals_1.findIndexSS; } });
 Object.defineProperty(exports, "getItem", { enumerable: true, get: function () { return internals_1.getItem; } });
 Object.defineProperty(exports, "createDocFromSnapshot", { enumerable: true, get: function () { return internals_1.createDocFromSnapshot; } });
-Object.defineProperty(exports, "iterateDeletedStructs", { enumerable: true, get: function () { return internals_1.iterateDeletedStructs; } });
 Object.defineProperty(exports, "applyUpdate", { enumerable: true, get: function () { return internals_1.applyUpdate; } });
 Object.defineProperty(exports, "applyUpdateV2", { enumerable: true, get: function () { return internals_1.applyUpdateV2; } });
 Object.defineProperty(exports, "readUpdate", { enumerable: true, get: function () { return internals_1.readUpdate; } });
@@ -70,7 +67,6 @@ Object.defineProperty(exports, "logUpdateV2", { enumerable: true, get: function 
 Object.defineProperty(exports, "decodeUpdate", { enumerable: true, get: function () { return internals_1.decodeUpdate; } });
 Object.defineProperty(exports, "decodeUpdateV2", { enumerable: true, get: function () { return internals_1.decodeUpdateV2; } });
 Object.defineProperty(exports, "relativePositionToJSON", { enumerable: true, get: function () { return internals_1.relativePositionToJSON; } });
-Object.defineProperty(exports, "isDeleted", { enumerable: true, get: function () { return internals_1.isDeleted; } });
 Object.defineProperty(exports, "isParentOf", { enumerable: true, get: function () { return internals_1.isParentOf; } });
 Object.defineProperty(exports, "equalSnapshots", { enumerable: true, get: function () { return internals_1.equalSnapshots; } });
 Object.defineProperty(exports, "PermanentUserData", { enumerable: true, get: function () { return internals_1.PermanentUserData; } });
@@ -91,6 +87,7 @@ Object.defineProperty(exports, "diffUpdateV2", { enumerable: true, get: function
 Object.defineProperty(exports, "convertUpdateFormatV1ToV2", { enumerable: true, get: function () { return internals_1.convertUpdateFormatV1ToV2; } });
 Object.defineProperty(exports, "convertUpdateFormatV2ToV1", { enumerable: true, get: function () { return internals_1.convertUpdateFormatV2ToV1; } });
 Object.defineProperty(exports, "UpdateEncoderV1", { enumerable: true, get: function () { return internals_1.UpdateEncoderV1; } });
+Object.defineProperty(exports, "DeleteSet", { enumerable: true, get: function () { return internals_1.DeleteSet; } });
 const glo = (typeof globalThis !== 'undefined'
     ? globalThis
     : typeof window !== 'undefined'

@@ -20,9 +20,6 @@ import {
     getState,
     createID,
     getStateVector,
-    readAndApplyDeleteSet,
-    writeDeleteSet,
-    createDeleteSetFromStructStore,
     transact,
     readItemContent,
     UpdateDecoderV1,
@@ -37,7 +34,8 @@ import {
     Skip,
     diffUpdateV2,
     convertUpdateFormatV2ToV1,
-    DSDecoderV2, Doc, Transaction, GC, Item, StructStore // eslint-disable-line
+    DSDecoderV2, Doc, Transaction, GC, Item, StructStore, // eslint-disable-line
+    DeleteSet
 } from '../internals'
 
 import * as encoding from 'lib0/encoding'
@@ -419,12 +417,12 @@ export const readUpdateV2 = (decoder: decoding.Decoder, ydoc: Doc, transactionOr
         }
         // console.log('time to integrate: ', performance.now() - start) // @todo remove
         // start = performance.now()
-        const dsRest = readAndApplyDeleteSet(structDecoder, transaction, store)
+        const dsRest = DeleteSet.decodeAndApply(structDecoder, transaction, store)
         if (store.pendingDs) {
             // @todo we could make a lower-bound state-vector check as we do above
             const pendingDSUpdate = new UpdateDecoderV2(decoding.createDecoder(store.pendingDs))
             decoding.readVarUint(pendingDSUpdate.restDecoder) // read 0 structs, because we only encode deletes in pendingdsupdate
-            const dsRest2 = readAndApplyDeleteSet(pendingDSUpdate, transaction, store)
+            const dsRest2 = DeleteSet.decodeAndApply(pendingDSUpdate, transaction, store)
             if (dsRest && dsRest2) {
                 // case 1: ds1 != null && ds2 != null
                 store.pendingDs = mergeUpdatesV2([dsRest, dsRest2])
@@ -505,7 +503,7 @@ export const applyUpdate = (ydoc: Doc, update: Uint8Array, transactionOrigin?: a
  */
 export const writeStateAsUpdate = (encoder: UpdateEncoderV1 | UpdateEncoderV2, doc: Doc, targetStateVector: Map<number, number> = new Map()) => {
     writeClientsStructs(encoder, doc.store, targetStateVector)
-    writeDeleteSet(encoder, createDeleteSetFromStructStore(doc.store))
+    DeleteSet.createFromStructStore(doc.store).encode(encoder)
 }
 
 /**
