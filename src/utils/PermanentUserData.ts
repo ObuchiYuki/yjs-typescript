@@ -5,12 +5,11 @@ import {
     readDeleteSet,
     writeDeleteSet,
     createDeleteSet,
-    DSEncoderV1, DSDecoderV1, ID, DeleteSet, YArrayEvent, Transaction, Doc // eslint-disable-line
+    DSEncoderV1, DSDecoderV1, ID, DeleteSet, YArrayEvent, Transaction, Doc, // eslint-disable-line
+    mergeDeleteSets, isDeleted
 } from '../internals'
 
 import * as decoding from 'lib0/decoding'
-
-import { mergeDeleteSets, isDeleted } from 'yjs/dist/src/utils/DeleteSet.js'
 
 export class PermanentUserData {
     yusers: YMap<any>

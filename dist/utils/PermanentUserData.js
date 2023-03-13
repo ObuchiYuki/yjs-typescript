@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PermanentUserData = void 0;
 const internals_1 = require("../internals");
 const decoding = require("lib0/decoding");
-const DeleteSet_js_1 = require("yjs/dist/src/utils/DeleteSet.js");
 class PermanentUserData {
     /**
      * @param {Doc} doc
@@ -30,12 +29,12 @@ class PermanentUserData {
                 event.changes.added.forEach(item => {
                     item.content.getContent().forEach(encodedDs => {
                         if (encodedDs instanceof Uint8Array) {
-                            this.dss.set(userDescription, (0, DeleteSet_js_1.mergeDeleteSets)([this.dss.get(userDescription) || (0, internals_1.createDeleteSet)(), (0, internals_1.readDeleteSet)(new internals_1.DSDecoderV1(decoding.createDecoder(encodedDs)))]));
+                            this.dss.set(userDescription, (0, internals_1.mergeDeleteSets)([this.dss.get(userDescription) || (0, internals_1.createDeleteSet)(), (0, internals_1.readDeleteSet)(new internals_1.DSDecoderV1(decoding.createDecoder(encodedDs)))]));
                         }
                     });
                 });
             });
-            this.dss.set(userDescription, (0, DeleteSet_js_1.mergeDeleteSets)(ds.map((encodedDs) => (0, internals_1.readDeleteSet)(new internals_1.DSDecoderV1(decoding.createDecoder(encodedDs))))));
+            this.dss.set(userDescription, (0, internals_1.mergeDeleteSets)(ds.map((encodedDs) => (0, internals_1.readDeleteSet)(new internals_1.DSDecoderV1(decoding.createDecoder(encodedDs))))));
             ids.observe((event) => event.changes.added.forEach(item => item.content.getContent().forEach(addClientId)));
             ids.forEach(addClientId);
         };
@@ -110,7 +109,7 @@ class PermanentUserData {
      */
     getUserByDeletedId(id) {
         for (const [userDescription, ds] of this.dss.entries()) {
-            if ((0, DeleteSet_js_1.isDeleted)(ds, id)) {
+            if ((0, internals_1.isDeleted)(ds, id)) {
                 return userDescription;
             }
         }
