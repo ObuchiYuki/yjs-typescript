@@ -554,7 +554,9 @@ export const encodeStateAsUpdateV2 = (doc: Doc, encodedTargetStateVector: Uint8A
  *
  * @function
  */
-export const encodeStateAsUpdate = (doc: Doc, encodedTargetStateVector: Uint8Array): Uint8Array => encodeStateAsUpdateV2(doc, encodedTargetStateVector, new UpdateEncoderV1())
+export const encodeStateAsUpdate = (doc: Doc, encodedTargetStateVector?: Uint8Array): Uint8Array => {
+    return encodeStateAsUpdateV2(doc, encodedTargetStateVector, new UpdateEncoderV1())
+}
 
 /**
  * Read state vector from Decoder and return as Map
