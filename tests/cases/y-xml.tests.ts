@@ -1,12 +1,12 @@
-import { init, compare } from './testHelper.js'
-import * as Y from '../src/index.js'
+import { init, compare } from './testHelper'
+import * as Y from '../../src/index'
 
 import * as t from 'lib0/testing'
 
 /**
  * @param {t.TestCase} tc
  */
-export const testSetProperty = tc => {
+export const testSetProperty = (tc: t.TestCase) => {
   const { testConnector, users, xml0, xml1 } = init(tc, { users: 2 })
   xml0.setAttribute('height', '10')
   t.assert(xml0.getAttribute('height') === '10', 'Simple set+get works')
@@ -18,7 +18,7 @@ export const testSetProperty = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testHasProperty = tc => {
+export const testHasProperty = (tc: t.TestCase) => {
   const { testConnector, users, xml0, xml1 } = init(tc, { users: 2 })
   xml0.setAttribute('height', '10')
   t.assert(xml0.hasAttribute('height'), 'Simple set+has works')
@@ -35,16 +35,16 @@ export const testHasProperty = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testEvents = tc => {
+export const testEvents = (tc: t.TestCase) => {
   const { testConnector, users, xml0, xml1 } = init(tc, { users: 2 })
   /**
    * @type {any}
    */
-  let event
+  let event: any
   /**
    * @type {any}
    */
-  let remoteEvent
+  let remoteEvent: any
   xml0.observe(e => {
     event = e
   })
@@ -75,7 +75,7 @@ export const testEvents = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testTreewalker = tc => {
+export const testTreewalker = (tc: t.TestCase) => {
   const { users, xml0 } = init(tc, { users: 3 })
   const paragraph1 = new Y.XmlElement('p')
   const paragraph2 = new Y.XmlElement('p')
@@ -94,9 +94,9 @@ export const testTreewalker = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testYtextAttributes = tc => {
+export const testYtextAttributes = (tc: t.TestCase) => {
   const ydoc = new Y.Doc()
-  const ytext = /** @type {Y.XmlText} */ (ydoc.get('', Y.XmlText))
+  const ytext = ydoc.get('', Y.XmlText) as Y.XmlText
   ytext.observe(event => {
     t.compare(event.changes.keys.get('test'), { action: 'add', oldValue: undefined })
   })
@@ -108,7 +108,7 @@ export const testYtextAttributes = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testSiblings = tc => {
+export const testSiblings = (tc: t.TestCase) => {
   const ydoc = new Y.Doc()
   const yxml = ydoc.getXmlFragment()
   const first = new Y.XmlText()
@@ -124,7 +124,7 @@ export const testSiblings = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testInsertafter = tc => {
+export const testInsertafter = (tc: t.TestCase) => {
   const ydoc = new Y.Doc()
   const yxml = ydoc.getXmlFragment()
   const first = new Y.XmlText()
@@ -154,7 +154,7 @@ export const testInsertafter = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testClone = tc => {
+export const testClone = (tc: t.TestCase) => {
   const ydoc = new Y.Doc()
   const yxml = ydoc.getXmlFragment()
   const first = new Y.XmlText('text')
@@ -172,9 +172,9 @@ export const testClone = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testFormattingBug = tc => {
+export const testFormattingBug = (tc: t.TestCase) => {
   const ydoc = new Y.Doc()
-  const yxml = /** @type {Y.XmlText} */ (ydoc.get('', Y.XmlText))
+  const yxml = ydoc.get('', Y.XmlText) as Y.XmlText
   const delta = [
     { insert: 'A', attributes: { em: {}, strong: {} } },
     { insert: 'B', attributes: { em: {} } },
