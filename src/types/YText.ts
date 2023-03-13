@@ -67,7 +67,7 @@ export class ItemTextListPosition {
                 if (!this.right.deleted) {
                     if (count < this.right.length) {
                         // split right
-                        getItemCleanStart(transaction, createID(this.right.id.client, this.right.id.clock + count))
+                        getItemCleanStart(transaction, new ID(this.right.id.client, this.right.id.clock + count))
                     }
                     this.index += this.right.length
                     count -= this.right.length
@@ -118,7 +118,7 @@ const insertNegatedAttributes = (transaction: Transaction, parent: AbstractType_
     negatedAttributes.forEach((val, key) => {
         const left = currPos.left
         const right = currPos.right
-        const nextFormat = new Item(createID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new ContentFormat(key, val))
+        const nextFormat = new Item(new ID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new ContentFormat(key, val))
         nextFormat.integrate(transaction, 0)
         currPos.right = nextFormat
         currPos.forward()
@@ -160,7 +160,7 @@ const insertAttributes = (transaction: Transaction, parent: AbstractType_<any>, 
             // save negated attribute (set null if currentVal undefined)
             negatedAttributes.set(key, currentVal)
             const { left, right } = currPos
-            currPos.right = new Item(createID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new ContentFormat(key, val))
+            currPos.right = new Item(new ID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new ContentFormat(key, val))
             currPos.right.integrate(transaction, 0)
             currPos.forward()
         }
@@ -184,7 +184,7 @@ const insertText = (transaction: Transaction, parent: AbstractType_<any>, currPo
     if (parent._searchMarker) {
         ArraySearchMarker_.updateChanges(parent._searchMarker, currPos.index, content.getLength())
     }
-    right = new Item(createID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, content)
+    right = new Item(new ID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, content)
     right.integrate(transaction, 0)
     currPos.right = right
     currPos.index = index
@@ -234,7 +234,7 @@ const formatText = (transaction: Transaction, parent: AbstractType_<any>, currPo
                 }
                 default:
                     if (length < currPos.right.length) {
-                        getItemCleanStart(transaction, createID(currPos.right.id.client, currPos.right.id.clock + length))
+                        getItemCleanStart(transaction, new ID(currPos.right.id.client, currPos.right.id.clock + length))
                     }
                     length -= currPos.right.length
                     break
@@ -250,7 +250,7 @@ const formatText = (transaction: Transaction, parent: AbstractType_<any>, currPo
         for (; length > 0; length--) {
             newlines += '\n'
         }
-        currPos.right = new Item(createID(ownClientId, getState(doc.store, ownClientId)), currPos.left, currPos.left && currPos.left.lastID, currPos.right, currPos.right && currPos.right.id, parent, null, new ContentString(newlines))
+        currPos.right = new Item(new ID(ownClientId, getState(doc.store, ownClientId)), currPos.left, currPos.left && currPos.left.lastID, currPos.right, currPos.right && currPos.right.id, parent, null, new ContentString(newlines))
         currPos.right.integrate(transaction, 0)
         currPos.forward()
     }
@@ -385,7 +385,7 @@ const deleteText = (transaction: Transaction, currPos: ItemTextListPosition, len
                 case ContentEmbed:
                 case ContentString:
                     if (length < currPos.right.length) {
-                        getItemCleanStart(transaction, createID(currPos.right.id.client, currPos.right.id.clock + length))
+                        getItemCleanStart(transaction, new ID(currPos.right.id.client, currPos.right.id.clock + length))
                     }
                     length -= currPos.right.length
                     currPos.right.delete(transaction)

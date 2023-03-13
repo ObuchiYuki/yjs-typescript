@@ -216,7 +216,7 @@ const cleanupTransactions = (transactionCleanups, i) => {
                             .sort((event1, event2) => event1.path.length - event2.path.length);
                         // We don't need to check for events.length
                         // because we know it has at least one element
-                        (0, internals_1.callEventHandlerListeners)(type._dEH, events, transaction);
+                        type._dEH.callListeners(events, transaction);
                     }
                 }));
                 fs.push(() => doc.emit('afterTransaction', [transaction, doc]));
@@ -258,7 +258,7 @@ const cleanupTransactions = (transactionCleanups, i) => {
             }
             if (!transaction.local && transaction.afterState.get(doc.clientID) !== transaction.beforeState.get(doc.clientID)) {
                 logging.print(logging.ORANGE, logging.BOLD, '[yjs] ', logging.UNBOLD, logging.RED, 'Changed the client-id because another client seems to be using it.');
-                doc.clientID = (0, internals_1.generateNewClientId)();
+                doc.clientID = (0, internals_1.generateNewClientID)();
             }
             // @todo Merge all the transactions into one and provide send the data as a single update message
             doc.emit('afterTransactionCleanup', [transaction, doc]);

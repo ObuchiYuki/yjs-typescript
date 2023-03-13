@@ -16,7 +16,7 @@ export const followRedone = (store: StructStore, id: ID): { item: Item, diff: nu
     let diff = 0
     let item: Item | null = null
     do {
-        if (diff > 0) { nextID = createID(nextID.client, nextID.clock + diff) }
+        if (diff > 0) { nextID = new ID(nextID.client, nextID.clock + diff) }
         item = getItem(store, nextID)
         diff = nextID.clock - item.id.clock
         nextID = item.redone
@@ -68,7 +68,7 @@ const popStackItem = (undoManager: UndoManager, stack: Array<StackItem>, eventTy
                     if (struct.redone !== null) {
                         let { item, diff } = followRedone(store, struct.id)
                         if (diff > 0) {
-                            item = getItemCleanStart(transaction, createID(item.id.client, item.id.clock + diff))
+                            item = getItemCleanStart(transaction, new ID(item.id.client, item.id.clock + diff))
                         }
                         struct = item
                     }

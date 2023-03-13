@@ -3,14 +3,13 @@
  * @module Y
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Doc = exports.generateNewClientId = void 0;
+exports.Doc = void 0;
 const internals_1 = require("../internals");
 const observable_1 = require("lib0/observable");
 const random = require("lib0/random");
 const map = require("lib0/map");
 const array = require("lib0/array");
 const promise = require("lib0/promise");
-exports.generateNewClientId = random.uint32;
 /**
  * A Yjs instance handles the state of shared data.
  * @extends Observable<string>
@@ -23,52 +22,20 @@ class Doc extends observable_1.Observable {
         super();
         this.gc = gc;
         this.gcFilter = gcFilter;
-        this.clientID = (0, exports.generateNewClientId)();
+        this.clientID = (0, internals_1.generateNewClientID)();
         this.guid = guid;
         this.collectionid = collectionid;
-        /**
-         * @type {Map<string, AbstractType_<YEvent<any>>>}
-         */
         this.share = new Map();
         this.store = new internals_1.StructStore();
-        /**
-         * @type {Transaction | null}
-         */
         this._transaction = null;
-        /**
-         * @type {Array<Transaction>}
-         */
         this._transactionCleanups = [];
-        /**
-         * @type {Set<Doc>}
-         */
         this.subdocs = new Set();
-        /**
-         * If this document is a subdocument - a document integrated into another document - then _item is defined.
-         * @type {Item?}
-         */
         this._item = null;
         this.shouldLoad = shouldLoad;
         this.autoLoad = autoLoad;
         this.meta = meta;
-        /**
-         * This is set to true when the persistence provider loaded the document from the database or when the `sync` event fires.
-         * Note that not all providers implement this feature. Provider authors are encouraged to fire the `load` event when the doc content is loaded from the database.
-         *
-         * @type {boolean}
-         */
         this.isLoaded = false;
-        /**
-         * This is set to true when the connection provider has successfully synced with a backend.
-         * Note that when using peer-to-peer providers this event may not provide very useful.
-         * Also note that not all providers implement this feature. Provider authors are encouraged to fire
-         * the `sync` event when the doc has been synced (with `true` as a parameter) or if connection is
-         * lost (with false as a parameter).
-         */
         this.isSynced = false;
-        /**
-         * Promise that resolves once the document has been loaded from a presistence provider.
-         */
         this.whenLoaded = promise.create(resolve => {
             this.on('load', () => {
                 this.isLoaded = true;
@@ -76,9 +43,6 @@ class Doc extends observable_1.Observable {
             });
         });
         const provideSyncedPromise = () => new Promise(resolve => {
-            /**
-             * @param {boolean} isSynced
-             */
             const eventHandler = (isSynced) => {
                 if (isSynced === undefined || isSynced === true) {
                     this.off('sync', eventHandler);
@@ -96,11 +60,6 @@ class Doc extends observable_1.Observable {
                 this.emit('load', []);
             }
         });
-        /**
-         * Promise that resolves once the document has been synced with a backend.
-         * This promise is recreated when the connection is lost.
-         * Note the documentation about the `isSynced` property.
-         */
         this.whenSynced = provideSyncedPromise();
     }
     /**
@@ -119,12 +78,8 @@ class Doc extends observable_1.Observable {
         }
         this.shouldLoad = true;
     }
-    getSubdocs() {
-        return this.subdocs;
-    }
-    getSubdocGuids() {
-        return new Set(array.from(this.subdocs).map(doc => doc.guid));
-    }
+    getSubdocs() { return this.subdocs; }
+    getSubdocGuids() { return new Set(Array.from(this.subdocs).map(doc => doc.guid)); }
     /**
      * Changes that happen inside of a transaction are bundled. This means that
      * the observer fires _after_ the transaction is finished and that all changes
@@ -133,12 +88,8 @@ class Doc extends observable_1.Observable {
      *
      * @param {function(Transaction):void} f The function that should be executed as a transaction
      * @param {any} [origin] Origin of who started the transaction. Will be stored on transaction.origin
-     *
-     * @public
      */
-    transact(f, origin = null) {
-        (0, internals_1.transact)(this, f, origin);
-    }
+    transact(f, origin = null) { (0, internals_1.transact)(this, f, origin); }
     /**
      * Define a shared data type.
      *
@@ -162,12 +113,9 @@ class Doc extends observable_1.Observable {
      * @param {string} name
      * @param {Function} TypeConstructor The constructor of the type definition. E.g. Y.Text, Y.Array, Y.Map, ...
      * @return {AbstractType_<any>} The created type. Constructed with TypeConstructor
-     *
-     * @public
      */
     get(name, TypeConstructor = internals_1.AbstractType_) {
         const type = map.setIfUndefined(this.share, name, () => {
-            // @ts-ignore
             const t = new TypeConstructor();
             t._integrate(this, null);
             return t;
@@ -175,12 +123,10 @@ class Doc extends observable_1.Observable {
         const Constr = type.constructor;
         if (TypeConstructor !== internals_1.AbstractType_ && Constr !== TypeConstructor) {
             if (Constr === internals_1.AbstractType_) {
-                // @ts-ignore
                 const t = new TypeConstructor();
                 t._map = type._map;
-                type._map.forEach(/** @param {Item?} n */ (n) => {
+                type._map.forEach((n) => {
                     for (; n !== null; n = n.left) {
-                        // @ts-ignore
                         n.parent = t;
                     }
                 });
@@ -199,69 +145,22 @@ class Doc extends observable_1.Observable {
         }
         return type;
     }
-    /**
-     * @template T
-     * @param {string} [name]
-     * @return {YArray<T>}
-     *
-     * @public
-     */
-    getArray(name = '') {
-        // @ts-ignore
-        return this.get(name, internals_1.YArray);
-    }
-    /**
-     * @param {string} [name]
-     * @return {YText}
-     *
-     * @public
-     */
-    getText(name = '') {
-        // @ts-ignore
-        return this.get(name, internals_1.YText);
-    }
-    /**
-     * @template T
-     * @param {string} [name]
-     * @return {YMap<T>}
-     *
-     * @public
-     */
-    getMap(name = '') {
-        // @ts-ignore
-        return this.get(name, internals_1.YMap);
-    }
-    /**
-     * @param {string} [name]
-     * @return {YXmlFragment}
-     *
-     * @public
-     */
-    getXmlFragment(name = '') {
-        // @ts-ignore
-        return this.get(name, internals_1.YXmlFragment);
-    }
+    getMap(name = '') { return this.get(name, internals_1.YMap); }
+    getArray(name = '') { return this.get(name, internals_1.YArray); }
+    getXmlFragment(name = '') { return this.get(name, internals_1.YXmlFragment); }
+    getText(name = '') { return this.get(name, internals_1.YText); }
     /**
      * Converts the entire document into a js object, recursively traversing each yjs type
      * Doesn't log types that have not been defined (using ydoc.getType(..)).
      *
      * @deprecated Do not use this method and rather call toJSON directly on the shared types.
-     *
-     * @return {Object<string, any>}
      */
     toJSON() {
-        /**
-         * @type {Object<string, any>}
-         */
         const doc = {};
-        this.share.forEach((value, key) => {
-            doc[key] = value.toJSON();
-        });
+        this.share.forEach((value, key) => { doc[key] = value.toJSON(); });
         return doc;
     }
-    /**
-     * Emit `destroy` event and unregister all event handlers.
-     */
+    /** Emit `destroy` event and unregister all event handlers. */
     destroy() {
         array.from(this.subdocs).forEach(subdoc => subdoc.destroy());
         const item = this._item;
@@ -281,20 +180,6 @@ class Doc extends observable_1.Observable {
         this.emit('destroyed', [true]);
         this.emit('destroy', [this]);
         super.destroy();
-    }
-    /**
-     * @param {string} eventName
-     * @param {function(...any):any} f
-     */
-    on(eventName, f) {
-        super.on(eventName, f);
-    }
-    /**
-     * @param {string} eventName
-     * @param {function} f
-     */
-    off(eventName, f) {
-        super.off(eventName, f);
     }
 }
 exports.Doc = Doc;

@@ -5,14 +5,13 @@ import * as encoding from 'lib0/encoding'
 import * as logging from 'lib0/logging'
 import * as math from 'lib0/math'
 import {
-    createID,
     readItemContent,
     Skip,
     DSEncoderV1,
     DSEncoderV2,
     decodeStateVector,
     Item, GC, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, // eslint-disable-line
-    DeleteSet
+    DeleteSet, ID
 } from '../internals'
 
 /**
@@ -29,7 +28,7 @@ function * lazyStructReaderGenerator (decoder: UpdateDecoderV1 | UpdateDecoderV2
             // @todo use switch instead of ifs
             if (info === 10) {
                 const len = decoding.readVarUint(decoder.restDecoder)
-                yield new Skip(createID(client, clock), len)
+                yield new Skip(new ID(client, clock), len)
                 clock += len
             } else if ((binary.BITS5 & info) !== 0) {
                 const cantCopyParentInfo = (info & (binary.BIT7 | binary.BIT8)) === 0
@@ -38,7 +37,7 @@ function * lazyStructReaderGenerator (decoder: UpdateDecoderV1 | UpdateDecoderV2
                 // It indicates how we store/retrieve parent from `y.share`
                 // @type {string|null}
                 const struct = new Item(
-                    createID(client, clock),
+                    new ID(client, clock),
                     null, // left
                     (info & binary.BIT8) === binary.BIT8 ? decoder.readLeftID() : null, // origin
                     null, // right
@@ -52,7 +51,7 @@ function * lazyStructReaderGenerator (decoder: UpdateDecoderV1 | UpdateDecoderV2
                 clock += struct.length
             } else {
                 const len = decoder.readLen()
-                yield new GC(createID(client, clock), len)
+                yield new GC(new ID(client, clock), len)
                 clock += len
             }
         }
@@ -288,17 +287,17 @@ export const parseUpdateMeta = (update: Uint8Array): { from: Map<number, number>
 const sliceStruct = (left: Item | GC | Skip, diff: number): Item | GC => {
     if (left.constructor === GC) {
         const { client, clock } = left.id
-        return new GC(createID(client, clock + diff), left.length - diff)
+        return new GC(new ID(client, clock + diff), left.length - diff)
     } else if (left.constructor === Skip) {
         const { client, clock } = left.id
-        return new Skip(createID(client, clock + diff), left.length - diff)
+        return new Skip(new ID(client, clock + diff), left.length - diff)
     } else {
         const leftItem = left as Item
         const { client, clock } = leftItem.id
         return new Item(
-            createID(client, clock + diff),
+            new ID(client, clock + diff),
             null,
-            createID(client, clock + diff - 1),
+            new ID(client, clock + diff - 1),
             null,
             leftItem.rightOrigin,
             leftItem.parent,
@@ -400,7 +399,7 @@ export const mergeUpdatesV2 = (updates: Array<Uint8Array>, YDecoder: typeof Upda
                         /**
                          * @type {Skip}
                          */
-                        const struct: Skip = new Skip(createID(firstClient, currWrite.struct.id.clock + currWrite.struct.length), diff)
+                        const struct: Skip = new Skip(new ID(firstClient, currWrite.struct.id.clock + currWrite.struct.length), diff)
                         currWrite = { struct, offset: 0 }
                     }
                 } else { // if (currWrite.struct.id.clock + currWrite.struct.length >= curr.id.clock) {

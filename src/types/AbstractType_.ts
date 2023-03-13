@@ -2,7 +2,6 @@ import * as map from "lib0/map"
 
 import {
     Doc, Transaction, EventHandler, YEvent, Item, 
-    createEventHandler, addEventHandlerListener, removeEventHandlerListener, callEventHandlerListeners,
     UpdateEncoderAny_, ArraySearchMarker_, Snapshot, isVisible, 
     createID, getState, ContentAny, ContentBinary, ContentDoc, ContentType, getItemCleanStart, Content_,
 } from '../internals'
@@ -24,8 +23,8 @@ export abstract class AbstractType_<EventType> {
     _map: Map<string, Item> = new Map()
     _start: Item|null = null
     _length: number = 0
-    _eH: EventHandler<EventType,Transaction> = createEventHandler() /** Event handlers */
-    _dEH: EventHandler<Array<YEvent<any>>,Transaction> = createEventHandler() /** Deep event handlers */
+    _eH: EventHandler<EventType,Transaction> = new EventHandler() /** Event handlers */
+    _dEH: EventHandler<Array<YEvent<any>>,Transaction> = new EventHandler() /** Deep event handlers */
     _searchMarker: null | Array<ArraySearchMarker_> = null
 
      /** The first non-deleted item */
@@ -70,7 +69,7 @@ export abstract class AbstractType_<EventType> {
             if (type._item === null) { break }
             type = (type._item.parent as AbstractType_<any>)
         }
-        callEventHandlerListeners(changedType._eH, event, transaction)
+        changedType._eH.callListeners(event, transaction)
     }
 
     listSlice(start: number, end: number): any[] {
@@ -228,7 +227,7 @@ export abstract class AbstractType_<EventType> {
 
         const packJsonContent = () => {
             if (jsonContent.length <= 0) return
-            const id = createID(ownClientId, getState(store, ownClientId))
+            const id = new ID(ownClientId, getState(store, ownClientId))
             const content = new ContentAny(jsonContent)
             left = new Item(id, left, left && left.lastID, right, right && right.id, this, null, content)
             left.integrate(transaction, 0)
@@ -253,17 +252,17 @@ export abstract class AbstractType_<EventType> {
                         content.constructor === Uint8Array || 
                         content.constructor === ArrayBuffer
                     ) {
-                        const id = createID(ownClientId, getState(store, ownClientId))
+                        const id = new ID(ownClientId, getState(store, ownClientId))
                         const icontent = new ContentBinary(new Uint8Array(content as Uint8Array))
                         left = new Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent)
                         left.integrate(transaction, 0)
                     } else if (content.constructor === Doc) {
-                        const id = createID(ownClientId, getState(store, ownClientId))
+                        const id = new ID(ownClientId, getState(store, ownClientId))
                         const icontent = new ContentDoc(content as Doc)
                         left = new Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent)
                         left.integrate(transaction, 0)
                     } else if (content instanceof AbstractType_) {
-                        const id = createID(ownClientId, getState(store, ownClientId))
+                        const id = new ID(ownClientId, getState(store, ownClientId))
                         const icontent = new ContentType(content)
                         left = new Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent)
                         left.integrate(transaction, 0)
@@ -304,7 +303,7 @@ export abstract class AbstractType_<EventType> {
                 if (index <= n.length) {
                     if (index < n.length) {
                         // insert in-between
-                        getItemCleanStart(transaction, createID(n.id.client, n.id.clock + index))
+                        getItemCleanStart(transaction, new ID(n.id.client, n.id.clock + index))
                     }
                     break
                 }
@@ -352,7 +351,7 @@ export abstract class AbstractType_<EventType> {
         for (; item !== null && index > 0; item = item.right) {
             if (!item.deleted && item.countable) {
                 if (index < item.length) {
-                    getItemCleanStart(transaction, createID(item.id.client, item.id.clock + index))
+                    getItemCleanStart(transaction, new ID(item.id.client, item.id.clock + index))
                 }
                 index -= item.length
             }
@@ -361,7 +360,7 @@ export abstract class AbstractType_<EventType> {
         while (length > 0 && item !== null) {
             if (!item.deleted) {
                 if (length < item.length) {
-                    getItemCleanStart(transaction, createID(item.id.client, item.id.clock + length))
+                    getItemCleanStart(transaction, new ID(item.id.client, item.id.clock + length))
                 }
                 item.delete(transaction)
                 length -= item.length
@@ -414,7 +413,7 @@ export abstract class AbstractType_<EventType> {
                 }
             }
         }
-        const id = createID(ownClientId, getState(doc.store, ownClientId))
+        const id = new ID(ownClientId, getState(doc.store, ownClientId))
         new Item(id, left, left && left.lastID, null, null, this, key, content)
             .integrate(transaction, 0)
     }
@@ -482,22 +481,22 @@ export abstract class AbstractType_<EventType> {
 
     /** Observe all events that are created on this type. */
     observe(f: (type: EventType, transaction: Transaction) => void) {
-        addEventHandlerListener(this._eH, f)
+        this._eH.addListener(f)
     }
 
     /** Observe all events that are created by this type and its children. */
     observeDeep(f: (events: Array<YEvent<any>>, transaction: Transaction) => void) {
-        addEventHandlerListener(this._dEH, f)
+        this._dEH.addListener(f)
     }
 
     /** Unregister an observer function. */
     unobserve(f: (type: EventType, transaction: Transaction) => void) {
-        removeEventHandlerListener(this._eH, f)
+        this._eH.addListener(f)
     }
 
     /** Unregister an observer function. */
     unobserveDeep(f: (events: Array<YEvent<any>>, transaction: Transaction) => void) {
-        removeEventHandlerListener(this._dEH, f)
+        this._dEH.removeListener(f)
     }
 
     toJSON(): any {}

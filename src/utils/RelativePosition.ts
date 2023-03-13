@@ -97,7 +97,7 @@ export const relativePositionToJSON = (rpos: RelativePosition): any => {
  * @function
  */
 export const createRelativePositionFromJSON = (json: any): RelativePosition => {
-    return new RelativePosition(json.type == null ? null : createID(json.type.client, json.type.clock), json.tname || null, json.item == null ? null : createID(json.item.client, json.item.clock), json.assoc == null ? 0 : json.assoc)
+    return new RelativePosition(json.type == null ? null : new ID(json.type.client, json.type.clock), json.tname || null, json.item == null ? null : new ID(json.item.client, json.item.clock), json.assoc == null ? 0 : json.assoc)
 }
 
 export class AbsolutePosition {
@@ -136,7 +136,7 @@ export const createRelativePosition = (type: AbstractType_<any>, item: ID | null
     if (type._item === null) {
         tname = findRootTypeKey(type)
     } else {
-        typeid = createID(type._item.id.client, type._item.id.clock)
+        typeid = new ID(type._item.id.client, type._item.id.clock)
     }
     return new RelativePosition(typeid, tname, item, assoc)
 }
@@ -164,7 +164,7 @@ export const createRelativePositionFromTypeIndex = (type: AbstractType_<any>, in
         if (!t.deleted && t.countable) {
             if (t.length > index) {
                 // case 1: found position somewhere in the linked list
-                return createRelativePosition(type, createID(t.id.client, t.id.clock + index), assoc)
+                return createRelativePosition(type, new ID(t.id.client, t.id.clock + index), assoc)
             }
             index -= t.length
         }

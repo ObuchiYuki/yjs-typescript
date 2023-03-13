@@ -1,7 +1,7 @@
 
 import {
     AbstractType_ // eslint-disable-line
-} from '../internals'
+} from '../../internals'
 
 /**
  * Convenient helper to log type information.

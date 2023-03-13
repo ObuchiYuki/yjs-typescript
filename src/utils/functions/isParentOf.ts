@@ -1,5 +1,5 @@
 
-import { AbstractType_, Item } from '../internals' // eslint-disable-line
+import { AbstractType_, Item } from '../../internals' // eslint-disable-line
 
 /**
  * Check if `parent` is a parent of `child`.

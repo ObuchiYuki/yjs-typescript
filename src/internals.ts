@@ -7,8 +7,8 @@ export * from './utils/UpdateEncoder'
 export * from './utils/encoding'
 export * from './utils/EventHandler'
 export * from './utils/ID'
-export * from './utils/isParentOf'
-export * from './utils/logging'
+export * from './utils/functions/isParentOf'
+export * from './utils/functions/logType'
 export * from './utils/PermanentUserData'
 export * from './utils/RelativePosition'
 export * from './utils/Snapshot'
@@ -51,5 +51,7 @@ export * from "./structs/Struct_"
 
 export * from "./types/ArraySearchMarker_"
 
-export * from "./utils/createMapIterator"
-export * from "./utils/equalAttributes"
+export * from "./utils/functions/generateNewClientID"
+export * from "./utils/functions/findRootTypeKey"
+export * from "./utils/functions/createMapIterator"
+export * from "./utils/functions/equalAttributes"

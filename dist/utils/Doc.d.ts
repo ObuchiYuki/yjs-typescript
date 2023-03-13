@@ -4,18 +4,6 @@
 import { StructStore, AbstractType_, YArray, YText, YMap, YXmlFragment, Item, Transaction, YEvent, // eslint-disable-line
 Contentable_ } from '../internals';
 import { Observable } from 'lib0/observable';
-import * as random from 'lib0/random';
-export declare const generateNewClientId: typeof random.uint32;
-/**
- * @typedef {Object} DocOpts
- * @property {boolean} [DocOpts.gc=true] Disable garbage collection (default: gc=true)
- * @property {function(Item):boolean} [DocOpts.gcFilter] Will be called before an Item is garbage collected. Return false to keep the Item.
- * @property {string} [DocOpts.guid] Define a globally unique identifier for this document
- * @property {string | null} [DocOpts.collectionid] Associate this document with a collection. This only plays a role if your provider has a concept of collection.
- * @property {any} [DocOpts.meta] Any kind of meta information you want to associate with this document. If this is a subdocument, remote peers will store the meta information as well.
- * @property {boolean} [DocOpts.autoLoad] If a subdocument, automatically load document. If this is a subdocument, remote peers will load the document as well automatically.
- * @property {boolean} [DocOpts.shouldLoad] Whether the document should be synced by the provider now. This is toggled to true when you call ydoc.load()
- */
 export type DocOpts = {
     gc?: boolean;
     gcFilter?: (item: Item) => boolean;
@@ -37,17 +25,39 @@ export declare class Doc extends Observable<string> {
     collectionid: string | null;
     share: Map<string, AbstractType_<YEvent<any>>>;
     store: StructStore;
-    _transaction: Transaction | null;
-    _transactionCleanups: Transaction[];
     subdocs: Set<Doc>;
-    _item: Item | null;
     shouldLoad: boolean;
     autoLoad: boolean;
     meta: any;
+    /**
+     * This is set to true when the persistence provider loaded the document from the database or when the `sync` event fires.
+     * Note that not all providers implement this feature. Provider authors are encouraged to fire the `load` event when the doc content is loaded from the database.
+     */
     isLoaded: boolean;
+    /**
+     * This is set to true when the connection provider has successfully synced with a backend.
+     * Note that when using peer-to-peer providers this event may not provide very useful.
+     * Also note that not all providers implement this feature. Provider authors are encouraged to fire
+     * the `sync` event when the doc has been synced (with `true` as a parameter) or if connection is
+     * lost (with false as a parameter).
+     */
     isSynced: boolean;
+    /**
+     * Promise that resolves once the document has been loaded from a presistence provider.
+     */
     whenLoaded: Promise<Doc>;
+    /**
+     * Promise that resolves once the document has been synced with a backend.
+     * This promise is recreated when the connection is lost.
+     * Note the documentation about the `isSynced` property.
+     */
     whenSynced: Promise<void>;
+    /**
+     * If this document is a subdocument - a document integrated into another document - then _item is defined.
+     */
+    _item: Item | null;
+    _transaction: Transaction | null;
+    _transactionCleanups: Transaction[];
     /**
      * @param {DocOpts} opts configuration
      */
@@ -70,8 +80,6 @@ export declare class Doc extends Observable<string> {
      *
      * @param {function(Transaction):void} f The function that should be executed as a transaction
      * @param {any} [origin] Origin of who started the transaction. Will be stored on transaction.origin
-     *
-     * @public
      */
     transact(f: (arg0: Transaction) => void, origin?: any): void;
     /**
@@ -97,63 +105,21 @@ export declare class Doc extends Observable<string> {
      * @param {string} name
      * @param {Function} TypeConstructor The constructor of the type definition. E.g. Y.Text, Y.Array, Y.Map, ...
      * @return {AbstractType_<any>} The created type. Constructed with TypeConstructor
-     *
-     * @public
      */
-    get(name: string, TypeConstructor?: Function): AbstractType_<any>;
-    /**
-     * @template T
-     * @param {string} [name]
-     * @return {YArray<T>}
-     *
-     * @public
-     */
-    getArray<T extends Contentable_>(name?: string): YArray<T>;
-    /**
-     * @param {string} [name]
-     * @return {YText}
-     *
-     * @public
-     */
-    getText(name?: string): YText;
-    /**
-     * @template T
-     * @param {string} [name]
-     * @return {YMap<T>}
-     *
-     * @public
-     */
+    get<T extends AbstractType_<any>>(name: string, TypeConstructor?: any): T;
     getMap<T extends Contentable_>(name?: string): YMap<T>;
-    /**
-     * @param {string} [name]
-     * @return {YXmlFragment}
-     *
-     * @public
-     */
+    getArray<T extends Contentable_>(name?: string): YArray<T>;
     getXmlFragment(name?: string): YXmlFragment;
+    getText(name?: string): YText;
     /**
      * Converts the entire document into a js object, recursively traversing each yjs type
      * Doesn't log types that have not been defined (using ydoc.getType(..)).
      *
      * @deprecated Do not use this method and rather call toJSON directly on the shared types.
-     *
-     * @return {Object<string, any>}
      */
     toJSON(): {
         [s: string]: any;
     };
-    /**
-     * Emit `destroy` event and unregister all event handlers.
-     */
+    /** Emit `destroy` event and unregister all event handlers. */
     destroy(): void;
-    /**
-     * @param {string} eventName
-     * @param {function(...any):any} f
-     */
-    on(eventName: string, f: Function): void;
-    /**
-     * @param {string} eventName
-     * @param {function} f
-     */
-    off(eventName: string, f: Function): void;
 }

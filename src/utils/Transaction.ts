@@ -5,9 +5,8 @@ import {
     DeleteSet,
     getStateVector,
     findIndexSS,
-    callEventHandlerListeners,
     Item,
-    generateNewClientId,
+    generateNewClientID,
     createID,
     UpdateEncoderV1, UpdateEncoderV2, GC, StructStore, AbstractType_, __AbstractStruct, YEvent, Doc // eslint-disable-line
 } from '../internals'
@@ -114,7 +113,7 @@ export const writeUpdateMessageFromTransaction = (encoder: UpdateEncoderV1 | Upd
  */
 export const nextID = (transaction: Transaction) => {
     const y = transaction.doc
-    return createID(y.clientID, getState(y.store, y.clientID))
+    return new ID(y.clientID, getState(y.store, y.clientID))
 }
 
 /**
@@ -262,7 +261,7 @@ const cleanupTransactions = (transactionCleanups: Array<Transaction>, i: number)
                                 .sort((event1, event2) => event1.path.length - event2.path.length)
                             // We don't need to check for events.length
                             // because we know it has at least one element
-                            callEventHandlerListeners(type._dEH, events, transaction)
+                            type._dEH.callListeners(events, transaction)
                         }
                     })
                 )
@@ -305,7 +304,7 @@ const cleanupTransactions = (transactionCleanups: Array<Transaction>, i: number)
             }
             if (!transaction.local && transaction.afterState.get(doc.clientID) !== transaction.beforeState.get(doc.clientID)) {
                 logging.print(logging.ORANGE, logging.BOLD, '[yjs] ', logging.UNBOLD, logging.RED, 'Changed the client-id because another client seems to be using it.')
-                doc.clientID = generateNewClientId()
+                doc.clientID = generateNewClientID()
             }
             // @todo Merge all the transactions into one and provide send the data as a single update message
             doc.emit('afterTransactionCleanup', [transaction, doc])

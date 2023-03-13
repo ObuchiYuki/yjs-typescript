@@ -112,9 +112,9 @@ export class Item extends Struct_ {
         // create rightItem
         const { client, clock } = this.id
         const rightItem = new Item(
-            createID(client, clock + diff),
+            new ID(client, clock + diff),
             this,
-            createID(client, clock + diff - 1),
+            new ID(client, clock + diff - 1),
             this.right,
             this.rightOrigin,
             this.parent,
@@ -128,7 +128,7 @@ export class Item extends Struct_ {
             rightItem.keep = true
         }
         if (this.redone !== null) {
-            rightItem.redone = createID(this.redone.client, this.redone.clock + diff)
+            rightItem.redone = new ID(this.redone.client, this.redone.clock + diff)
         }
         // update left (do not set leftItem.rightOrigin as it will lead to problems when syncing)
         this.right = rightItem
@@ -232,7 +232,7 @@ export class Item extends Struct_ {
             }
         }
         const nextClock = getState(store, ownClientID)
-        const nextId = createID(ownClientID, nextClock)
+        const nextId = new ID(ownClientID, nextClock)
         const redoneItem = new Item(
             nextId,
             left, left && left.lastID,
@@ -295,7 +295,7 @@ export class Item extends Struct_ {
     integrate(transaction: Transaction, offset: number) {
         if (offset > 0) {
             this.id.clock += offset
-            this.left = getItemCleanEnd(transaction, transaction.doc.store, createID(this.id.client, this.id.clock - 1))
+            this.left = getItemCleanEnd(transaction, transaction.doc.store, new ID(this.id.client, this.id.clock - 1))
             this.origin = this.left.lastID
             this.content = this.content.splice(offset)
             this.length -= offset
@@ -415,7 +415,7 @@ export class Item extends Struct_ {
      */
     get lastID() {
         // allocating ids is pretty costly because of the amount of ids created, so we try to reuse whenever possible
-        return this.length === 1 ? this.id : createID(this.id.client, this.id.clock + this.length - 1)
+        return this.length === 1 ? this.id : new ID(this.id.client, this.id.clock + this.length - 1)
     }
 
     /** Try to merge two items */
@@ -493,7 +493,7 @@ export class Item extends Struct_ {
      * This is called when this Item is sent to a remote peer.
      */
     write(encoder: UpdateEncoderAny_, offset: number) {
-        const origin = offset > 0 ? createID(this.id.client, this.id.clock + offset - 1) : this.origin
+        const origin = offset > 0 ? new ID(this.id.client, this.id.clock + offset - 1) : this.origin
         const rightOrigin = this.rightOrigin
         const parentSub = this.parentSub
         const info = (this.content.getRef() & binary.BITS5) |

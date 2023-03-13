@@ -11,7 +11,8 @@ import {
     YXmlFragment,
     transact,
     ContentDoc, Item, Transaction, YEvent, // eslint-disable-line
-    Contentable_
+    Contentable_,
+    generateNewClientID
 } from '../internals'
 
 import { Observable } from 'lib0/observable'
@@ -19,19 +20,6 @@ import * as random from 'lib0/random'
 import * as map from 'lib0/map'
 import * as array from 'lib0/array'
 import * as promise from 'lib0/promise'
-
-export const generateNewClientId = random.uint32
-
-/**
- * @typedef {Object} DocOpts
- * @property {boolean} [DocOpts.gc=true] Disable garbage collection (default: gc=true)
- * @property {function(Item):boolean} [DocOpts.gcFilter] Will be called before an Item is garbage collected. Return false to keep the Item.
- * @property {string} [DocOpts.guid] Define a globally unique identifier for this document
- * @property {string | null} [DocOpts.collectionid] Associate this document with a collection. This only plays a role if your provider has a concept of collection.
- * @property {any} [DocOpts.meta] Any kind of meta information you want to associate with this document. If this is a subdocument, remote peers will store the meta information as well.
- * @property {boolean} [DocOpts.autoLoad] If a subdocument, automatically load document. If this is a subdocument, remote peers will load the document as well automatically.
- * @property {boolean} [DocOpts.shouldLoad] Whether the document should be synced by the provider now. This is toggled to true when you call ydoc.load()
- */
 
 export type DocOpts = {
     gc?: boolean,
@@ -55,18 +43,43 @@ export class Doc extends Observable<string> {
     collectionid: string | null
     share: Map<string, AbstractType_<YEvent<any>>>
     store: StructStore
-    _transaction: Transaction | null
-    _transactionCleanups: Transaction[]
     subdocs: Set<Doc>
-    _item: Item | null
     shouldLoad: boolean
     autoLoad: boolean
     meta: any
+    /**
+     * This is set to true when the persistence provider loaded the document from the database or when the `sync` event fires.
+     * Note that not all providers implement this feature. Provider authors are encouraged to fire the `load` event when the doc content is loaded from the database.
+     */
     isLoaded: boolean
+    /**
+     * This is set to true when the connection provider has successfully synced with a backend.
+     * Note that when using peer-to-peer providers this event may not provide very useful.
+     * Also note that not all providers implement this feature. Provider authors are encouraged to fire
+     * the `sync` event when the doc has been synced (with `true` as a parameter) or if connection is
+     * lost (with false as a parameter).
+     */
     isSynced: boolean
+    /**
+     * Promise that resolves once the document has been loaded from a presistence provider.
+     */
     whenLoaded: Promise<Doc>
+    /**
+     * Promise that resolves once the document has been synced with a backend.
+     * This promise is recreated when the connection is lost.
+     * Note the documentation about the `isSynced` property.
+     */
     whenSynced: Promise<void>
     
+    /**
+     * If this document is a subdocument - a document integrated into another document - then _item is defined.
+     */
+    _item: Item | null
+    
+    _transaction: Transaction | null
+    _transactionCleanups: Transaction[]
+    
+
     /**
      * @param {DocOpts} opts configuration
      */
@@ -74,52 +87,20 @@ export class Doc extends Observable<string> {
         super()
         this.gc = gc
         this.gcFilter = gcFilter
-        this.clientID = generateNewClientId()
+        this.clientID = generateNewClientID()
         this.guid = guid
         this.collectionid = collectionid
-        /**
-         * @type {Map<string, AbstractType_<YEvent<any>>>}
-         */
         this.share = new Map()
         this.store = new StructStore()
-        /**
-         * @type {Transaction | null}
-         */
         this._transaction = null
-        /**
-         * @type {Array<Transaction>}
-         */
         this._transactionCleanups = []
-        /**
-         * @type {Set<Doc>}
-         */
         this.subdocs = new Set()
-        /**
-         * If this document is a subdocument - a document integrated into another document - then _item is defined.
-         * @type {Item?}
-         */
         this._item = null
         this.shouldLoad = shouldLoad
         this.autoLoad = autoLoad
         this.meta = meta
-        /**
-         * This is set to true when the persistence provider loaded the document from the database or when the `sync` event fires.
-         * Note that not all providers implement this feature. Provider authors are encouraged to fire the `load` event when the doc content is loaded from the database.
-         *
-         * @type {boolean}
-         */
         this.isLoaded = false
-        /**
-         * This is set to true when the connection provider has successfully synced with a backend.
-         * Note that when using peer-to-peer providers this event may not provide very useful.
-         * Also note that not all providers implement this feature. Provider authors are encouraged to fire
-         * the `sync` event when the doc has been synced (with `true` as a parameter) or if connection is
-         * lost (with false as a parameter).
-         */
         this.isSynced = false
-        /**
-         * Promise that resolves once the document has been loaded from a presistence provider.
-         */
         this.whenLoaded = promise.create(resolve => {
             this.on('load', () => {
                 this.isLoaded = true
@@ -127,9 +108,6 @@ export class Doc extends Observable<string> {
             })
         })
         const provideSyncedPromise = () => new Promise<void>(resolve => {
-            /**
-             * @param {boolean} isSynced
-             */
             const eventHandler = (isSynced: boolean | undefined) => {
                 if (isSynced === undefined || isSynced === true) {
                     this.off('sync', eventHandler)
@@ -147,11 +125,6 @@ export class Doc extends Observable<string> {
                 this.emit('load', [])
             }
         })
-        /**
-         * Promise that resolves once the document has been synced with a backend.
-         * This promise is recreated when the connection is lost.
-         * Note the documentation about the `isSynced` property.
-         */
         this.whenSynced = provideSyncedPromise()
     }
 
@@ -162,7 +135,7 @@ export class Doc extends Observable<string> {
      *
      * It is safe to call `load()` multiple times.
      */
-    load () {
+    load() {
         const item = this._item
         if (item !== null && !this.shouldLoad) {
             transact((item.parent as any).doc, transaction => {
@@ -172,13 +145,9 @@ export class Doc extends Observable<string> {
         this.shouldLoad = true
     }
 
-    getSubdocs () {
-        return this.subdocs
-    }
+    getSubdocs() { return this.subdocs }
 
-    getSubdocGuids () {
-        return new Set(array.from(this.subdocs).map(doc => doc.guid))
-    }
+    getSubdocGuids() { return new Set(Array.from(this.subdocs).map(doc => doc.guid)) }
 
     /**
      * Changes that happen inside of a transaction are bundled. This means that
@@ -188,12 +157,8 @@ export class Doc extends Observable<string> {
      *
      * @param {function(Transaction):void} f The function that should be executed as a transaction
      * @param {any} [origin] Origin of who started the transaction. Will be stored on transaction.origin
-     *
-     * @public
      */
-    transact (f: (arg0: Transaction) => void, origin: any = null) {
-        transact(this, f, origin)
-    }
+    transact(f: (arg0: Transaction) => void, origin: any = null) { transact(this, f, origin) }
 
     /**
      * Define a shared data type.
@@ -218,12 +183,9 @@ export class Doc extends Observable<string> {
      * @param {string} name
      * @param {Function} TypeConstructor The constructor of the type definition. E.g. Y.Text, Y.Array, Y.Map, ...
      * @return {AbstractType_<any>} The created type. Constructed with TypeConstructor
-     *
-     * @public
      */
-    get (name: string, TypeConstructor: Function = AbstractType_): AbstractType_<any> {
+    get<T extends AbstractType_<any>>(name: string, TypeConstructor: any = AbstractType_): T {
         const type = map.setIfUndefined(this.share, name, () => {
-            // @ts-ignore
             const t = new TypeConstructor()
             t._integrate(this, null)
             return t
@@ -231,12 +193,10 @@ export class Doc extends Observable<string> {
         const Constr = type.constructor
         if (TypeConstructor !== AbstractType_ && Constr !== TypeConstructor) {
             if (Constr === AbstractType_) {
-                // @ts-ignore
                 const t = new TypeConstructor()
                 t._map = type._map
-                type._map.forEach(/** @param {Item?} n */ (n: Item | null) => {
+                type._map.forEach((n: Item | null) => {
                     for (; n !== null; n = n.left) {
-                        // @ts-ignore
                         n.parent = t
                     }
                 })
@@ -255,77 +215,28 @@ export class Doc extends Observable<string> {
         return type
     }
 
-    /**
-     * @template T
-     * @param {string} [name]
-     * @return {YArray<T>}
-     *
-     * @public
-     */
-    getArray<T extends Contentable_>(name: string = ''): YArray<T> {
-        // @ts-ignore
-        return this.get(name, YArray)
-    }
+    getMap<T extends Contentable_>(name: string = ''): YMap<T> { return this.get(name, YMap) }
 
-    /**
-     * @param {string} [name]
-     * @return {YText}
-     *
-     * @public
-     */
-    getText (name: string = ''): YText {
-        // @ts-ignore
-        return this.get(name, YText)
-    }
+    getArray<T extends Contentable_>(name: string = ''): YArray<T> { return this.get(name, YArray) }
 
-    /**
-     * @template T
-     * @param {string} [name]
-     * @return {YMap<T>}
-     *
-     * @public
-     */
-    getMap<T extends Contentable_>(name: string = ''): YMap<T> {
-        // @ts-ignore
-        return this.get(name, YMap)
-    }
+    getXmlFragment (name: string = ''): YXmlFragment { return this.get(name, YXmlFragment) }
 
-    /**
-     * @param {string} [name]
-     * @return {YXmlFragment}
-     *
-     * @public
-     */
-    getXmlFragment (name: string = ''): YXmlFragment {
-        // @ts-ignore
-        return this.get(name, YXmlFragment)
-    }
+    getText (name: string = ''): YText { return this.get(name, YText) }
 
     /**
      * Converts the entire document into a js object, recursively traversing each yjs type
      * Doesn't log types that have not been defined (using ydoc.getType(..)).
      *
      * @deprecated Do not use this method and rather call toJSON directly on the shared types.
-     *
-     * @return {Object<string, any>}
      */
-    toJSON (): { [s: string]: any } {
-        /**
-         * @type {Object<string, any>}
-         */
+    toJSON(): { [s: string]: any } {
         const doc: { [s: string]: any } = {}
-
-        this.share.forEach((value, key) => {
-            doc[key] = value.toJSON()
-        })
-
+        this.share.forEach((value, key) => { doc[key] = value.toJSON() })
         return doc
     }
 
-    /**
-     * Emit `destroy` event and unregister all event handlers.
-     */
-    destroy () {
+    /** Emit `destroy` event and unregister all event handlers. */
+    destroy() {
         array.from(this.subdocs).forEach(subdoc => subdoc.destroy())
         const item = this._item
         if (item !== null) {
@@ -335,30 +246,12 @@ export class Doc extends Observable<string> {
             content.doc._item = item
             transact((item as any).parent.doc, transaction => {
                 const doc = content.doc
-                if (!item.deleted) {
-                    transaction.subdocsAdded.add(doc)
-                }
+                if (!item.deleted) { transaction.subdocsAdded.add(doc) }
                 transaction.subdocsRemoved.add(this)
             }, null, true)
         }
         this.emit('destroyed', [true])
         this.emit('destroy', [this])
         super.destroy()
-    }
-
-    /**
-     * @param {string} eventName
-     * @param {function(...any):any} f
-     */
-    on (eventName: string, f: Function) {
-        super.on(eventName, f)
-    }
-
-    /**
-     * @param {string} eventName
-     * @param {function} f
-     */
-    off (eventName: string, f: Function) {
-        super.off(eventName, f)
     }
 }

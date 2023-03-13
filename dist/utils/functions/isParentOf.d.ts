@@ -1,4 +1,4 @@
-import { AbstractType_, Item } from '../internals';
+import { AbstractType_, Item } from '../../internals';
 /**
  * Check if `parent` is a parent of `child`.
  *

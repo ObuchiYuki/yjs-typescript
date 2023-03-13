@@ -24,11 +24,11 @@ export class DSDecoderV1 {
 
 export class UpdateDecoderV1 extends DSDecoderV1 {
     readLeftID(): ID {
-        return createID(decoding.readVarUint(this.restDecoder), decoding.readVarUint(this.restDecoder))
+        return new ID(decoding.readVarUint(this.restDecoder), decoding.readVarUint(this.restDecoder))
     }
 
     readRightID(): ID {
-        return createID(decoding.readVarUint(this.restDecoder), decoding.readVarUint(this.restDecoder))
+        return new ID(decoding.readVarUint(this.restDecoder), decoding.readVarUint(this.restDecoder))
     }
 
     /**

@@ -27,8 +27,8 @@ class AbstractType_ {
         this._map = new Map();
         this._start = null;
         this._length = 0;
-        this._eH = (0, internals_1.createEventHandler)(); /** Event handlers */
-        this._dEH = (0, internals_1.createEventHandler)(); /** Deep event handlers */
+        this._eH = new internals_1.EventHandler(); /** Event handlers */
+        this._dEH = new internals_1.EventHandler(); /** Deep event handlers */
         this._searchMarker = null;
         // this -> parent
         this.listInsertGenerics = (transaction, index, contents) => {
@@ -95,7 +95,7 @@ class AbstractType_ {
             }
             type = type._item.parent;
         }
-        (0, internals_1.callEventHandlerListeners)(changedType._eH, event, transaction);
+        changedType._eH.callListeners(event, transaction);
     }
     listSlice(start, end) {
         if (start < 0) {
@@ -452,19 +452,19 @@ class AbstractType_ {
     }
     /** Observe all events that are created on this type. */
     observe(f) {
-        (0, internals_1.addEventHandlerListener)(this._eH, f);
+        this._eH.addListener(f);
     }
     /** Observe all events that are created by this type and its children. */
     observeDeep(f) {
-        (0, internals_1.addEventHandlerListener)(this._dEH, f);
+        this._dEH.addListener(f);
     }
     /** Unregister an observer function. */
     unobserve(f) {
-        (0, internals_1.removeEventHandlerListener)(this._eH, f);
+        this._eH.addListener(f);
     }
     /** Unregister an observer function. */
     unobserveDeep(f) {
-        (0, internals_1.removeEventHandlerListener)(this._dEH, f);
+        this._dEH.removeListener(f);
     }
     toJSON() { }
 }

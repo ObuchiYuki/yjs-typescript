@@ -137,7 +137,7 @@ export const splitSnapshotAffectedStructs = (transaction: Transaction, snapshot:
     if (!meta.has(snapshot)) {
         snapshot.sv.forEach((clock, client) => {
             if (clock < getState(store, client)) {
-                getItemCleanStart(transaction, createID(client, clock))
+                getItemCleanStart(transaction, new ID(client, clock))
             }
         })
         snapshot.ds.iterate(transaction, item => {})
@@ -173,7 +173,7 @@ export const createDocFromSnapshot = (originDoc: Doc, snapshot: Snapshot, newDoc
                 continue
             }
             if (clock < getState(originDoc.store, client)) {
-                getItemCleanStart(transaction, createID(client, clock))
+                getItemCleanStart(transaction, new ID(client, clock))
             }
             const structs = originDoc.store.clients.get(client) || []
             const lastStructIndex = findIndexSS(structs, clock - 1)

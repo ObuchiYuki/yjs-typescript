@@ -1,4 +1,4 @@
-import { AbstractType_ } from '../internals';
+import { AbstractType_ } from '../../internals';
 /**
  * Convenient helper to log type information.
  *

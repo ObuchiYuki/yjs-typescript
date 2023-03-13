@@ -66,7 +66,7 @@ export declare const writeUpdateMessageFromTransaction: (encoder: UpdateEncoderV
  * @private
  * @function
  */
-export declare const nextID: (transaction: Transaction) => import("./ID").ID;
+export declare const nextID: (transaction: Transaction) => any;
 /**
  * If `type.parent` was added in current transaction, `type` technically
  * did not change, it was just added and we should not fire events for `type`.

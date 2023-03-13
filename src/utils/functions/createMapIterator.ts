@@ -1,5 +1,5 @@
 
-import { Item } from '../internals'
+import { Item } from '../../internals'
 import * as iterator from 'lib0/iterator'
 
 export const createMapIterator = (map: Map<string, Item>): IterableIterator<any[]> => {
