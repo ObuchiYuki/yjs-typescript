@@ -1,4 +1,4 @@
-import * as Y from '../src/index'
+import * as Y from '../../src/index'
 import * as t from 'lib0/testing'
 import { init } from './testHelper'
 

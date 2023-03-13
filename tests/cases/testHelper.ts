@@ -3,11 +3,11 @@ import * as t from 'lib0/testing'
 import * as prng from 'lib0/prng'
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'
-import * as syncProtocol from 'y-protocols-mock'
+import * as syncProtocol from './sync'
 import * as object from 'lib0/object'
 import * as map from 'lib0/map'
-import * as Y from '../src/index'
-export * from '../src/index'
+import * as Y from '../../src/index'
+export * from '../../src/index'
 
 if (typeof window !== 'undefined') {
     // @ts-ignore
@@ -56,7 +56,7 @@ const useV1Encoding = () => {
 }
 
 const useV2Encoding = () => {
-    console.error('sync protocol doesnt support v2 protocol yet, fallback to v1 encoding') // @Todo
+    // console.error('sync protocol doesnt support v2 protocol yet, fallback to v1 encoding') // @Todo
     useV2 = false
     enc = encV1
 }
@@ -398,10 +398,10 @@ export const compare = (users: Array<TestYInstance>) => {
 export const compareItemIDs = (a: Y.Item | null, b: Y.Item | null): boolean => a === b || (a !== null && b != null && Y.compareIDs(a.id, b.id))
 
 /**
- * @param {import('../src/internals.js').StructStore} ss1
- * @param {import('../src/internals.js').StructStore} ss2
+ * @param {import('../../src/internals.js').StructStore} ss1
+ * @param {import('../../src/internals.js').StructStore} ss2
  */
-export const compareStructStores = (ss1: import('../src/internals.js').StructStore, ss2: import('../src/internals.js').StructStore) => {
+export const compareStructStores = (ss1: import('../../src/internals.js').StructStore, ss2: import('../../src/internals.js').StructStore) => {
     t.assert(ss1.clients.size === ss2.clients.size)
     for (const [client, structs1] of ss1.clients) {
         const structs2 = ss2.clients.get(client) as Y.AbstractStruct[]
@@ -444,10 +444,10 @@ export const compareStructStores = (ss1: import('../src/internals.js').StructSto
  * @param {import('../src/internals.js').DeleteSet} ds1
  * @param {import('../src/internals.js').DeleteSet} ds2
  */
-export const compareDS = (ds1: import('../src/internals.js').DeleteSet, ds2: import('../src/internals.js').DeleteSet) => {
+export const compareDS = (ds1: import('../../src/internals.js').DeleteSet, ds2: import('../../src/internals.js').DeleteSet) => {
     t.assert(ds1.clients.size === ds2.clients.size)
     ds1.clients.forEach((deleteItems1, client) => {
-        const deleteItems2 = (ds2.clients.get(client)) as (import('../src/internals.js').DeleteItem)[]
+        const deleteItems2 = (ds2.clients.get(client)) as (import('../../src/internals.js').DeleteItem)[]
         t.assert(deleteItems2 !== undefined && deleteItems1.length === deleteItems2.length)
         for (let i = 0; i < deleteItems1.length; i++) {
             const di1 = deleteItems1[i]
@@ -475,7 +475,7 @@ type InitTestObjectCallback<T> = (y: TestYInstance) => T
  * @param {number} iterations
  * @param {InitTestObjectCallback<T>} [initTestObject]
  */
-export const applyRandomTests = <T>(tc: t.TestCase, mods: Array<((arg0: Y.Doc, arg1: prng.PRNG, arg2: T) => void)>, iterations: number, initTestObject: InitTestObjectCallback<T>) => {
+export const applyRandomTests = <T>(tc: t.TestCase, mods: Array<((arg0: Y.Doc, arg1: prng.PRNG, arg2: T) => void)>, iterations: number, initTestObject?: InitTestObjectCallback<T>) => {
     const gen = tc.prng
     const result = init(tc, { users: 5 }, initTestObject)
     const { testConnector, users } = result

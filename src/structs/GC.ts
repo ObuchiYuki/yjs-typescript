@@ -3,19 +3,11 @@ import {
     AbstractStruct,
     addStruct,
     StructStore, Transaction, UpdateEncoderAny, ID,
-    AbstractStruct_
 } from '../internals'
 
 export const structGCRefNumber = 0
 
-// AbstractStruct で constructor チェックをしている部分はないので、implements にして良い
-
-export class GC implements AbstractStruct_ {
-    constructor(
-        public id: ID,
-        public length: number
-    ) {}
-    
+export class GC extends AbstractStruct {
     get deleted () { return true }
 
     delete() {}

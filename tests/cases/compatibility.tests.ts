@@ -6,7 +6,7 @@
  * The v1 documents were generated with Yjs v13.2.0 based on the randomisized tests.
  */
 
-import * as Y from '../src/index'
+import * as Y from '../../src/index'
 import * as t from 'lib0/testing'
 import * as buffer from 'lib0/buffer'
 

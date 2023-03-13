@@ -16,9 +16,9 @@ import {
     PermanentUserData,
     encodeStateAsUpdate,
     applyUpdate
-} from '../src/internals'
+} from '../../src/internals'
 
-import * as Y from '../src/index'
+import * as Y from '../../src/index'
 
 /**
  * @param {t.TestCase} tc

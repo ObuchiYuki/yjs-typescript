@@ -1,6 +1,6 @@
-import { init, compare, applyRandomTests, Doc } from './testHelper.js' // eslint-disable-line
+import { init, compare, applyRandomTests, Doc } from './testHelper' // eslint-disable-line
 
-import * as Y from '../src/index.js'
+import * as Y from '../../src/index'
 import * as t from 'lib0/testing'
 import * as prng from 'lib0/prng'
 import * as math from 'lib0/math'
@@ -8,7 +8,7 @@ import * as math from 'lib0/math'
 /**
  * @param {t.TestCase} tc
  */
-export const testBasicUpdate = tc => {
+export const testBasicUpdate = (tc: t.TestCase) => {
   const doc1 = new Y.Doc()
   const doc2 = new Y.Doc()
   doc1.getArray('array').insert(0, ['hi'])
@@ -20,7 +20,7 @@ export const testBasicUpdate = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testSlice = tc => {
+export const testSlice = (tc: t.TestCase) => {
   const doc1 = new Y.Doc()
   const arr = doc1.getArray('array')
   arr.insert(0, [1, 2, 3])
@@ -35,7 +35,7 @@ export const testSlice = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testArrayFrom = tc => {
+export const testArrayFrom = (tc: t.TestCase) => {
   const doc1 = new Y.Doc()
   const db1 = doc1.getMap('root')
   const nestedArray1 = Y.Array.from([0, 1, 2])
@@ -48,7 +48,7 @@ export const testArrayFrom = tc => {
  *
  * @param {t.TestCase} tc
  */
-export const testLengthIssue = tc => {
+export const testLengthIssue = (tc: t.TestCase) => {
   const doc1 = new Y.Doc()
   const arr = doc1.getArray('array')
   arr.push([0, 1, 2, 3])
@@ -77,7 +77,7 @@ export const testLengthIssue = tc => {
  *
  * @param {t.TestCase} tc
  */
-export const testLengthIssue2 = tc => {
+export const testLengthIssue2 = (tc: t.TestCase) => {
   const doc = new Y.Doc()
   const next = doc.getArray()
   doc.transact(() => {
@@ -118,7 +118,7 @@ export const testLengthIssue2 = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testDeleteInsert = tc => {
+export const testDeleteInsert = (tc: t.TestCase) => {
   const { users, array0 } = init(tc, { users: 2 })
   array0.delete(0, 0)
   t.describe('Does not throw when deleting zero elements with position 0')
@@ -134,7 +134,7 @@ export const testDeleteInsert = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testInsertThreeElementsTryRegetProperty = tc => {
+export const testInsertThreeElementsTryRegetProperty = (tc: t.TestCase) => {
   const { testConnector, users, array0, array1 } = init(tc, { users: 2 })
   array0.insert(0, [1, true, false])
   t.compare(array0.toJSON(), [1, true, false], '.toJSON() works')
@@ -146,7 +146,7 @@ export const testInsertThreeElementsTryRegetProperty = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testConcurrentInsertWithThreeConflicts = tc => {
+export const testConcurrentInsertWithThreeConflicts = (tc: t.TestCase) => {
   const { users, array0, array1, array2 } = init(tc, { users: 3 })
   array0.insert(0, [0])
   array1.insert(0, [1])
@@ -157,7 +157,7 @@ export const testConcurrentInsertWithThreeConflicts = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testConcurrentInsertDeleteWithThreeConflicts = tc => {
+export const testConcurrentInsertDeleteWithThreeConflicts = (tc: t.TestCase) => {
   const { testConnector, users, array0, array1, array2 } = init(tc, { users: 3 })
   array0.insert(0, ['x', 'y', 'z'])
   testConnector.flushAllMessages()
@@ -171,7 +171,7 @@ export const testConcurrentInsertDeleteWithThreeConflicts = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testInsertionsInLateSync = tc => {
+export const testInsertionsInLateSync = (tc: t.TestCase) => {
   const { testConnector, users, array0, array1, array2 } = init(tc, { users: 3 })
   array0.insert(0, ['x', 'y'])
   testConnector.flushAllMessages()
@@ -189,7 +189,7 @@ export const testInsertionsInLateSync = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testDisconnectReallyPreventsSendingMessages = tc => {
+export const testDisconnectReallyPreventsSendingMessages = (tc: t.TestCase) => {
   const { testConnector, users, array0, array1 } = init(tc, { users: 3 })
   array0.insert(0, ['x', 'y'])
   testConnector.flushAllMessages()
@@ -207,7 +207,7 @@ export const testDisconnectReallyPreventsSendingMessages = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testDeletionsInLateSync = tc => {
+export const testDeletionsInLateSync = (tc: t.TestCase) => {
   const { testConnector, users, array0, array1 } = init(tc, { users: 2 })
   array0.insert(0, ['x', 'y'])
   testConnector.flushAllMessages()
@@ -221,7 +221,7 @@ export const testDeletionsInLateSync = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testInsertThenMergeDeleteOnSync = tc => {
+export const testInsertThenMergeDeleteOnSync = (tc: t.TestCase) => {
   const { testConnector, users, array0, array1 } = init(tc, { users: 2 })
   array0.insert(0, ['x', 'y', 'z'])
   testConnector.flushAllMessages()
@@ -234,12 +234,12 @@ export const testInsertThenMergeDeleteOnSync = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testInsertAndDeleteEvents = tc => {
+export const testInsertAndDeleteEvents = (tc: t.TestCase) => {
   const { array0, users } = init(tc, { users: 2 })
   /**
    * @type {Object<string,any>?}
    */
-  let event = null
+  let event: { [s: string]: any } | null = null
   array0.observe(e => {
     event = e
   })
@@ -258,12 +258,12 @@ export const testInsertAndDeleteEvents = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testNestedObserverEvents = tc => {
+export const testNestedObserverEvents = (tc: t.TestCase) => {
   const { array0, users } = init(tc, { users: 2 })
   /**
    * @type {Array<number>}
    */
-  const vals = []
+  const vals: Array<number> = []
   array0.observe(e => {
     if (array0.length === 1) {
       // inserting, will call this observer again
@@ -284,12 +284,12 @@ export const testNestedObserverEvents = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testInsertAndDeleteEventsForTypes = tc => {
+export const testInsertAndDeleteEventsForTypes = (tc: t.TestCase) => {
   const { array0, users } = init(tc, { users: 2 })
   /**
    * @type {Object<string,any>|null}
    */
-  let event = null
+  let event: { [s: string]: any } | null = null
   array0.observe(e => {
     event = e
   })
@@ -311,12 +311,12 @@ export const testInsertAndDeleteEventsForTypes = tc => {
  *
  * @param {t.TestCase} tc
  */
-export const testObserveDeepEventOrder = tc => {
+export const testObserveDeepEventOrder = (tc: t.TestCase) => {
   const { array0, users } = init(tc, { users: 2 })
   /**
    * @type {Array<any>}
    */
-  let events = []
+  let events: Array<any> = []
   array0.observeDeep(e => {
     events = e
   })
@@ -333,12 +333,12 @@ export const testObserveDeepEventOrder = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testChangeEvent = tc => {
+export const testChangeEvent = (tc: t.TestCase) => {
   const { array0, users } = init(tc, { users: 2 })
   /**
    * @type {any}
    */
-  let changes = null
+  let changes: any = null
   array0.observe(e => {
     changes = e.changes
   })
@@ -360,12 +360,12 @@ export const testChangeEvent = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testInsertAndDeleteEventsForTypes2 = tc => {
+export const testInsertAndDeleteEventsForTypes2 = (tc: t.TestCase) => {
   const { array0, users } = init(tc, { users: 2 })
   /**
    * @type {Array<Object<string,any>>}
    */
-  const events = []
+  const events: Array<{ [s: string]: any }> = []
   array0.observe(e => {
     events.push(e)
   })
@@ -380,7 +380,7 @@ export const testInsertAndDeleteEventsForTypes2 = tc => {
  * This issue has been reported here https://github.com/yjs/yjs/issues/155
  * @param {t.TestCase} tc
  */
-export const testNewChildDoesNotEmitEventInTransaction = tc => {
+export const testNewChildDoesNotEmitEventInTransaction = (tc: t.TestCase) => {
   const { array0, users } = init(tc, { users: 2 })
   let fired = false
   users[0].transact(() => {
@@ -397,7 +397,7 @@ export const testNewChildDoesNotEmitEventInTransaction = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testGarbageCollector = tc => {
+export const testGarbageCollector = (tc: t.TestCase) => {
   const { testConnector, users, array0 } = init(tc, { users: 3 })
   array0.insert(0, ['x', 'y', 'z'])
   testConnector.flushAllMessages()
@@ -411,12 +411,12 @@ export const testGarbageCollector = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testEventTargetIsSetCorrectlyOnLocal = tc => {
+export const testEventTargetIsSetCorrectlyOnLocal = (tc: t.TestCase) => {
   const { array0, users } = init(tc, { users: 3 })
   /**
    * @type {any}
    */
-  let event
+  let event: any
   array0.observe(e => {
     event = e
   })
@@ -428,12 +428,12 @@ export const testEventTargetIsSetCorrectlyOnLocal = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testEventTargetIsSetCorrectlyOnRemote = tc => {
+export const testEventTargetIsSetCorrectlyOnRemote = (tc: t.TestCase) => {
   const { testConnector, array0, array1, users } = init(tc, { users: 3 })
   /**
    * @type {any}
    */
-  let event
+  let event: any
   array0.observe(e => {
     event = e
   })
@@ -446,12 +446,12 @@ export const testEventTargetIsSetCorrectlyOnRemote = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testIteratingArrayContainingTypes = tc => {
+export const testIteratingArrayContainingTypes = (tc: t.TestCase) => {
   const y = new Y.Doc()
-  const arr = y.getArray('arr')
+  const arr = y.getArray<Y.Map<number>>('arr')
   const numItems = 10
   for (let i = 0; i < numItems; i++) {
-    const map = new Y.Map()
+    const map = new Y.Map<number>()
     map.set('value', i)
     arr.push([map])
   }
@@ -468,11 +468,11 @@ const getUniqueNumber = () => _uniqueNumber++
 /**
  * @type {Array<function(Doc,prng.PRNG,any):void>}
  */
-const arrayTransactions = [
+const arrayTransactions: Array<((arg0: Doc, arg1: prng.PRNG, arg2: any) => void)> = [
   function insert (user, gen) {
-    const yarray = user.getArray('array')
+    const yarray = user.getArray<number>('array')
     const uniqueNumber = getUniqueNumber()
-    const content = []
+    const content: number[] = []
     const len = prng.int32(gen, 1, 4)
     for (let i = 0; i < len; i++) {
       content.push(uniqueNumber)
@@ -484,14 +484,14 @@ const arrayTransactions = [
     t.compareArrays(yarray.toArray(), oldContent) // we want to make sure that fastSearch markers insert at the correct position
   },
   function insertTypeArray (user, gen) {
-    const yarray = user.getArray('array')
+    const yarray = user.getArray<Y.Array<number>>('array')
     const pos = prng.int32(gen, 0, yarray.length)
     yarray.insert(pos, [new Y.Array()])
     const array2 = yarray.get(pos)
     array2.insert(0, [1, 2, 3, 4])
   },
   function insertTypeMap (user, gen) {
-    const yarray = user.getArray('array')
+    const yarray = user.getArray<Y.Map<number>>('array')
     const pos = prng.int32(gen, 0, yarray.length)
     yarray.insert(pos, [new Y.Map()])
     const map = yarray.get(pos)
@@ -530,98 +530,98 @@ const arrayTransactions = [
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests6 = tc => {
+export const testRepeatGeneratingYarrayTests6 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 6)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests40 = tc => {
+export const testRepeatGeneratingYarrayTests40 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 40)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests42 = tc => {
+export const testRepeatGeneratingYarrayTests42 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 42)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests43 = tc => {
+export const testRepeatGeneratingYarrayTests43 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 43)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests44 = tc => {
+export const testRepeatGeneratingYarrayTests44 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 44)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests45 = tc => {
+export const testRepeatGeneratingYarrayTests45 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 45)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests46 = tc => {
+export const testRepeatGeneratingYarrayTests46 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 46)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests300 = tc => {
+export const testRepeatGeneratingYarrayTests300 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 300)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests400 = tc => {
+export const testRepeatGeneratingYarrayTests400 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 400)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests500 = tc => {
+export const testRepeatGeneratingYarrayTests500 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 500)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests600 = tc => {
+export const testRepeatGeneratingYarrayTests600 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 600)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests1000 = tc => {
+export const testRepeatGeneratingYarrayTests1000 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 1000)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests1800 = tc => {
+export const testRepeatGeneratingYarrayTests1800 = (tc: t.TestCase) => {
   applyRandomTests(tc, arrayTransactions, 1800)
 }
 
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests3000 = tc => {
+export const testRepeatGeneratingYarrayTests3000 = (tc: t.TestCase) => {
   t.skip(!t.production)
   applyRandomTests(tc, arrayTransactions, 3000)
 }
@@ -629,7 +629,7 @@ export const testRepeatGeneratingYarrayTests3000 = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests5000 = tc => {
+export const testRepeatGeneratingYarrayTests5000 = (tc: t.TestCase) => {
   t.skip(!t.production)
   applyRandomTests(tc, arrayTransactions, 5000)
 }
@@ -637,7 +637,7 @@ export const testRepeatGeneratingYarrayTests5000 = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testRepeatGeneratingYarrayTests30000 = tc => {
+export const testRepeatGeneratingYarrayTests30000 = (tc: t.TestCase) => {
   t.skip(!t.production)
   applyRandomTests(tc, arrayTransactions, 30000)
 }

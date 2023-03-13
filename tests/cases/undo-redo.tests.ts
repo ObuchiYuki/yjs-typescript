@@ -1,12 +1,12 @@
-import { init, compare, applyRandomTests, Doc } from './testHelper.js' // eslint-disable-line
+import { init } from './testHelper' // eslint-disable-line
 
-import * as Y from '../src/index.js'
+import * as Y from '../../src/index'
 import * as t from 'lib0/testing'
 
 /**
  * @param {t.TestCase} tc
  */
-export const testInfiniteCaptureTimeout = tc => {
+export const testInfiniteCaptureTimeout = (tc: t.TestCase) => {
   const { array0 } = init(tc, { users: 3 })
   const undoManager = new Y.UndoManager(array0, { captureTimeout: Number.MAX_VALUE })
   array0.push([1, 2, 3])
@@ -19,7 +19,7 @@ export const testInfiniteCaptureTimeout = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testUndoText = tc => {
+export const testUndoText = (tc: t.TestCase) => {
   const { testConnector, text0, text1 } = init(tc, { users: 3 })
   const undoManager = new Y.UndoManager(text0)
 
@@ -43,6 +43,7 @@ export const testUndoText = tc => {
   text1.insert(0, 'xyz')
   testConnector.syncAll()
   undoManager.undo()
+  
   t.assert(text0.toString() === 'xyz')
   undoManager.redo()
   t.assert(text0.toString() === 'abcxyz')
@@ -66,7 +67,7 @@ export const testUndoText = tc => {
  * Test case to fix #241
  * @param {t.TestCase} tc
  */
-export const testEmptyTypeScope = tc => {
+export const testEmptyTypeScope = (tc: t.TestCase) => {
   const ydoc = new Y.Doc()
   const um = new Y.UndoManager([], { doc: ydoc })
   const yarray = ydoc.getArray()
@@ -80,7 +81,7 @@ export const testEmptyTypeScope = tc => {
  * Test case to fix #241
  * @param {t.TestCase} tc
  */
-export const testDoubleUndo = tc => {
+export const testDoubleUndo = (tc: t.TestCase) => {
   const doc = new Y.Doc()
   const text = doc.getText()
   text.insert(0, '1221')
@@ -101,7 +102,7 @@ export const testDoubleUndo = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testUndoMap = tc => {
+export const testUndoMap = (tc: t.TestCase) => {
   const { testConnector, map0, map1 } = init(tc, { users: 2 })
   map0.set('a', 0)
   const undoManager = new Y.UndoManager(map0)
@@ -141,7 +142,7 @@ export const testUndoMap = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testUndoArray = tc => {
+export const testUndoArray = (tc: t.TestCase) => {
   const { testConnector, array0, array1 } = init(tc, { users: 3 })
   const undoManager = new Y.UndoManager(array0)
   array0.insert(0, [1, 2, 3])
@@ -192,7 +193,7 @@ export const testUndoArray = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testUndoXml = tc => {
+export const testUndoXml = (tc: t.TestCase) => {
   const { xml0 } = init(tc, { users: 3 })
   const undoManager = new Y.UndoManager(xml0)
   const child = new Y.XmlElement('p')
@@ -217,17 +218,17 @@ export const testUndoXml = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testUndoEvents = tc => {
+export const testUndoEvents = (tc: t.TestCase) => {
   const { text0 } = init(tc, { users: 3 })
   const undoManager = new Y.UndoManager(text0)
   let counter = 0
   let receivedMetadata = -1
-  undoManager.on('stack-item-added', /** @param {any} event */ event => {
+  undoManager.on('stack-item-added', /** @param {any} event */ (event: any) => {
     t.assert(event.type != null)
     t.assert(event.changedParentTypes != null && event.changedParentTypes.has(text0))
     event.stackItem.meta.set('test', counter++)
   })
-  undoManager.on('stack-item-popped', /** @param {any} event */ event => {
+  undoManager.on('stack-item-popped', /** @param {any} event */ (event: any) => {
     t.assert(event.type != null)
     t.assert(event.changedParentTypes != null && event.changedParentTypes.has(text0))
     receivedMetadata = event.stackItem.meta.get('test')
@@ -242,7 +243,7 @@ export const testUndoEvents = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testTrackClass = tc => {
+export const testTrackClass = (tc: t.TestCase) => {
   const { users, text0 } = init(tc, { users: 3 })
   // only track origins that are numbers
   const undoManager = new Y.UndoManager(text0, { trackedOrigins: new Set([Number]) })
@@ -257,7 +258,7 @@ export const testTrackClass = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testTypeScope = tc => {
+export const testTypeScope = (tc: t.TestCase) => {
   const { array0 } = init(tc, { users: 3 })
   // only track origins that are numbers
   const text0 = new Y.Text()
@@ -278,7 +279,7 @@ export const testTypeScope = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testUndoInEmbed = tc => {
+export const testUndoInEmbed = (tc: t.TestCase) => {
   const { text0 } = init(tc, { users: 3 })
   const undoManager = new Y.UndoManager(text0)
   const nestedText = new Y.Text('initial text')
@@ -298,11 +299,11 @@ export const testUndoInEmbed = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testUndoDeleteFilter = tc => {
+export const testUndoDeleteFilter = (tc: t.TestCase) => {
   /**
    * @type {Y.Array<any>}
    */
-  const array0 = /** @type {any} */ (init(tc, { users: 3 }).array0)
+  const array0: Y.Array<any> = /** @type {any} */ (init(tc, { users: 3 }).array0)
   const undoManager = new Y.UndoManager(array0, { deleteFilter: item => !(item instanceof Y.Item) || (item.content instanceof Y.ContentType && item.content.type._map.size === 0) })
   const map0 = new Y.Map()
   map0.set('hi', 1)
@@ -318,18 +319,18 @@ export const testUndoDeleteFilter = tc => {
  * This issue has been reported in https://discuss.yjs.dev/t/undomanager-with-external-updates/454/6
  * @param {t.TestCase} tc
  */
-export const testUndoUntilChangePerformed = tc => {
+export const testUndoUntilChangePerformed = (tc: t.TestCase) => {
   const doc = new Y.Doc()
   const doc2 = new Y.Doc()
-  doc.on('update', update => Y.applyUpdate(doc2, update))
-  doc2.on('update', update => Y.applyUpdate(doc, update))
+  doc.on('update', (update: Uint8Array) => Y.applyUpdate(doc2, update))
+  doc2.on('update', (update: Uint8Array) => Y.applyUpdate(doc, update))
 
   const yArray = doc.getArray('array')
   const yArray2 = doc2.getArray('array')
   const yMap = new Y.Map()
   yMap.set('hello', 'world')
   yArray.push([yMap])
-  const yMap2 = new Y.Map()
+  const yMap2 = new Y.Map<string>()
   yMap2.set('key', 'value')
   yArray.push([yMap2])
 
@@ -342,14 +343,14 @@ export const testUndoUntilChangePerformed = tc => {
   Y.transact(doc2, () => yArray2.delete(0), doc2.clientID)
   undoManager2.undo()
   undoManager.undo()
-  t.compareStrings(yMap2.get('key'), 'value')
+  t.compareStrings(yMap2.get('key')!, 'value')
 }
 
 /**
  * This issue has been reported in https://github.com/yjs/yjs/issues/317
  * @param {t.TestCase} tc
  */
-export const testUndoNestedUndoIssue = tc => {
+export const testUndoNestedUndoIssue = (tc: t.TestCase) => {
   const doc = new Y.Doc({ gc: false })
   const design = doc.getMap()
   const undoManager = new Y.UndoManager(design, { captureTimeout: 0 })
@@ -357,7 +358,7 @@ export const testUndoNestedUndoIssue = tc => {
   /**
    * @type {Y.Map<any>}
    */
-  const text = new Y.Map()
+  const text: Y.Map<any> = new Y.Map()
 
   const blocks1 = new Y.Array()
   const blocks1block = new Y.Map()
@@ -405,12 +406,12 @@ export const testUndoNestedUndoIssue = tc => {
  *
  * @param {t.TestCase} tc
  */
-export const testConsecutiveRedoBug = tc => {
+export const testConsecutiveRedoBug = (tc: t.TestCase) => {
   const doc = new Y.Doc()
-  const yRoot = doc.getMap()
+  const yRoot = doc.getMap<Y.Map<number>>()
   const undoMgr = new Y.UndoManager(yRoot)
 
-  let yPoint = new Y.Map()
+  let yPoint = new Y.Map<number>()
   yPoint.set('x', 0)
   yPoint.set('y', 0)
   yRoot.set('a', yPoint)
@@ -440,7 +441,7 @@ export const testConsecutiveRedoBug = tc => {
   t.compare(yRoot.get('a'), undefined)
 
   undoMgr.redo() // x=0, y=0
-  yPoint = yRoot.get('a')
+  yPoint = yRoot.get('a')!
 
   t.compare(yPoint.toJSON(), { x: 0, y: 0 })
   undoMgr.redo() // x=100, y=100
@@ -456,7 +457,7 @@ export const testConsecutiveRedoBug = tc => {
  *
  * @param {t.TestCase} tc
  */
-export const testUndoXmlBug = tc => {
+export const testUndoXmlBug = (tc: t.TestCase) => {
   const origin = 'origin'
   const doc = new Y.Doc()
   const fragment = doc.getXmlFragment('t')
@@ -501,7 +502,7 @@ export const testUndoXmlBug = tc => {
  *
  * @param {t.TestCase} tc
  */
-export const testUndoBlockBug = tc => {
+export const testUndoBlockBug = (tc: t.TestCase) => {
   const doc = new Y.Doc({ gc: false })
   const design = doc.getMap()
 
@@ -561,7 +562,7 @@ export const testUndoBlockBug = tc => {
  * @see https://github.com/yjs/yjs/issues/392
  * @param {t.TestCase} tc
  */
-export const testUndoDeleteTextFormat = tc => {
+export const testUndoDeleteTextFormat = (tc: t.TestCase) => {
   const doc = new Y.Doc()
   const text = doc.getText()
   text.insert(0, 'Attack ships on fire off the shoulder of Orion.')
@@ -599,11 +600,11 @@ export const testUndoDeleteTextFormat = tc => {
  * @see https://github.com/yjs/yjs/issues/392
  * @param {t.TestCase} tc
  */
-export const testBehaviorOfIgnoreremotemapchangesProperty = tc => {
+export const testBehaviorOfIgnoreremotemapchangesProperty = (tc: t.TestCase) => {
   const doc = new Y.Doc()
   const doc2 = new Y.Doc()
-  doc.on('update', update => Y.applyUpdate(doc2, update, doc))
-  doc2.on('update', update => Y.applyUpdate(doc, update, doc2))
+  doc.on('update', (update: Uint8Array) => Y.applyUpdate(doc2, update, doc))
+  doc2.on('update', (update: Uint8Array) => Y.applyUpdate(doc, update, doc2))
   const map1 = doc.getMap()
   const map2 = doc2.getMap()
   const um1 = new Y.UndoManager(map1, { ignoreRemoteMapChanges: true })
@@ -622,7 +623,7 @@ export const testBehaviorOfIgnoreremotemapchangesProperty = tc => {
  * @see https://github.com/yjs/yjs/issues/447
  * @param {t.TestCase} tc
  */
-export const testSpecialDeletionCase = tc => {
+export const testSpecialDeletionCase = (tc: t.TestCase) => {
   const origin = 'undoable'
   const doc = new Y.Doc()
   const fragment = doc.getXmlFragment()

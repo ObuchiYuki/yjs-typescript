@@ -1,6 +1,6 @@
 
 import {
-    StructStore, Transaction, ID, AbstractStruct_, UpdateEncoderAny
+    StructStore, Transaction, ID, AbstractStruct, UpdateEncoderAny
 } from '../internals'
 
 import * as error from 'lib0/error'
@@ -8,12 +8,8 @@ import * as encoding from 'lib0/encoding'
 
 export const structSkipRefNumber = 10
 
-export class Skip implements AbstractStruct_ {
-    constructor(
-        public id: ID,
-        public length: number
-    ) {}
-
+export class Skip extends AbstractStruct {
+    
     get deleted(): boolean { return true }
 
     delete () {}

@@ -1,15 +1,15 @@
-import * as doc from './doc.tests'
-import * as compatibility from './compatibility.tests'
-import * as encoding from './encoding.tests'
-import * as relativePositions from './relativePositions.tests'
+import * as doc from './cases/doc.tests'
+import * as compatibility from './cases/compatibility.tests'
+import * as encoding from './cases/encoding.tests'
+import * as relativePositions from './cases/relativePositions.tests'
+import * as undoredo from './cases/undo-redo.tests'
+import * as updates from './cases/updates.tests'
 
-// import * as map from './y-map.tests.js'
-// import * as array from './y-array.tests.js'
-// import * as text from './y-text.tests.js'
-// import * as xml from './y-xml.tests.js'
-// import * as undoredo from './undo-redo.tests.js'
-// import * as snapshot from './snapshot.tests.js'
-// import * as updates from './updates.tests.js'
+import * as map from './cases/y-map.tests'
+import * as array from './cases/y-array.tests'
+import * as text from './cases/y-text.tests'
+// import * as xml from './y-xml.tests'
+// import * as snapshot from './snapshot.tests'
 
 
 import { runTests } from 'lib0/testing'
@@ -20,10 +20,15 @@ if (isBrowser) {
     log.createVConsole(document.body)
 }
 runTests({ 
-    doc, 
-    compatibility,
-    encoding,
-    relativePositions
+    // doc, 
+    // compatibility,
+    // encoding,
+    // relativePositions,
+    // undoredo,
+    // updates,
+    // map,
+    // array,
+    text
 }).then(success => {
     if (isNode) { process.exit(success ? 0 : 1) }
 })

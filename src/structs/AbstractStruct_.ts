@@ -4,10 +4,10 @@ import {
 } from '../internals'
 
 export interface AbstractStructConstructor_ {
-    new(id: ID, length: number): AbstractStruct_
+    new(id: ID, length: number): __AbstractStruct_
 }
 
-export interface AbstractStruct_ {
+export interface __AbstractStruct_ {
     get deleted(): boolean
 
     /**

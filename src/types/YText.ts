@@ -460,7 +460,7 @@ export type YTextEventDelta = {
     insert?: Array<any> | string,
     delete?: number, 
     retain?: number,
-    attributes: { [s: string]: any }
+    attributes?: { [s: string]: any }
 }[]
 
 export type YTextEventChange = {
@@ -479,9 +479,6 @@ export class YTextEvent extends YEvent<YText> {
 
     /** Set of all changed attributes. */
     keysChanged: Set<string>
-
-    _delta: YTextEventDelta = []
-    _changes: YTextEventChange|null = null
 
     /**
      * @param {YText} ytext
@@ -507,7 +504,7 @@ export class YTextEvent extends YEvent<YText> {
         if (this._changes === null) {
             this._changes = { keys: this.keys, delta: this.delta, added: new Set(), deleted: new Set() }
         }
-        return this._changes
+        return this._changes as YTextEventChange
     }
 
     /**
@@ -683,7 +680,7 @@ export class YTextEvent extends YEvent<YText> {
             })
             this._delta = delta
         }
-        return /** @type {any} */ (this._delta)
+        return this._delta as any
     }
 }
 

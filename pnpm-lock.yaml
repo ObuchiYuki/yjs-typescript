@@ -5,13 +5,11 @@ specifiers:
   lib0: ^0.2.66
   ts-node: ^10.9.1
   typescript: ^4.9.5
-  y-protocols-mock: github:ObuchiYuki/y-protocols-mock
   yjs: ^13.5.50
 
 dependencies:
   lib0: 0.2.66
   typescript: 4.9.5
-  y-protocols-mock: github.com/ObuchiYuki/y-protocols-mock/84fb368354011836b6afb96f8e20855817af10e3
   yjs: 13.5.50
 
 devDependencies:
@@ -153,23 +151,3 @@ packages:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
     engines: {node: '>=6'}
     dev: true
-
-  github.com/ObuchiYuki/y-protocols-mock/84fb368354011836b6afb96f8e20855817af10e3:
-    resolution: {tarball: https://codeload.github.com/ObuchiYuki/y-protocols-mock/tar.gz/84fb368354011836b6afb96f8e20855817af10e3}
-    name: y-protocols-mock
-    version: 1.0.3
-    dependencies:
-      lib0: 0.2.66
-      yjs-typescript: github.com/ObuchiYuki/yjs-typescript/0207f098164b9d9ccb193027d366fb05728585a0
-    dev: false
-
-  github.com/ObuchiYuki/yjs-typescript/0207f098164b9d9ccb193027d366fb05728585a0:
-    resolution: {tarball: https://codeload.github.com/ObuchiYuki/yjs-typescript/tar.gz/0207f098164b9d9ccb193027d366fb05728585a0}
-    name: yjs-typescript
-    version: 1.0.0
-    dependencies:
-      lib0: 0.2.66
-      typescript: 4.9.5
-      y-protocols-mock: github.com/ObuchiYuki/y-protocols-mock/84fb368354011836b6afb96f8e20855817af10e3
-      yjs: 13.5.50
-    dev: false

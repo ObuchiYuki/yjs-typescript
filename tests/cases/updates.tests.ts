@@ -1,7 +1,7 @@
 import * as t from 'lib0/testing'
-import { init, compare } from './testHelper.js' // eslint-disable-line
-import * as Y from '../src/index.js'
-import { readClientsStructRefs, readDeleteSet, UpdateDecoderV2, UpdateEncoderV2, writeDeleteSet } from '../src/internals.js'
+import { init, compare } from './testHelper' // eslint-disable-line
+import * as Y from '../../src/index'
+import { readClientsStructRefs, readDeleteSet, UpdateDecoderV2, UpdateEncoderV2, writeDeleteSet } from '../../src/internals'
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'
 
@@ -19,10 +19,23 @@ import * as decoding from 'lib0/decoding'
  * @property {function(Uint8Array, Uint8Array):Uint8Array} Enc.diffUpdate
  */
 
+type Enc = {
+  mergeUpdates: (updates: Array<Uint8Array>) => Uint8Array,
+  encodeStateAsUpdate: (doc: Y.Doc, encodedTargetStateVector?: Uint8Array) => Uint8Array,
+  applyUpdate: (ydoc: Y.Doc, update: Uint8Array, transactionOrigin?: any) => void,
+  logUpdate: (update: Uint8Array) => void,
+  parseUpdateMeta: (update: Uint8Array) => { from: Map<number, number>, to: Map<number, number> },
+  encodeStateVectorFromUpdate: (update: Uint8Array) => Uint8Array,
+  encodeStateVector: (doc: Y.Doc | Map<number, number>) => Uint8Array,
+  updateEventName: string,
+  description: string,
+  diffUpdate: (update: Uint8Array, sv: Uint8Array) => Uint8Array
+}
+
 /**
  * @type {Enc}
  */
-const encV1 = {
+const encV1: Enc = {
   mergeUpdates: Y.mergeUpdates,
   encodeStateAsUpdate: Y.encodeStateAsUpdate,
   applyUpdate: Y.applyUpdate,
@@ -38,7 +51,7 @@ const encV1 = {
 /**
  * @type {Enc}
  */
-const encV2 = {
+const encV2: Enc = {
   mergeUpdates: Y.mergeUpdatesV2,
   encodeStateAsUpdate: Y.encodeStateAsUpdateV2,
   applyUpdate: Y.applyUpdateV2,
@@ -54,7 +67,7 @@ const encV2 = {
 /**
  * @type {Enc}
  */
-const encDoc = {
+const encDoc: Enc = {
   mergeUpdates: (updates) => {
     const ydoc = new Y.Doc({ gc: false })
     updates.forEach(update => {
@@ -74,7 +87,7 @@ const encDoc = {
    * @param {Uint8Array} update
    * @param {Uint8Array} sv
    */
-  diffUpdate: (update, sv) => {
+  diffUpdate: (update: Uint8Array, sv: Uint8Array) => {
     const ydoc = new Y.Doc({ gc: false })
     Y.applyUpdateV2(ydoc, update)
     return Y.encodeStateAsUpdateV2(ydoc, sv)
@@ -87,7 +100,7 @@ const encoders = [encV1, encV2, encDoc]
  * @param {Array<Y.Doc>} users
  * @param {Enc} enc
  */
-const fromUpdates = (users, enc) => {
+const fromUpdates = (users: Array<Y.Doc>, enc: Enc) => {
   const updates = users.map(user =>
     enc.encodeStateAsUpdate(user)
   )
@@ -99,7 +112,7 @@ const fromUpdates = (users, enc) => {
 /**
  * @param {t.TestCase} tc
  */
-export const testMergeUpdates = tc => {
+export const testMergeUpdates = (tc: t.TestCase) => {
   const { users, array0, array1 } = init(tc, { users: 3 })
 
   array0.insert(0, [1])
@@ -115,7 +128,7 @@ export const testMergeUpdates = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testKeyEncoding = tc => {
+export const testKeyEncoding = (tc: t.TestCase) => {
   const { users, text0, text1 } = init(tc, { users: 2 })
 
   text0.insert(0, 'a', { italic: true })
@@ -136,8 +149,8 @@ export const testKeyEncoding = tc => {
  * @param {Enc} enc
  * @param {boolean} hasDeletes
  */
-const checkUpdateCases = (ydoc, updates, enc, hasDeletes) => {
-  const cases = []
+const checkUpdateCases = (ydoc: Y.Doc, updates: Array<Uint8Array>, enc: Enc, hasDeletes: boolean) => {
+  const cases: Uint8Array[] = []
 
   // Case 1: Simple case, simply merge everything
   cases.push(enc.mergeUpdates(updates))
@@ -210,7 +223,7 @@ const checkUpdateCases = (ydoc, updates, enc, hasDeletes) => {
     const meta = enc.parseUpdateMeta(mergedUpdates)
     meta.from.forEach((clock, client) => t.assert(clock === 0))
     meta.to.forEach((clock, client) => {
-      const structs = /** @type {Array<Y.Item>} */ (merged.store.clients.get(client))
+      const structs = merged.store.clients.get(client) as Y.Item[]
       const lastStruct = structs[structs.length - 1]
       t.assert(lastStruct.id.clock + lastStruct.length === clock)
     })
@@ -220,12 +233,12 @@ const checkUpdateCases = (ydoc, updates, enc, hasDeletes) => {
 /**
  * @param {t.TestCase} tc
  */
-export const testMergeUpdates1 = tc => {
+export const testMergeUpdates1 = (tc: t.TestCase) => {
   encoders.forEach((enc, i) => {
     t.info(`Using encoder: ${enc.description}`)
     const ydoc = new Y.Doc({ gc: false })
-    const updates = /** @type {Array<Uint8Array>} */ ([])
-    ydoc.on(enc.updateEventName, update => { updates.push(update) })
+    const updates: Uint8Array[] = []
+    ydoc.on(enc.updateEventName, (update: Uint8Array) => { updates.push(update) })
 
     const array = ydoc.getArray()
     array.insert(0, [1])
@@ -240,12 +253,12 @@ export const testMergeUpdates1 = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testMergeUpdates2 = tc => {
+export const testMergeUpdates2 = (tc: t.TestCase) => {
   encoders.forEach((enc, i) => {
     t.info(`Using encoder: ${enc.description}`)
     const ydoc = new Y.Doc({ gc: false })
-    const updates = /** @type {Array<Uint8Array>} */ ([])
-    ydoc.on(enc.updateEventName, update => { updates.push(update) })
+    const updates: Uint8Array[] = []
+    ydoc.on(enc.updateEventName, (update: Uint8Array) => { updates.push(update) })
 
     const array = ydoc.getArray()
     array.insert(0, [1, 2])
@@ -260,13 +273,13 @@ export const testMergeUpdates2 = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testMergePendingUpdates = tc => {
+export const testMergePendingUpdates = (tc: t.TestCase) => {
   const yDoc = new Y.Doc()
   /**
-   * @type {Array<Uint8Array>}
+   * @type {Array<>}
    */
-  const serverUpdates = []
-  yDoc.on('update', (update, origin, c) => {
+  const serverUpdates: Uint8Array[] = []
+  yDoc.on('update', (update: Uint8Array, origin: any, c: any) => {
     serverUpdates.splice(serverUpdates.length, 0, update)
   })
   const yText = yDoc.getText('textBlock')
