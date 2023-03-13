@@ -91,7 +91,7 @@ export {
   convertUpdateFormatV1ToV2,
   convertUpdateFormatV2ToV1,
   UpdateEncoderV1
-} from './internals.js'
+} from './internals'
 
 const glo = (typeof globalThis !== 'undefined'
   ? globalThis

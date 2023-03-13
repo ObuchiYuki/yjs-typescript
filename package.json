@@ -7,12 +7,10 @@
   "main": "dist/index.js",
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean ; tsc",
-    "prepush": "npm run test.clean; npm run build",
-    "push": "make(){ if [[ -z \"$1\" ]]; then echo Commit message should not be empty. ;exit 1; fi; npm run prepush; git add .; git commit -m \"$1\"; git push; }; make ",
-    "test.clean": "rm -rf tests/dist",
-    "test.build": "npm run test.clean; tsc -p ./tests/tsconfig.json",
-    "test": "npm run test.build; node --stack-size=10000 ./tests/dist/tests/index.js"
+    "build": "npm run clean && tsc",
+    "prepush": "npm run test.clean && npm run build",
+    "push": "make(){ if [[ -z \"$1\" ]]; then echo Commit message should not be empty. ;exit 1; fi; npm run prepush && git add . && git commit -m \"$1\" && git push; }; make ",
+    "test": "node --stack-size=10000 -r ts-node/register tests/index.ts"
   },
   "dependencies": {
     "lib0": "^0.2.66",
@@ -21,6 +19,7 @@
     "yjs": "^13.5.50"
   },
   "devDependencies": {
-    "@types/node": "^18.15.0"
+    "@types/node": "^18.15.0",
+    "ts-node": "^10.9.1"
   }
 }

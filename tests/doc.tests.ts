@@ -1,5 +1,5 @@
 
-import * as Y from '../src/index.js'
+import * as Y from '../src/index'
 import * as t from 'lib0/testing'
 
 /**

@@ -18,7 +18,7 @@ import {
     transact,
     ArraySearchMarker, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item // eslint-disable-line
 } from '../internals'
-import { typeListSlice } from './AbstractType.js'
+import { typeListSlice } from './AbstractType'
 
 /** Event that describes the changes on a YArray */
 export class YArrayEvent<T> extends YEvent<YArray<T>> {

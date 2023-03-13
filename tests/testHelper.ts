@@ -6,8 +6,8 @@ import * as decoding from 'lib0/decoding'
 import * as syncProtocol from 'y-protocols-mock'
 import * as object from 'lib0/object'
 import * as map from 'lib0/map'
-import * as Y from '../src/index.js'
-export * from '../src/index.js'
+import * as Y from '../src/index'
+export * from '../src/index'
 
 if (typeof window !== 'undefined') {
     // @ts-ignore
@@ -276,7 +276,7 @@ export class TestConnector {
 export const init = <T>(
     tc: t.TestCase,
     { users = 5 }: { users?: number } = {},
-    initTestObject: InitTestObjectCallback<T>
+    initTestObject?: InitTestObjectCallback<T>
 ): {
     testObjects: Array<any>;
     testConnector: TestConnector;

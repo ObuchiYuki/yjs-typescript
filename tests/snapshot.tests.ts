@@ -1,11 +1,11 @@
-import * as Y from '../src/index.js'
+import * as Y from '../src/index'
 import * as t from 'lib0/testing'
-import { init } from './testHelper.js.js'
+import { init } from './testHelper'
 
 /**
  * @param {t.TestCase} tc
  */
-export const testBasicRestoreSnapshot = tc => {
+export const testBasicRestoreSnapshot = (tc: t.TestCase) => {
   const doc = new Y.Doc({ gc: false })
   doc.getArray('array').insert(0, ['hello'])
   const snap = Y.snapshot(doc)
@@ -20,7 +20,7 @@ export const testBasicRestoreSnapshot = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testEmptyRestoreSnapshot = tc => {
+export const testEmptyRestoreSnapshot = (tc: t.TestCase) => {
   const doc = new Y.Doc({ gc: false })
   const snap = Y.snapshot(doc)
   snap.sv.set(9999, 0)
@@ -40,10 +40,10 @@ export const testEmptyRestoreSnapshot = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testRestoreSnapshotWithSubType = tc => {
+export const testRestoreSnapshotWithSubType = (tc: t.TestCase) => {
   const doc = new Y.Doc({ gc: false })
   doc.getArray('array').insert(0, [new Y.Map()])
-  const subMap = doc.getArray('array').get(0)
+  const subMap = doc.getArray<Y.Map<string>>('array').get(0)
   subMap.set('key1', 'value1')
 
   const snap = Y.snapshot(doc)
@@ -63,7 +63,7 @@ export const testRestoreSnapshotWithSubType = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testRestoreDeletedItem1 = tc => {
+export const testRestoreDeletedItem1 = (tc: t.TestCase) => {
   const doc = new Y.Doc({ gc: false })
   doc.getArray('array').insert(0, ['item1', 'item2'])
 
@@ -79,7 +79,7 @@ export const testRestoreDeletedItem1 = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testRestoreLeftItem = tc => {
+export const testRestoreLeftItem = (tc: t.TestCase) => {
   const doc = new Y.Doc({ gc: false })
   doc.getArray('array').insert(0, ['item1'])
   doc.getMap('map').set('test', 1)
@@ -97,7 +97,7 @@ export const testRestoreLeftItem = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testDeletedItemsBase = tc => {
+export const testDeletedItemsBase = (tc: t.TestCase) => {
   const doc = new Y.Doc({ gc: false })
   doc.getArray('array').insert(0, ['item1'])
   doc.getArray('array').delete(0)
@@ -113,7 +113,7 @@ export const testDeletedItemsBase = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testDeletedItems2 = tc => {
+export const testDeletedItems2 = (tc: t.TestCase) => {
   const doc = new Y.Doc({ gc: false })
   doc.getArray('array').insert(0, ['item1', 'item2', 'item3'])
   doc.getArray('array').delete(1)
@@ -129,7 +129,7 @@ export const testDeletedItems2 = tc => {
 /**
  * @param {t.TestCase} tc
  */
-export const testDependentChanges = tc => {
+export const testDependentChanges = (tc: t.TestCase) => {
   const { array0, array1, testConnector } = init(tc, { users: 2 })
 
   if (!array0.doc) {
@@ -142,11 +142,11 @@ export const testDependentChanges = tc => {
   /**
    * @type {Y.Doc}
    */
-  const doc0 = array0.doc
+  const doc0: Y.Doc = array0.doc
   /**
    * @type {Y.Doc}
    */
-  const doc1 = array1.doc
+  const doc1: Y.Doc = array1.doc
 
   doc0.gc = false
   doc1.gc = false
