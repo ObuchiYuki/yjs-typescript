@@ -81,7 +81,7 @@ exports.relativePositionToJSON = relativePositionToJSON;
  * @function
  */
 const createRelativePositionFromJSON = (json) => {
-    return new RelativePosition(json.type == null ? null : (0, internals_1.createID)(json.type.client, json.type.clock), json.tname || null, json.item == null ? null : (0, internals_1.createID)(json.item.client, json.item.clock), json.assoc == null ? 0 : json.assoc);
+    return new RelativePosition(json.type == null ? null : new internals_1.ID(json.type.client, json.type.clock), json.tname || null, json.item == null ? null : new internals_1.ID(json.item.client, json.item.clock), json.assoc == null ? 0 : json.assoc);
 };
 exports.createRelativePositionFromJSON = createRelativePositionFromJSON;
 class AbsolutePosition {
@@ -117,7 +117,7 @@ const createRelativePosition = (type, item, assoc) => {
         tname = (0, internals_1.findRootTypeKey)(type);
     }
     else {
-        typeid = (0, internals_1.createID)(type._item.id.client, type._item.id.clock);
+        typeid = new internals_1.ID(type._item.id.client, type._item.id.clock);
     }
     return new RelativePosition(typeid, tname, item, assoc);
 };
@@ -145,7 +145,7 @@ const createRelativePositionFromTypeIndex = (type, index, assoc = 0) => {
         if (!t.deleted && t.countable) {
             if (t.length > index) {
                 // case 1: found position somewhere in the linked list
-                return (0, exports.createRelativePosition)(type, (0, internals_1.createID)(t.id.client, t.id.clock + index), assoc);
+                return (0, exports.createRelativePosition)(type, new internals_1.ID(t.id.client, t.id.clock + index), assoc);
             }
             index -= t.length;
         }
@@ -168,7 +168,7 @@ const writeRelativePosition = (encoder, rpos) => {
     const { type, tname, item, assoc } = rpos;
     if (item !== null) {
         encoding.writeVarUint(encoder, 0);
-        (0, internals_1.writeID)(encoder, item);
+        item.encode(encoder);
     }
     else if (tname !== null) {
         // case 2: found position at the end of the list and type is stored in y.share
@@ -178,7 +178,7 @@ const writeRelativePosition = (encoder, rpos) => {
     else if (type !== null) {
         // case 3: found position at the end of the list and type is attached to an item
         encoding.writeUint8(encoder, 2);
-        (0, internals_1.writeID)(encoder, type);
+        type.encode(encoder);
     }
     else {
         throw error.unexpectedCase();
@@ -210,7 +210,7 @@ const readRelativePosition = (decoder) => {
     switch (decoding.readVarUint(decoder)) {
         case 0:
             // case 1: found position somewhere in the linked list
-            itemID = (0, internals_1.readID)(decoder);
+            itemID = internals_1.ID.decode(decoder);
             break;
         case 1:
             // case 2: found position at the end of the list and type is stored in y.share
@@ -218,7 +218,7 @@ const readRelativePosition = (decoder) => {
             break;
         case 2: {
             // case 3: found position at the end of the list and type is attached to an item
-            type = (0, internals_1.readID)(decoder);
+            type = internals_1.ID.decode(decoder);
         }
     }
     const assoc = decoding.hasContent(decoder) ? decoding.readVarInt(decoder) : 0;

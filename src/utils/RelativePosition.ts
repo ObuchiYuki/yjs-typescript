@@ -1,12 +1,9 @@
 
 import {
-    writeID,
-    readID,
     compareIDs,
     getState,
     findRootTypeKey,
     Item,
-    createID,
     ContentType,
     followRedone,
     ID, Doc, AbstractType_ // eslint-disable-line
@@ -15,6 +12,7 @@ import {
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'
 import * as error from 'lib0/error'
+import { encode } from 'querystring'
 
 /**
  * A relative position is based on the Yjs model and is not affected by document changes.
@@ -187,7 +185,7 @@ export const writeRelativePosition = (encoder: encoding.Encoder, rpos: RelativeP
     const { type, tname, item, assoc } = rpos
     if (item !== null) {
         encoding.writeVarUint(encoder, 0)
-        writeID(encoder, item)
+        item.encode(encoder)
     } else if (tname !== null) {
         // case 2: found position at the end of the list and type is stored in y.share
         encoding.writeUint8(encoder, 1)
@@ -195,7 +193,7 @@ export const writeRelativePosition = (encoder: encoding.Encoder, rpos: RelativeP
     } else if (type !== null) {
         // case 3: found position at the end of the list and type is attached to an item
         encoding.writeUint8(encoder, 2)
-        writeID(encoder, type)
+        type.encode(encoder)
     } else {
         throw error.unexpectedCase()
     }
@@ -226,7 +224,7 @@ export const readRelativePosition = (decoder: decoding.Decoder): RelativePositio
     switch (decoding.readVarUint(decoder)) {
         case 0:
             // case 1: found position somewhere in the linked list
-            itemID = readID(decoder)
+            itemID = ID.decode(decoder)
             break
         case 1:
             // case 2: found position at the end of the list and type is stored in y.share
@@ -234,7 +232,7 @@ export const readRelativePosition = (decoder: decoding.Decoder): RelativePositio
             break
         case 2: {
             // case 3: found position at the end of the list and type is attached to an item
-            type = readID(decoder)
+            type = ID.decode(decoder)
         }
     }
     const assoc = decoding.hasContent(decoder) ? decoding.readVarInt(decoder) : 0

@@ -107,14 +107,14 @@ const readClientsStructRefs = (decoder, doc) => {
             switch (binary.BITS5 & info) {
                 case 0: { // GC
                     const len = decoder.readLen();
-                    refs[i] = new internals_1.GC((0, internals_1.createID)(client, clock), len);
+                    refs[i] = new internals_1.GC(new internals_1.ID(client, clock), len);
                     clock += len;
                     break;
                 }
                 case 10: { // Skip Struct (nothing to apply)
                     // @todo we could reduce the amount of checks by adding Skip struct to clientRefs so we know that something is missing.
                     const len = decoding.readVarUint(decoder.restDecoder);
-                    refs[i] = new internals_1.Skip((0, internals_1.createID)(client, clock), len);
+                    refs[i] = new internals_1.Skip(new internals_1.ID(client, clock), len);
                     clock += len;
                     break;
                 }
@@ -129,7 +129,7 @@ const readClientsStructRefs = (decoder, doc) => {
                     // and we read the next string as parentYKey.
                     // It indicates how we store/retrieve parent from `y.share`
                     // @type {string|null}
-                    const struct = new internals_1.Item((0, internals_1.createID)(client, clock), null, // leftd
+                    const struct = new internals_1.Item(new internals_1.ID(client, clock), null, // leftd
                     (info & binary.BIT8) === binary.BIT8 ? decoder.readLeftID() : null, // origin
                     null, // right
                     (info & binary.BIT7) === binary.BIT7 ? decoder.readRightID() : null, // right origin
@@ -152,7 +152,7 @@ const readClientsStructRefs = (decoder, doc) => {
                     const parentYKey = cantCopyParentInfo && hasParentYKey ? decoder.readString() : null
 
                     const struct = new Item(
-                        createID(client, clock),
+                        new ID(client, clock),
                         null, // leftd
                         origin, // origin
                         null, // right

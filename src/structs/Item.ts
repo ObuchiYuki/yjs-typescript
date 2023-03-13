@@ -4,7 +4,7 @@ import {
     GC, getState,
     replaceStruct, addStruct,
     findRootTypeKey,
-    compareIDs, createID,
+    compareIDs,
     getItem, getItemCleanEnd, getItemCleanStart,
     readContentDeleted, readContentBinary, readContentJSON, readContentAny, readContentString, readContentEmbed, readContentDoc, readContentFormat, readContentType,
     addChangedTypeToTransaction,

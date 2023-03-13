@@ -21,7 +21,7 @@ function* lazyStructReaderGenerator(decoder) {
             // @todo use switch instead of ifs
             if (info === 10) {
                 const len = decoding.readVarUint(decoder.restDecoder);
-                yield new internals_1.Skip((0, internals_1.createID)(client, clock), len);
+                yield new internals_1.Skip(new internals_1.ID(client, clock), len);
                 clock += len;
             }
             else if ((binary.BITS5 & info) !== 0) {
@@ -30,7 +30,7 @@ function* lazyStructReaderGenerator(decoder) {
                 // and we read the next string as parentYKey.
                 // It indicates how we store/retrieve parent from `y.share`
                 // @type {string|null}
-                const struct = new internals_1.Item((0, internals_1.createID)(client, clock), null, // left
+                const struct = new internals_1.Item(new internals_1.ID(client, clock), null, // left
                 (info & binary.BIT8) === binary.BIT8 ? decoder.readLeftID() : null, // origin
                 null, // right
                 (info & binary.BIT7) === binary.BIT7 ? decoder.readRightID() : null, // right origin
@@ -44,7 +44,7 @@ function* lazyStructReaderGenerator(decoder) {
             }
             else {
                 const len = decoder.readLen();
-                yield new internals_1.GC((0, internals_1.createID)(client, clock), len);
+                yield new internals_1.GC(new internals_1.ID(client, clock), len);
                 clock += len;
             }
         }
@@ -270,16 +270,16 @@ exports.parseUpdateMeta = parseUpdateMeta;
 const sliceStruct = (left, diff) => {
     if (left.constructor === internals_1.GC) {
         const { client, clock } = left.id;
-        return new internals_1.GC((0, internals_1.createID)(client, clock + diff), left.length - diff);
+        return new internals_1.GC(new internals_1.ID(client, clock + diff), left.length - diff);
     }
     else if (left.constructor === internals_1.Skip) {
         const { client, clock } = left.id;
-        return new internals_1.Skip((0, internals_1.createID)(client, clock + diff), left.length - diff);
+        return new internals_1.Skip(new internals_1.ID(client, clock + diff), left.length - diff);
     }
     else {
         const leftItem = left;
         const { client, clock } = leftItem.id;
-        return new internals_1.Item((0, internals_1.createID)(client, clock + diff), null, (0, internals_1.createID)(client, clock + diff - 1), null, leftItem.rightOrigin, leftItem.parent, leftItem.parentSub, leftItem.content.splice(diff));
+        return new internals_1.Item(new internals_1.ID(client, clock + diff), null, new internals_1.ID(client, clock + diff - 1), null, leftItem.rightOrigin, leftItem.parent, leftItem.parentSub, leftItem.content.splice(diff));
     }
 };
 /**
@@ -368,7 +368,7 @@ const mergeUpdatesV2 = (updates, YDecoder = internals_1.UpdateDecoderV2, YEncode
                         /**
                          * @type {Skip}
                          */
-                        const struct = new internals_1.Skip((0, internals_1.createID)(firstClient, currWrite.struct.id.clock + currWrite.struct.length), diff);
+                        const struct = new internals_1.Skip(new internals_1.ID(firstClient, currWrite.struct.id.clock + currWrite.struct.length), diff);
                         currWrite = { struct, offset: 0 };
                     }
                 }

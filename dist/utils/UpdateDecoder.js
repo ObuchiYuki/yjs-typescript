@@ -19,10 +19,10 @@ class DSDecoderV1 {
 exports.DSDecoderV1 = DSDecoderV1;
 class UpdateDecoderV1 extends DSDecoderV1 {
     readLeftID() {
-        return (0, internals_1.createID)(decoding.readVarUint(this.restDecoder), decoding.readVarUint(this.restDecoder));
+        return new internals_1.ID(decoding.readVarUint(this.restDecoder), decoding.readVarUint(this.restDecoder));
     }
     readRightID() {
-        return (0, internals_1.createID)(decoding.readVarUint(this.restDecoder), decoding.readVarUint(this.restDecoder));
+        return new internals_1.ID(decoding.readVarUint(this.restDecoder), decoding.readVarUint(this.restDecoder));
     }
     /**
      * Read the next client id.

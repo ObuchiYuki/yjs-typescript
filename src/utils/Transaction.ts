@@ -7,8 +7,8 @@ import {
     findIndexSS,
     Item,
     generateNewClientID,
-    createID,
-    UpdateEncoderV1, UpdateEncoderV2, GC, StructStore, AbstractType_, __AbstractStruct, YEvent, Doc // eslint-disable-line
+    GC, StructStore, AbstractType_, __AbstractStruct, YEvent, Doc, // eslint-disable-line
+    UpdateEncoderAny_, ID, UpdateEncoderV1, UpdateEncoderV2
 } from '../internals'
 
 import * as map from 'lib0/map'
@@ -95,7 +95,7 @@ export class Transaction {
  * @param {Transaction} transaction
  * @return {boolean} Whether data was written.
  */
-export const writeUpdateMessageFromTransaction = (encoder: UpdateEncoderV1 | UpdateEncoderV2, transaction: Transaction): boolean => {
+export const writeUpdateMessageFromTransaction = (encoder: UpdateEncoderAny_, transaction: Transaction): boolean => {
     if (transaction.deleteSet.clients.size === 0 && !map.any(transaction.afterState, (clock, client) => transaction.beforeState.get(client) !== clock)) {
         return false
     }

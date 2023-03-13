@@ -34,7 +34,6 @@ export {
   AbsolutePosition,
   RelativePosition,
   ID,
-  createID,
   compareIDs,
   getState,
   Snapshot,

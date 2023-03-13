@@ -84,7 +84,7 @@ exports.writeUpdateMessageFromTransaction = writeUpdateMessageFromTransaction;
  */
 const nextID = (transaction) => {
     const y = transaction.doc;
-    return (0, internals_1.createID)(y.clientID, (0, internals_1.getState)(y.store, y.clientID));
+    return new internals_1.ID(y.clientID, (0, internals_1.getState)(y.store, y.clientID));
 };
 exports.nextID = nextID;
 /**

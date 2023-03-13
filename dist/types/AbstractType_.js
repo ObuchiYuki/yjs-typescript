@@ -59,7 +59,7 @@ class AbstractType_ {
                     if (index <= n.length) {
                         if (index < n.length) {
                             // insert in-between
-                            (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(n.id.client, n.id.clock + index));
+                            (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(n.id.client, n.id.clock + index));
                         }
                         break;
                     }
@@ -247,7 +247,7 @@ class AbstractType_ {
         const packJsonContent = () => {
             if (jsonContent.length <= 0)
                 return;
-            const id = (0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId));
+            const id = new internals_1.ID(ownClientId, (0, internals_1.getState)(store, ownClientId));
             const content = new internals_1.ContentAny(jsonContent);
             left = new internals_1.Item(id, left, left && left.lastID, right, right && right.id, this, null, content);
             left.integrate(transaction, 0);
@@ -269,19 +269,19 @@ class AbstractType_ {
                     packJsonContent();
                     if (content.constructor === Uint8Array ||
                         content.constructor === ArrayBuffer) {
-                        const id = (0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId));
+                        const id = new internals_1.ID(ownClientId, (0, internals_1.getState)(store, ownClientId));
                         const icontent = new internals_1.ContentBinary(new Uint8Array(content));
                         left = new internals_1.Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent);
                         left.integrate(transaction, 0);
                     }
                     else if (content.constructor === internals_1.Doc) {
-                        const id = (0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId));
+                        const id = new internals_1.ID(ownClientId, (0, internals_1.getState)(store, ownClientId));
                         const icontent = new internals_1.ContentDoc(content);
                         left = new internals_1.Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent);
                         left.integrate(transaction, 0);
                     }
                     else if (content instanceof AbstractType_) {
-                        const id = (0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId));
+                        const id = new internals_1.ID(ownClientId, (0, internals_1.getState)(store, ownClientId));
                         const icontent = new internals_1.ContentType(content);
                         left = new internals_1.Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent);
                         left.integrate(transaction, 0);
@@ -329,7 +329,7 @@ class AbstractType_ {
         for (; item !== null && index > 0; item = item.right) {
             if (!item.deleted && item.countable) {
                 if (index < item.length) {
-                    (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(item.id.client, item.id.clock + index));
+                    (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(item.id.client, item.id.clock + index));
                 }
                 index -= item.length;
             }
@@ -338,7 +338,7 @@ class AbstractType_ {
         while (length > 0 && item !== null) {
             if (!item.deleted) {
                 if (length < item.length) {
-                    (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(item.id.client, item.id.clock + length));
+                    (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(item.id.client, item.id.clock + length));
                 }
                 item.delete(transaction);
                 length -= item.length;
@@ -392,7 +392,7 @@ class AbstractType_ {
                     }
             }
         }
-        const id = (0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId));
+        const id = new internals_1.ID(ownClientId, (0, internals_1.getState)(doc.store, ownClientId));
         new internals_1.Item(id, left, left && left.lastID, null, null, this, key, content)
             .integrate(transaction, 0);
     }

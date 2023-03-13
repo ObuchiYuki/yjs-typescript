@@ -1,6 +1,5 @@
 import {
     transact,
-    createID,
     isParentOf,
     getItemCleanStart,
     Transaction, Doc, Item, GC, DeleteSet, AbstractType_, YEvent,

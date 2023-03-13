@@ -58,7 +58,7 @@ class Item extends Struct_1.Struct_ {
     split(transaction, diff) {
         // create rightItem
         const { client, clock } = this.id;
-        const rightItem = new Item((0, internals_1.createID)(client, clock + diff), this, (0, internals_1.createID)(client, clock + diff - 1), this.right, this.rightOrigin, this.parent, this.parentSub, this.content.splice(diff));
+        const rightItem = new Item(new internals_1.ID(client, clock + diff), this, new internals_1.ID(client, clock + diff - 1), this.right, this.rightOrigin, this.parent, this.parentSub, this.content.splice(diff));
         if (this.deleted) {
             rightItem.markDeleted();
         }
@@ -66,7 +66,7 @@ class Item extends Struct_1.Struct_ {
             rightItem.keep = true;
         }
         if (this.redone !== null) {
-            rightItem.redone = (0, internals_1.createID)(this.redone.client, this.redone.clock + diff);
+            rightItem.redone = new internals_1.ID(this.redone.client, this.redone.clock + diff);
         }
         // update left (do not set leftItem.rightOrigin as it will lead to problems when syncing)
         this.right = rightItem;
@@ -167,7 +167,7 @@ class Item extends Struct_1.Struct_ {
             }
         }
         const nextClock = (0, internals_1.getState)(store, ownClientID);
-        const nextId = (0, internals_1.createID)(ownClientID, nextClock);
+        const nextId = new internals_1.ID(ownClientID, nextClock);
         const redoneItem = new Item(nextId, left, left && left.lastID, right, right && right.id, parentType, this.parentSub, this.content.copy());
         this.redone = nextId;
         Item.keepRecursive(redoneItem, true);
@@ -222,7 +222,7 @@ class Item extends Struct_1.Struct_ {
     integrate(transaction, offset) {
         if (offset > 0) {
             this.id.clock += offset;
-            this.left = (0, internals_1.getItemCleanEnd)(transaction, transaction.doc.store, (0, internals_1.createID)(this.id.client, this.id.clock - 1));
+            this.left = (0, internals_1.getItemCleanEnd)(transaction, transaction.doc.store, new internals_1.ID(this.id.client, this.id.clock - 1));
             this.origin = this.left.lastID;
             this.content = this.content.splice(offset);
             this.length -= offset;
@@ -349,7 +349,7 @@ class Item extends Struct_1.Struct_ {
      */
     get lastID() {
         // allocating ids is pretty costly because of the amount of ids created, so we try to reuse whenever possible
-        return this.length === 1 ? this.id : (0, internals_1.createID)(this.id.client, this.id.clock + this.length - 1);
+        return this.length === 1 ? this.id : new internals_1.ID(this.id.client, this.id.clock + this.length - 1);
     }
     /** Try to merge two items */
     mergeWith(right) {
@@ -422,7 +422,7 @@ class Item extends Struct_1.Struct_ {
      * This is called when this Item is sent to a remote peer.
      */
     write(encoder, offset) {
-        const origin = offset > 0 ? (0, internals_1.createID)(this.id.client, this.id.clock + offset - 1) : this.origin;
+        const origin = offset > 0 ? new internals_1.ID(this.id.client, this.id.clock + offset - 1) : this.origin;
         const rightOrigin = this.rightOrigin;
         const parentSub = this.parentSub;
         const info = (this.content.getRef() & binary.BITS5) |

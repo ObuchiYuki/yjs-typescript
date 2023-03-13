@@ -119,7 +119,7 @@ const splitSnapshotAffectedStructs = (transaction, snapshot) => {
     if (!meta.has(snapshot)) {
         snapshot.sv.forEach((clock, client) => {
             if (clock < (0, internals_1.getState)(store, client)) {
-                (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(client, clock));
+                (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(client, clock));
             }
         });
         snapshot.ds.iterate(transaction, item => { });
@@ -154,7 +154,7 @@ const createDocFromSnapshot = (originDoc, snapshot, newDoc = new internals_1.Doc
                 continue;
             }
             if (clock < (0, internals_1.getState)(originDoc.store, client)) {
-                (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(client, clock));
+                (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(client, clock));
             }
             const structs = originDoc.store.clients.get(client) || [];
             const lastStructIndex = (0, internals_1.findIndexSS)(structs, clock - 1);

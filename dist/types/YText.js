@@ -50,7 +50,7 @@ class ItemTextListPosition {
                 if (!this.right.deleted) {
                     if (count < this.right.length) {
                         // split right
-                        (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(this.right.id.client, this.right.id.clock + count));
+                        (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(this.right.id.client, this.right.id.clock + count));
                     }
                     this.index += this.right.length;
                     count -= this.right.length;
@@ -91,7 +91,7 @@ const insertNegatedAttributes = (transaction, parent, currPos, negatedAttributes
     negatedAttributes.forEach((val, key) => {
         const left = currPos.left;
         const right = currPos.right;
-        const nextFormat = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new internals_1.ContentFormat(key, val));
+        const nextFormat = new internals_1.Item(new internals_1.ID(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new internals_1.ContentFormat(key, val));
         nextFormat.integrate(transaction, 0);
         currPos.right = nextFormat;
         currPos.forward();
@@ -133,7 +133,7 @@ const insertAttributes = (transaction, parent, currPos, attributes) => {
             // save negated attribute (set null if currentVal undefined)
             negatedAttributes.set(key, currentVal);
             const { left, right } = currPos;
-            currPos.right = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new internals_1.ContentFormat(key, val));
+            currPos.right = new internals_1.Item(new internals_1.ID(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new internals_1.ContentFormat(key, val));
             currPos.right.integrate(transaction, 0);
             currPos.forward();
         }
@@ -156,7 +156,7 @@ const insertText = (transaction, parent, currPos, text, attributes) => {
     if (parent._searchMarker) {
         internals_1.ArraySearchMarker_.updateChanges(parent._searchMarker, currPos.index, content.getLength());
     }
-    right = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, content);
+    right = new internals_1.Item(new internals_1.ID(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, content);
     right.integrate(transaction, 0);
     currPos.right = right;
     currPos.index = index;
@@ -202,7 +202,7 @@ const formatText = (transaction, parent, currPos, length, attributes) => {
                 }
                 default:
                     if (length < currPos.right.length) {
-                        (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(currPos.right.id.client, currPos.right.id.clock + length));
+                        (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(currPos.right.id.client, currPos.right.id.clock + length));
                     }
                     length -= currPos.right.length;
                     break;
@@ -218,7 +218,7 @@ const formatText = (transaction, parent, currPos, length, attributes) => {
         for (; length > 0; length--) {
             newlines += '\n';
         }
-        currPos.right = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), currPos.left, currPos.left && currPos.left.lastID, currPos.right, currPos.right && currPos.right.id, parent, null, new internals_1.ContentString(newlines));
+        currPos.right = new internals_1.Item(new internals_1.ID(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), currPos.left, currPos.left && currPos.left.lastID, currPos.right, currPos.right && currPos.right.id, parent, null, new internals_1.ContentString(newlines));
         currPos.right.integrate(transaction, 0);
         currPos.forward();
     }
@@ -352,7 +352,7 @@ const deleteText = (transaction, currPos, length) => {
                 case internals_1.ContentEmbed:
                 case internals_1.ContentString:
                     if (length < currPos.right.length) {
-                        (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(currPos.right.id.client, currPos.right.id.clock + length));
+                        (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(currPos.right.id.client, currPos.right.id.clock + length));
                     }
                     length -= currPos.right.length;
                     currPos.right.delete(transaction);

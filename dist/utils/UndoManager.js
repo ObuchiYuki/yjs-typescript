@@ -11,7 +11,7 @@ const followRedone = (store, id) => {
     let item = null;
     do {
         if (diff > 0) {
-            nextID = (0, internals_1.createID)(nextID.client, nextID.clock + diff);
+            nextID = new internals_1.ID(nextID.client, nextID.clock + diff);
         }
         item = (0, internals_1.getItem)(store, nextID);
         diff = nextID.clock - item.id.clock;
@@ -53,7 +53,7 @@ const popStackItem = (undoManager, stack, eventType) => {
                     if (struct.redone !== null) {
                         let { item, diff } = (0, exports.followRedone)(store, struct.id);
                         if (diff > 0) {
-                            item = (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(item.id.client, item.id.clock + diff));
+                            item = (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(item.id.client, item.id.clock + diff));
                         }
                         struct = item;
                     }

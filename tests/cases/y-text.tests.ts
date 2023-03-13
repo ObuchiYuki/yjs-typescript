@@ -2045,7 +2045,7 @@ export const testAppendChars = (tc: t.TestCase) => {
 
 const largeDocumentSize = 100000
 
-const id = Y.new ID(0, 0)
+const id = new Y.ID(0, 0)
 const c = new Y.ContentString('a')
 
 /**
@@ -2061,7 +2061,7 @@ export const testBestCase = (_tc: t.TestCase) => {
             /**
              * @type {Y.Item}
              */
-            const n: Y.Item = new Y.Item(Y.new ID(0, 0), null, null, null, null, null, null, c)
+            const n: Y.Item = new Y.Item(new Y.ID(0, 0), null, null, null, null, null, null, c)
             // items.push(n)
             items[i] = n
             n.right = prevItem

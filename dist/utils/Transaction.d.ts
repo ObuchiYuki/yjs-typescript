@@ -1,4 +1,5 @@
-import { DeleteSet, Item, UpdateEncoderV1, UpdateEncoderV2, StructStore, AbstractType_, __AbstractStruct, YEvent, Doc } from '../internals';
+import { DeleteSet, Item, StructStore, AbstractType_, __AbstractStruct, YEvent, Doc, // eslint-disable-line
+UpdateEncoderAny_, ID } from '../internals';
 /**
  * A transaction is created for every change on the Yjs model. It is possible
  * to bundle changes on the Yjs model in a single transaction to
@@ -59,14 +60,14 @@ export declare class Transaction {
  * @param {Transaction} transaction
  * @return {boolean} Whether data was written.
  */
-export declare const writeUpdateMessageFromTransaction: (encoder: UpdateEncoderV1 | UpdateEncoderV2, transaction: Transaction) => boolean;
+export declare const writeUpdateMessageFromTransaction: (encoder: UpdateEncoderAny_, transaction: Transaction) => boolean;
 /**
  * @param {Transaction} transaction
  *
  * @private
  * @function
  */
-export declare const nextID: (transaction: Transaction) => any;
+export declare const nextID: (transaction: Transaction) => ID;
 /**
  * If `type.parent` was added in current transaction, `type` technically
  * did not change, it was just added and we should not fire events for `type`.

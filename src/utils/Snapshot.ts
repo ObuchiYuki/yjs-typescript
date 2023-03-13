@@ -4,13 +4,12 @@ import {
     getItemCleanStart,
     writeStateVector,
     readStateVector,
-    createID,
     getState,
     findIndexSS,
     UpdateEncoderV2,
     applyUpdateV2,
     DSEncoderV1, DSEncoderV2, DSDecoderV1, DSDecoderV2, Transaction, Doc, DeleteSet, Item, // eslint-disable-line
-    StructStore
+    StructStore, ID
 } from '../internals'
 
 import * as map from 'lib0/map'

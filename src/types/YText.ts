@@ -5,7 +5,6 @@ import {
     getItemCleanStart,
     getState,
     isVisible,
-    createID,
     YTextRefID,
     transact,
     ContentEmbed,
@@ -15,8 +14,8 @@ import {
     splitSnapshotAffectedStructs,
     iterateStructs,
     ContentType,
-    ID, Doc, Item, Snapshot, Transaction, // eslint-disable-line
-    ArraySearchMarker_, equalAttributes_, UpdateDecoderAny_, UpdateEncoderAny_, YEventDelta, YEventKey, YEventChange
+    ID, Doc, Item, Snapshot, Transaction,
+    ArraySearchMarker_, equalAttributes_, UpdateDecoderAny_, UpdateEncoderAny_, YEventDelta
 } from '../internals'
 
 import * as map from 'lib0/map'

@@ -1,8 +1,6 @@
 import * as buffer from 'lib0/buffer'
 import * as decoding from 'lib0/decoding'
-import {
-    ID, createID
-} from '../internals'
+import { ID } from '../internals'
 
 export class DSDecoderV1 {
     restDecoder: decoding.Decoder

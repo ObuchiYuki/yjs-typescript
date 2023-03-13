@@ -3,7 +3,7 @@ import * as map from "lib0/map"
 import {
     Doc, Transaction, EventHandler, YEvent, Item, 
     UpdateEncoderAny_, ArraySearchMarker_, Snapshot, isVisible, 
-    createID, getState, ContentAny, ContentBinary, ContentDoc, ContentType, getItemCleanStart, Content_,
+    getState, ContentAny, ContentBinary, ContentDoc, ContentType, getItemCleanStart, Content_, ID
 } from '../internals'
 
 export type Contentable_ = object | Contentable_[] | boolean | number | null | string | Uint8Array

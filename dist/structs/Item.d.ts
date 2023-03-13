@@ -62,7 +62,7 @@ export declare class Item extends Struct_ {
     /**
      * Computes the last content address of this Item.
      */
-    get lastID(): any;
+    get lastID(): ID;
     /** Try to merge two items */
     mergeWith(right: Item): boolean;
     /** Mark this Item as deleted. */
