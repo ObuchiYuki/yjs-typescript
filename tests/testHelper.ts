@@ -3,7 +3,7 @@ import * as t from 'lib0/testing'
 import * as prng from 'lib0/prng'
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'
-import * as syncProtocol from 'y-protocols-mock/sync'
+import * as syncProtocol from 'y-protocols-mock'
 import * as object from 'lib0/object'
 import * as map from 'lib0/map'
 import * as Y from '../src/index.js'
@@ -62,9 +62,9 @@ const useV2Encoding = () => {
 }
 
 export class TestYInstance extends Y.Doc {
-  tc: any
+  tc: TestConnector
   userID: number
-  receiving: Map<TestYInstance, Array<Uint8Array>>
+  receiving: Map<TestYInstance, Uint8Array[]>
   updates: Uint8Array[]
   /**
    * @param {TestConnector} testConnector
@@ -138,7 +138,7 @@ export class TestYInstance extends Y.Doc {
    * @param {TestYInstance} remoteClient
    */
   _receive (message: Uint8Array, remoteClient: TestYInstance) {
-    map.setIfUndefined(this.receiving, remoteClient, () => []).push(message)
+    map.setIfUndefined(this.receiving, remoteClient, () => [] as Uint8Array[]).push(message)
   }
 }
 
@@ -149,8 +149,8 @@ export class TestYInstance extends Y.Doc {
  * I think it makes sense. Deal with it.
  */
 export class TestConnector {
-  allConns: any
-  onlineConns: Set<unknown>
+  allConns: Set<TestYInstance>
+  onlineConns: Set<TestYInstance>
   prng: prng.PRNG
   /**
    * @param {prng.PRNG} gen
@@ -273,37 +273,58 @@ export class TestConnector {
  * @param {InitTestObjectCallback<T>} [initTestObject]
  * @return {{testObjects:Array<any>,testConnector:TestConnector,users:Array<TestYInstance>,array0:Y.Array<any>,array1:Y.Array<any>,array2:Y.Array<any>,map0:Y.Map<any>,map1:Y.Map<any>,map2:Y.Map<any>,map3:Y.Map<any>,text0:Y.Text,text1:Y.Text,text2:Y.Text,xml0:Y.XmlElement,xml1:Y.XmlElement,xml2:Y.XmlElement}}
  */
-export const init = <T>(tc: t.TestCase, { users = 5 }: { users?: number } = {}, initTestObject: InitTestObjectCallback<T>): { testObjects: Array<any>; testConnector: TestConnector; users: Array<TestYInstance>; array0: Y.Array<any>; array1: Y.Array<any>; array2: Y.Array<any>; map0: Y.Map<any>; map1: Y.Map<any>; map2: Y.Map<any>; map3: Y.Map<any>; text0: Y.Text; text1: Y.Text; text2: Y.Text; xml0: Y.XmlElement; xml1: Y.XmlElement; xml2: Y.XmlElement } => {
+export const init = <T>(
+  tc: t.TestCase,
+  { users = 5 }: { users?: number } = {},
+  initTestObject: InitTestObjectCallback<T>
+): {
+  testObjects: Array<any>;
+  testConnector: TestConnector;
+  users: Array<TestYInstance>;
+  array0: Y.Array<any>;
+  array1: Y.Array<any>;
+  array2: Y.Array<any>;
+  map0: Y.Map<any>;
+  map1: Y.Map<any>;
+  map2: Y.Map<any>;
+  map3: Y.Map<any>;
+  text0: Y.Text;
+  text1: Y.Text;
+  text2: Y.Text;
+  xml0: Y.XmlElement;
+  xml1: Y.XmlElement;
+  xml2: Y.XmlElement;
+} => {
   /**
    * @type {Object<string,any>}
    */
   const result: { [s: string]: any } = {
-    users: []
-  }
-  const gen = tc.prng
+    users: [],
+  };
+  const gen = tc.prng;
   // choose an encoding approach at random
   if (prng.bool(gen)) {
-    useV2Encoding()
+    useV2Encoding();
   } else {
-    useV1Encoding()
+    useV1Encoding();
   }
 
-  const testConnector = new TestConnector(gen)
-  result.testConnector = testConnector
+  const testConnector = new TestConnector(gen);
+  result.testConnector = testConnector;
   for (let i = 0; i < users; i++) {
-    const y = testConnector.createY(i)
-    y.clientID = i
-    result.users.push(y)
-    result['array' + i] = y.getArray('array')
-    result['map' + i] = y.getMap('map')
-    result['xml' + i] = y.get('xml', Y.XmlElement)
-    result['text' + i] = y.getText('text')
+    const y = testConnector.createY(i);
+    y.clientID = i;
+    result.users.push(y);
+    result["array" + i] = y.getArray("array");
+    result["map" + i] = y.getMap("map");
+    result["xml" + i] = y.get("xml", Y.XmlElement);
+    result["text" + i] = y.getText("text");
   }
-  testConnector.syncAll()
-  result.testObjects = result.users.map(initTestObject || (() => null))
-  useV1Encoding()
-  return /** @type {any} */ (result)
-}
+  testConnector.syncAll();
+  result.testObjects = result.users.map(initTestObject || (() => null));
+  useV1Encoding();
+  return result as any;
+};
 
 /**
  * 1. reconnect and flush all
@@ -324,7 +345,7 @@ export const compare = (users: Array<TestYInstance>) => {
     enc.applyUpdate(ydoc, enc.mergeUpdates(user.updates))
     return ydoc
   })
-  users.push(.../** @type {any} */(mergedDocs))
+  users.push(...(mergedDocs as any))
   const userArrayValues = users.map(u => u.getArray('array').toJSON())
   const userMapValues = users.map(u => u.getMap('map').toJSON())
   const userXmlValues = users.map(u => u.get('xml', Y.XmlElement).toString())
@@ -444,6 +465,8 @@ export const compareDS = (ds1: import('../src/internals.js').DeleteSet, ds2: imp
  * @param {TestYInstance} y
  * @return {T}
  */
+
+type InitTestObjectCallback<T> = (y: TestYInstance) => T
 
 /**
  * @template T

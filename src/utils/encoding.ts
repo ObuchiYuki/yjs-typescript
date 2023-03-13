@@ -491,7 +491,7 @@ export const applyUpdateV2 = (ydoc: Doc, update: Uint8Array, transactionOrigin?:
  *
  * @function
  */
-export const applyUpdate = (ydoc: Doc, update: Uint8Array, transactionOrigin: any) => applyUpdateV2(ydoc, update, transactionOrigin, UpdateDecoderV1)
+export const applyUpdate = (ydoc: Doc, update: Uint8Array, transactionOrigin?: any) => applyUpdateV2(ydoc, update, transactionOrigin, UpdateDecoderV1)
 
 /**
  * Write all the document as a single update message. If you specify the state of the remote client (`targetStateVector`) it will
