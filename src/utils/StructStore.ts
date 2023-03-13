@@ -2,7 +2,6 @@
 
 import {
     GC,
-    splitItem,
     Transaction, ID, Item, DSDecoderV2 // eslint-disable-line
 } from '../internals'
 
@@ -168,7 +167,7 @@ export const findIndexCleanStart = (transaction: Transaction, structs: Array<Ite
     const index = findIndexSS(structs, clock)
     const struct = structs[index]
     if (struct.id.clock < clock && struct instanceof Item) {
-        structs.splice(index + 1, 0, splitItem(transaction, struct, clock - struct.id.clock))
+        structs.splice(index + 1, 0, struct.split(transaction, clock - struct.id.clock))
         return index + 1
     }
     return index
@@ -205,7 +204,7 @@ export const getItemCleanEnd = (transaction: Transaction, store: StructStore, id
     const index = findIndexSS(structs, id.clock)
     const struct = structs[index]
     if (id.clock !== struct.id.clock + struct.length - 1 && struct.constructor !== GC) {
-        structs.splice(index + 1, 0, splitItem(transaction, struct, id.clock - struct.id.clock + 1))
+        structs.splice(index + 1, 0, struct.split(transaction, id.clock - struct.id.clock + 1))
     }
     return struct
 }

@@ -2,16 +2,16 @@
  * @module YMap
  */
 import { YEvent, Doc, Transaction, Item, UpdateEncoderAny_, UpdateDecoderAny_ } from '../internals';
-import { AbstractType_ } from "./AbstractType_";
+import { AbstractType_, Contentable_ } from "./AbstractType_";
 /** Event that describes the changes on a YMap. */
-export declare class YMapEvent<T> extends YEvent<YMap<T>> {
+export declare class YMapEvent<T extends Contentable_> extends YEvent<YMap<T>> {
     keysChanged: Set<any>;
     /**
      * @param {YMap<T>} ymap The YArray that changed.
      * @param {Transaction} transaction
      * @param {Set<any>} subs The keys that changed.
      */
-    constructor(ymap: YMap<T>, transaction: Transaction, subs: Set<any>);
+    constructor(ymap: YMap<T>, transaction: Transaction, keysChanged: Set<string | null>);
 }
 /**
  * @template MapType
@@ -20,7 +20,7 @@ export declare class YMapEvent<T> extends YEvent<YMap<T>> {
  * @extends AbstractType_<YMapEvent<MapType>>
  * @implements {Iterable<MapType>}
  */
-export declare class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> implements Iterable<MapType> {
+export declare class YMap<MapType extends Contentable_> extends AbstractType_<YMapEvent<MapType>> implements Iterable<MapType> {
     _prelimContent: Map<string, any> | null;
     /**
      *
@@ -72,4 +72,4 @@ export declare class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> imp
     clear(): void;
     _write(encoder: UpdateEncoderAny_): void;
 }
-export declare const readYMap: (_decoder: UpdateDecoderAny_) => YMap<unknown>;
+export declare const readYMap: (_decoder: UpdateDecoderAny_) => YMap<Contentable_>;

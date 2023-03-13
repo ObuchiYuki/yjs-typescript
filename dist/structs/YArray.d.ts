@@ -1,8 +1,8 @@
-import { AbstractType_ } from "./AbstractType_";
+import { AbstractType_ } from "../types/AbstractType_";
 import { YEvent, Doc, Transaction, Item, // eslint-disable-line
-ArraySearchMarker_, UpdateEncoderAny_, UpdateDecoderAny_ } from '../internals';
+ArraySearchMarker_, UpdateEncoderAny_, UpdateDecoderAny_, Contentable_ } from '../internals';
 /** Event that describes the changes on a YArray */
-export declare class YArrayEvent<T> extends YEvent<YArray<T>> {
+export declare class YArrayEvent<T extends Contentable_> extends YEvent<YArray<T>> {
     _transaction: Transaction;
     /**
      * @param {YArray<T>} yarray The changed type
@@ -11,12 +11,12 @@ export declare class YArrayEvent<T> extends YEvent<YArray<T>> {
     constructor(yarray: YArray<T>, transaction: Transaction);
 }
 /** A shared Array implementation. */
-export declare class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable<T> {
+export declare class YArray<T extends Contentable_> extends AbstractType_<YArrayEvent<T>> implements Iterable<T> {
     _prelimContent: any[] | null;
     _searchMarker: ArraySearchMarker_[];
     constructor();
     /** Construct a new YArray containing the specified items. */
-    static from<T>(items: T[]): YArray<T>;
+    static from<T extends Contentable_>(items: T[]): YArray<T>;
     /**
      * Integrate this type into the Yjs instance.
      *
@@ -107,4 +107,4 @@ export declare class YArray<T> extends AbstractType_<YArrayEvent<T>> implements 
     [Symbol.iterator](): IterableIterator<T>;
     _write(encoder: UpdateEncoderAny_): void;
 }
-export declare const readYArray: (_decoder: UpdateDecoderAny_) => YArray<unknown>;
+export declare const readYArray: (_decoder: UpdateDecoderAny_) => YArray<Contentable_>;

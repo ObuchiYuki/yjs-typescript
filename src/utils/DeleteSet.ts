@@ -2,7 +2,6 @@
 import {
     findIndexSS,
     getState,
-    splitItem,
     iterateStructs,
     UpdateEncoderV2,
     DSDecoderV1, DSEncoderV1, DSDecoderV2, DSEncoderV2, Item, GC, StructStore, Transaction, ID // eslint-disable-line
@@ -300,20 +299,18 @@ export const readAndApplyDeleteSet = (decoder: DSDecoderV1 | DSDecoderV2, transa
                  * We can ignore the case of GC and Delete structs, because we are going to skip them
                  * @type {Item}
                  */
-                // @ts-ignore
-                let struct: Item = structs[index]
+                let struct: Item = structs[index] as Item
                 // split the first item if necessary
                 if (!struct.deleted && struct.id.clock < clock) {
-                    structs.splice(index + 1, 0, splitItem(transaction, struct, clock - struct.id.clock))
+                    structs.splice(index + 1, 0, struct.split(transaction, clock - struct.id.clock))
                     index++ // increase we now want to use the next struct
                 }
                 while (index < structs.length) {
-                    // @ts-ignore
-                    struct = structs[index++]
+                    struct = structs[index++] as Item
                     if (struct.id.clock < clockEnd) {
                         if (!struct.deleted) {
                             if (clockEnd < struct.id.clock + struct.length) {
-                                structs.splice(index, 0, splitItem(transaction, struct, clockEnd - struct.id.clock))
+                                structs.splice(index, 0, struct.split(transaction, clockEnd - struct.id.clock))
                             }
                             struct.delete(transaction)
                         }

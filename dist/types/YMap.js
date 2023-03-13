@@ -14,9 +14,9 @@ class YMapEvent extends internals_1.YEvent {
      * @param {Transaction} transaction
      * @param {Set<any>} subs The keys that changed.
      */
-    constructor(ymap, transaction, subs) {
+    constructor(ymap, transaction, keysChanged) {
         super(ymap, transaction);
-        this.keysChanged = subs;
+        this.keysChanged = keysChanged;
     }
 }
 exports.YMapEvent = YMapEvent;

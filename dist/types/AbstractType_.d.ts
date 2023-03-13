@@ -1,6 +1,5 @@
 import { Doc, Transaction, EventHandler, YEvent, Item, UpdateEncoderAny_, ArraySearchMarker_, Snapshot } from '../internals';
-export type Contentable = object | Contentable[] | boolean | number | null | string | Uint8Array;
-export type MapValue = object | number | null | Array<MapValue> | string | Uint8Array | AbstractType_<any> | undefined;
+export type Contentable_ = object | Contentable_[] | boolean | number | null | string | Uint8Array;
 export declare abstract class AbstractType_<EventType> {
     doc: Doc | null;
     get parent(): AbstractType_<any> | null;
@@ -19,7 +18,7 @@ export declare abstract class AbstractType_<EventType> {
     /** Accumulate all (list) children of a type and return them as an Array. */
     getChildren(): Item[];
     /** Call event listeners with an event. This will also add an event to all parents (for `.observeDeep` handlers). */
-    callObservers<EventType>(this: AbstractType_<any>, transaction: Transaction, event: EventType): void;
+    callObservers<EventType extends YEvent<any>>(this: AbstractType_<any>, transaction: Transaction, event: EventType): void;
     listSlice(start: number, end: number): any[];
     listToArray(): any[];
     listToArraySnapshot(snapshot: Snapshot): any[];
@@ -33,25 +32,25 @@ export declare abstract class AbstractType_<EventType> {
      */
     listForEachSnapshot(body: (element: any, index: number, type: this) => void, snapshot: Snapshot): void;
     listGet(index: number): any;
-    listInsertGenericsAfter(transaction: Transaction, referenceItem: Item | null, contents: Contentable[]): void;
-    listInsertGenerics: (transaction: Transaction, index: number, contents: Contentable[]) => void;
+    listInsertGenericsAfter(transaction: Transaction, referenceItem: Item | null, contents: Contentable_[]): void;
+    listInsertGenerics: (transaction: Transaction, index: number, contents: Contentable_[]) => void;
     /**
      * this -> parent
      *
      * Pushing content is special as we generally want to push after the last item. So we don't have to update
      * the serach marker.
     */
-    listPushGenerics(transaction: Transaction, contents: Contentable[]): void;
+    listPushGenerics(transaction: Transaction, contents: Contentable_[]): void;
     /** this -> parent */
     listDelete(transaction: Transaction, index: number, length: number): void;
     mapDelete(transaction: Transaction, key: string): void;
-    mapSet(transaction: Transaction, key: string, value: MapValue): void;
-    mapGet(key: string): MapValue;
+    mapSet(transaction: Transaction, key: string, value: Contentable_): void;
+    mapGet(key: string): Contentable_;
     mapGetAll(): {
-        [s: string]: MapValue;
+        [s: string]: Contentable_;
     };
     mapHas(key: string): boolean;
-    mapGetSnapshot(key: string, snapshot: Snapshot): MapValue;
+    mapGetSnapshot(key: string, snapshot: Snapshot): Contentable_;
     /**
      * Integrate this type into the Yjs instance.
      *

@@ -1,5 +1,9 @@
-import { Transaction, Doc, Item, DeleteSet, AbstractType_ } from '../internals';
+import { Transaction, Doc, Item, DeleteSet, AbstractType_, StructStore, ID } from '../internals';
 import { Observable } from 'lib0/observable';
+export declare const followRedone: (store: StructStore, id: ID) => {
+    item: Item;
+    diff: number;
+};
 declare class StackItem {
     deletions: DeleteSet;
     insertions: DeleteSet;

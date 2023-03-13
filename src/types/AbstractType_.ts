@@ -4,7 +4,7 @@ import {
     Doc, Transaction, EventHandler, YEvent, Item, 
     createEventHandler, addEventHandlerListener, removeEventHandlerListener, callEventHandlerListeners,
     UpdateEncoderAny_, ArraySearchMarker_, Snapshot, isVisible, 
-    createID, getState, ContentAny, ContentBinary, ContentDoc, ContentType, getItemCleanStart,
+    createID, getState, ContentAny, ContentBinary, ContentDoc, ContentType, getItemCleanStart, Content_,
 } from '../internals'
 
 export type Contentable_ = object | Contentable_[] | boolean | number | null | string | Uint8Array
@@ -388,30 +388,30 @@ export abstract class AbstractType_<EventType> {
         const left = this._map.get(key) || null
         const doc = transaction.doc
         const ownClientId = doc.clientID
-        let content
+        let content: Content_
         if (value == null) {
             content = new ContentAny([value])
         } else {
             switch (value.constructor) {
-                case Number:
-                case Object:
-                case Boolean:
-                case Array:
-                case String:
-                    content = new ContentAny([value])
-                    break
-                case Uint8Array:
-                    content = new ContentBinary(value as Uint8Array)
-                    break
-                case Doc:
-                    content = new ContentDoc(value as Doc)
-                    break
-                default:
-                    if (value instanceof AbstractType_) {
-                        content = new ContentType(value)
-                    } else {
-                        throw new Error('Unexpected content type')
-                    }
+            case Number: 
+            case Object: 
+            case Boolean: 
+            case Array: 
+            case String:
+                content = new ContentAny([value])
+                break
+            case Uint8Array:
+                content = new ContentBinary(value as Uint8Array)
+                break
+            case Doc:
+                content = new ContentDoc(value as Doc)
+                break
+            default:
+                if (value instanceof AbstractType_) {
+                    content = new ContentType(value)
+                } else {
+                    throw new Error('Unexpected content type')
+                }
             }
         }
         const id = createID(ownClientId, getState(doc.store, ownClientId))

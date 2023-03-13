@@ -1,178 +1,46 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.contentDecoders_ = exports.readItemContent = exports.Item = exports.redoItem = exports.splitItem = exports.keepItem = exports.followRedone = void 0;
+exports.contentDecoders_ = exports.readItemContent = exports.Item = void 0;
 const Struct_1 = require("./Struct_");
 const internals_1 = require("../internals");
 const error = require("lib0/error");
 const binary = require("lib0/binary");
-const followRedone = (store, id) => {
-    let nextID = id;
-    let diff = 0;
-    let item = null;
-    do {
-        if (diff > 0) {
-            nextID = (0, internals_1.createID)(nextID.client, nextID.clock + diff);
-        }
-        item = (0, internals_1.getItem)(store, nextID);
-        diff = nextID.clock - item.id.clock;
-        nextID = item.redone;
-    } while (nextID !== null && item instanceof Item);
-    return { item, diff };
-};
-exports.followRedone = followRedone;
-/**
- * Make sure that neither item nor any of its parents is ever deleted.
- *
- * This property does not persist when storing it into a database or when
- * sending it to other peers
- */
-const keepItem = (item, keep) => {
-    while (item !== null && item.keep !== keep) {
-        item.keep = keep;
-        item = item.parent._item;
-    }
-};
-exports.keepItem = keepItem;
-/**
- * Split leftItem into two items
- */
-const splitItem = (transaction, leftItem, diff) => {
-    // create rightItem
-    const { client, clock } = leftItem.id;
-    const rightItem = new Item((0, internals_1.createID)(client, clock + diff), leftItem, (0, internals_1.createID)(client, clock + diff - 1), leftItem.right, leftItem.rightOrigin, leftItem.parent, leftItem.parentSub, leftItem.content.splice(diff));
-    if (leftItem.deleted) {
-        rightItem.markDeleted();
-    }
-    if (leftItem.keep) {
-        rightItem.keep = true;
-    }
-    if (leftItem.redone !== null) {
-        rightItem.redone = (0, internals_1.createID)(leftItem.redone.client, leftItem.redone.clock + diff);
-    }
-    // update left (do not set leftItem.rightOrigin as it will lead to problems when syncing)
-    leftItem.right = rightItem;
-    // update right
-    if (rightItem.right !== null) {
-        rightItem.right.left = rightItem;
-    }
-    // right is more specific.
-    transaction._mergeStructs.push(rightItem);
-    // update parent._map
-    if (rightItem.parentSub !== null && rightItem.right === null) {
-        rightItem.parent._map.set(rightItem.parentSub, rightItem);
-    }
-    leftItem.length = diff;
-    return rightItem;
-};
-exports.splitItem = splitItem;
-/**
- * Redoes the effect of this operation.
- */
-const redoItem = (transaction, item, redoitems, itemsToDelete, ignoreRemoteMapChanges) => {
-    const doc = transaction.doc;
-    const store = doc.store;
-    const ownClientID = doc.clientID;
-    const redone = item.redone;
-    if (redone !== null) {
-        return (0, internals_1.getItemCleanStart)(transaction, redone);
-    }
-    let parentItem = item.parent._item;
-    /**
-     * @type {Item|null}
-     */
-    let left = null;
-    /**
-     * @type {Item|null}
-     */
-    let right;
-    // make sure that parent is redone
-    if (parentItem !== null && parentItem.deleted === true) {
-        // try to undo parent if it will be undone anyway
-        if (parentItem.redone === null && (!redoitems.has(parentItem) || (0, exports.redoItem)(transaction, parentItem, redoitems, itemsToDelete, ignoreRemoteMapChanges) === null)) {
-            return null;
-        }
-        while (parentItem.redone !== null) {
-            parentItem = (0, internals_1.getItemCleanStart)(transaction, parentItem.redone);
-        }
-    }
-    const parentType = parentItem === null ? item.parent : parentItem.content.type;
-    if (item.parentSub === null) {
-        // Is an array item. Insert at the old position
-        left = item.left;
-        right = item;
-        // find next cloned_redo items
-        while (left !== null) {
-            let leftTrace = left;
-            // trace redone until parent matches
-            while (leftTrace !== null && leftTrace.parent._item !== parentItem) {
-                leftTrace = leftTrace.redone === null ? null : (0, internals_1.getItemCleanStart)(transaction, leftTrace.redone);
-            }
-            if (leftTrace !== null && leftTrace.parent._item === parentItem) {
-                left = leftTrace;
-                break;
-            }
-            left = left.left;
-        }
-        while (right !== null) {
-            let rightTrace = right;
-            // trace redone until parent matches
-            while (rightTrace !== null && rightTrace.parent._item !== parentItem) {
-                rightTrace = rightTrace.redone === null ? null : (0, internals_1.getItemCleanStart)(transaction, rightTrace.redone);
-            }
-            if (rightTrace !== null && rightTrace.parent._item === parentItem) {
-                right = rightTrace;
-                break;
-            }
-            right = right.right;
-        }
-    }
-    else {
-        right = null;
-        if (item.right && !ignoreRemoteMapChanges) {
-            left = item;
-            // Iterate right while right is in itemsToDelete
-            // If it is intended to delete right while item is redone, we can expect that item should replace right.
-            while (left !== null && left.right !== null && (0, internals_1.isDeleted)(itemsToDelete, left.right.id)) {
-                left = left.right;
-            }
-            // follow redone
-            // trace redone until parent matches
-            while (left !== null && left.redone !== null) {
-                left = (0, internals_1.getItemCleanStart)(transaction, left.redone);
-            }
-            if (left && left.right !== null) {
-                // It is not possible to redo this item because it conflicts with a
-                // change from another client
-                return null;
-            }
-        }
-        else {
-            left = parentType._map.get(item.parentSub) || null;
-        }
-    }
-    const nextClock = (0, internals_1.getState)(store, ownClientID);
-    const nextId = (0, internals_1.createID)(ownClientID, nextClock);
-    const redoneItem = new Item(nextId, left, left && left.lastID, right, right && right.id, parentType, item.parentSub, item.content.copy());
-    item.redone = nextId;
-    (0, exports.keepItem)(redoneItem, true);
-    redoneItem.integrate(transaction, 0);
-    return redoneItem;
-};
-exports.redoItem = redoItem;
-/**
- * Abstract class that represents any content.
- */
+// ================================================================================================================ //
+// MARK: - Item -
+// ================================================================================================================ //
+/** Abstract class that represents any content. */
 class Item extends Struct_1.Struct_ {
+    /** This is used to mark the item as an indexed fast-search marker */
+    set marker(isMarked) { if (((this.info & binary.BIT4) > 0) !== isMarked) {
+        this.info ^= binary.BIT4;
+    } }
+    get marker() { return (this.info & binary.BIT4) > 0; }
+    /** If true, do not garbage collect this Item. */
+    get keep() { return (this.info & binary.BIT1) > 0; }
+    set keep(doKeep) { if (this.keep !== doKeep) {
+        this.info ^= binary.BIT1;
+    } }
+    get countable() { return (this.info & binary.BIT2) > 0; }
+    /** Whether this item was deleted or not. */
+    get deleted() { return (this.info & binary.BIT3) > 0; }
+    set deleted(doDelete) { if (this.deleted !== doDelete) {
+        this.info ^= binary.BIT3;
+    } }
+    // ================================================================================================================ //
+    // MARK: - Methods -
     /**
-     * @param {ID} id
-     * @param {Item | null} left
-     * @param {ID | null} origin
-     * @param {Item | null} right
-     * @param {ID | null} rightOrigin
-     * @param {AbstractType_<any>|ID|null} parent Is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.
-     * @param {string | null} parentSub
-     * @param {Content_} content
-     */
+    * Make sure that neither item nor any of its parents is ever deleted.
+    *
+    * This property does not persist when storing it into a database or when
+    * sending it to other peers
+    */
+    static keepRecursive(item, keep) {
+        while (item !== null && item.keep !== keep) {
+            item.keep = keep;
+            item = item.parent._item;
+        }
+    }
+    /** parent is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.*/
     constructor(id, left, origin, right, rightOrigin, parent, parentSub, content) {
         super(id, content.getLength());
         this.origin = origin;
@@ -185,34 +53,128 @@ class Item extends Struct_1.Struct_ {
         this.content = content;
         this.info = this.content.isCountable() ? binary.BIT2 : 0;
     }
-    /**
-     * This is used to mark the item as an indexed fast-search marker
-     */
-    set marker(isMarked) {
-        if (((this.info & binary.BIT4) > 0) !== isMarked) {
-            this.info ^= binary.BIT4;
-        }
-    }
-    get marker() { return (this.info & binary.BIT4) > 0; }
-    /** If true, do not garbage collect this Item. */
-    get keep() { return (this.info & binary.BIT1) > 0; }
-    set keep(doKeep) { if (this.keep !== doKeep) {
-        this.info ^= binary.BIT1;
-    } }
-    get countable() { return (this.info & binary.BIT2) > 0; }
-    /** Whether this item was deleted or not. */
-    get deleted() {
-        return (this.info & binary.BIT3) > 0;
-    }
-    set deleted(doDelete) {
-        if (this.deleted !== doDelete) {
-            this.info ^= binary.BIT3;
-        }
-    }
     markDeleted() { this.info |= binary.BIT3; }
-    /**
-     * Return the creator clientID of the missing op or define missing items and return null.
-     */
+    /** Split leftItem into two items; this -> leftItem */
+    split(transaction, diff) {
+        // create rightItem
+        const { client, clock } = this.id;
+        const rightItem = new Item((0, internals_1.createID)(client, clock + diff), this, (0, internals_1.createID)(client, clock + diff - 1), this.right, this.rightOrigin, this.parent, this.parentSub, this.content.splice(diff));
+        if (this.deleted) {
+            rightItem.markDeleted();
+        }
+        if (this.keep) {
+            rightItem.keep = true;
+        }
+        if (this.redone !== null) {
+            rightItem.redone = (0, internals_1.createID)(this.redone.client, this.redone.clock + diff);
+        }
+        // update left (do not set leftItem.rightOrigin as it will lead to problems when syncing)
+        this.right = rightItem;
+        // update right
+        if (rightItem.right !== null) {
+            rightItem.right.left = rightItem;
+        }
+        // right is more specific.
+        transaction._mergeStructs.push(rightItem);
+        // update parent._map
+        if (rightItem.parentSub !== null && rightItem.right === null) {
+            rightItem.parent._map.set(rightItem.parentSub, rightItem);
+        }
+        this.length = diff;
+        return rightItem;
+    }
+    /** Redoes the effect of this operation. */
+    redo(transaction, redoitems, itemsToDelete, ignoreRemoteMapChanges) {
+        const doc = transaction.doc;
+        const store = doc.store;
+        const ownClientID = doc.clientID;
+        const redone = this.redone;
+        if (redone !== null) {
+            return (0, internals_1.getItemCleanStart)(transaction, redone);
+        }
+        let parentItem = this.parent._item;
+        /**
+         * @type {Item|null}
+         */
+        let left = null;
+        /**
+         * @type {Item|null}
+         */
+        let right;
+        // make sure that parent is redone
+        if (parentItem !== null && parentItem.deleted === true) {
+            // try to undo parent if it will be undone anyway
+            if (parentItem.redone === null && (!redoitems.has(parentItem) || parentItem.redo(transaction, redoitems, itemsToDelete, ignoreRemoteMapChanges) === null)) {
+                return null;
+            }
+            while (parentItem.redone !== null) {
+                parentItem = (0, internals_1.getItemCleanStart)(transaction, parentItem.redone);
+            }
+        }
+        const parentType = parentItem === null ? this.parent : parentItem.content.type;
+        if (this.parentSub === null) {
+            // Is an array item. Insert at the old position
+            left = this.left;
+            right = this;
+            // find next cloned_redo items
+            while (left !== null) {
+                let leftTrace = left;
+                // trace redone until parent matches
+                while (leftTrace !== null && leftTrace.parent._item !== parentItem) {
+                    leftTrace = leftTrace.redone === null ? null : (0, internals_1.getItemCleanStart)(transaction, leftTrace.redone);
+                }
+                if (leftTrace !== null && leftTrace.parent._item === parentItem) {
+                    left = leftTrace;
+                    break;
+                }
+                left = left.left;
+            }
+            while (right !== null) {
+                let rightTrace = right;
+                // trace redone until parent matches
+                while (rightTrace !== null && rightTrace.parent._item !== parentItem) {
+                    rightTrace = rightTrace.redone === null ? null : (0, internals_1.getItemCleanStart)(transaction, rightTrace.redone);
+                }
+                if (rightTrace !== null && rightTrace.parent._item === parentItem) {
+                    right = rightTrace;
+                    break;
+                }
+                right = right.right;
+            }
+        }
+        else {
+            right = null;
+            if (this.right && !ignoreRemoteMapChanges) {
+                left = this;
+                // Iterate right while right is in itemsToDelete
+                // If it is intended to delete right while item is redone, we can expect that item should replace right.
+                while (left !== null && left.right !== null && (0, internals_1.isDeleted)(itemsToDelete, left.right.id)) {
+                    left = left.right;
+                }
+                // follow redone
+                // trace redone until parent matches
+                while (left !== null && left.redone !== null) {
+                    left = (0, internals_1.getItemCleanStart)(transaction, left.redone);
+                }
+                if (left && left.right !== null) {
+                    // It is not possible to redo this item because it conflicts with a
+                    // change from another client
+                    return null;
+                }
+            }
+            else {
+                left = parentType._map.get(this.parentSub) || null;
+            }
+        }
+        const nextClock = (0, internals_1.getState)(store, ownClientID);
+        const nextId = (0, internals_1.createID)(ownClientID, nextClock);
+        const redoneItem = new Item(nextId, left, left && left.lastID, right, right && right.id, parentType, this.parentSub, this.content.copy());
+        this.redone = nextId;
+        Item.keepRecursive(redoneItem, true);
+        redoneItem.integrate(transaction, 0);
+        return redoneItem;
+    }
+    /** Return the creator clientID of the missing op or define missing items and return null. */
     getMissing(transaction, store) {
         if (this.origin && this.origin.client !== this.id.client && this.origin.clock >= (0, internals_1.getState)(store, this.origin.client)) {
             return this.origin.client;
@@ -268,52 +230,52 @@ class Item extends Struct_1.Struct_ {
         if (this.parent) {
             if ((!this.left && (!this.right || this.right.left !== null)) || (this.left && this.left.right !== this.right)) {
                 let left = this.left;
-                let o;
+                let item;
                 // set o to the first conflicting item
                 if (left !== null) {
-                    o = left.right;
+                    item = left.right;
                 }
                 else if (this.parentSub !== null) {
-                    o = this.parent._map.get(this.parentSub) || null;
-                    while (o !== null && o.left !== null) {
-                        o = o.left;
+                    item = this.parent._map.get(this.parentSub) || null;
+                    while (item !== null && item.left !== null) {
+                        item = item.left;
                     }
                 }
                 else {
-                    o = this.parent._start;
+                    item = this.parent._start;
                 }
                 const conflictingItems = new Set();
                 const itemsBeforeOrigin = new Set();
                 // Let c in conflictingItems, b in itemsBeforeOrigin
                 // ***{origin}bbbb{this}{c,b}{c,b}{o}***
                 // Note that conflictingItems is a subset of itemsBeforeOrigin
-                while (o !== null && o !== this.right) {
-                    itemsBeforeOrigin.add(o);
-                    conflictingItems.add(o);
-                    if ((0, internals_1.compareIDs)(this.origin, o.origin)) {
+                while (item !== null && item !== this.right) {
+                    itemsBeforeOrigin.add(item);
+                    conflictingItems.add(item);
+                    if ((0, internals_1.compareIDs)(this.origin, item.origin)) {
                         // case 1
-                        if (o.id.client < this.id.client) {
-                            left = o;
+                        if (item.id.client < this.id.client) {
+                            left = item;
                             conflictingItems.clear();
                         }
-                        else if ((0, internals_1.compareIDs)(this.rightOrigin, o.rightOrigin)) {
+                        else if ((0, internals_1.compareIDs)(this.rightOrigin, item.rightOrigin)) {
                             // this and o are conflicting and point to the same integration points. The id decides which item comes first.
                             // Since this is to the left of o, we can break here
                             break;
                         } // else, o might be integrated before an item that this conflicts with. If so, we will find it in the next iterations
                     }
-                    else if (o.origin !== null && itemsBeforeOrigin.has((0, internals_1.getItem)(transaction.doc.store, o.origin))) {
+                    else if (item.origin !== null && itemsBeforeOrigin.has((0, internals_1.getItem)(transaction.doc.store, item.origin))) {
                         // use getItem instead of getItemCleanEnd because we don't want / need to split items.
                         // case 2
-                        if (!conflictingItems.has((0, internals_1.getItem)(transaction.doc.store, o.origin))) {
-                            left = o;
+                        if (!conflictingItems.has((0, internals_1.getItem)(transaction.doc.store, item.origin))) {
+                            left = item;
                             conflictingItems.clear();
                         }
                     }
                     else {
                         break;
                     }
-                    o = o.right;
+                    item = item.right;
                 }
                 this.left = left;
             }

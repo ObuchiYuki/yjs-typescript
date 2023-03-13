@@ -1,23 +1,33 @@
-import { Item, AbstractType_, Transaction, __AbstractStruct } from '../internals';
+import { Item, AbstractType_, Transaction, // eslint-disable-line
+Struct_ } from '../internals';
+export type YEventDelta = {
+    insert?: string | Array<any> | object | AbstractType_<any>;
+    retain?: number;
+    delete?: number;
+    attributes?: {
+        [s: string]: any;
+    };
+};
+export type YEventAction = 'add' | 'update' | 'delete';
+export type YEventKey = {
+    action: YEventAction;
+    oldValue: any;
+    newValue?: any;
+};
+export type YEventChange = {
+    added: Set<Item>;
+    deleted: Set<Item>;
+    keys: Map<string, YEventKey>;
+    delta: YEventDelta[];
+};
 /** YEvent describes the changes on a YType. */
 export declare class YEvent<T extends AbstractType_<any>> {
     target: T;
     currentTarget: AbstractType_<any>;
     transaction: Transaction;
-    _changes: object | null;
-    _keys: null | Map<string, {
-        action: 'add' | 'update' | 'delete';
-        oldValue: any;
-        newValue: any;
-    }>;
-    _delta: null | Array<{
-        insert?: string | Array<any> | object | AbstractType_<any>;
-        retain?: number;
-        delete?: number;
-        attributes?: {
-            [s: string]: any;
-        };
-    }>;
+    _changes: YEventChange | null;
+    _keys: Map<string, YEventKey> | null;
+    _delta: YEventDelta[] | null;
     /**
      * @param {T} target The changed type.
      * @param {Transaction} transaction
@@ -31,9 +41,7 @@ export declare class YEvent<T extends AbstractType_<any>> {
      * The following property holds:
      * @example
      *     let type = y
-     *     event.path.forEach(dir => {
-     *         type = type.get(dir)
-     *     })
+     *     event.path.forEach(dir => { type = type.get(dir) })
      *     type === event.target // => true
      */
     get path(): (string | number)[];
@@ -42,43 +50,17 @@ export declare class YEvent<T extends AbstractType_<any>> {
      *
      * In contrast to change.deleted, this method also returns true if the struct was added and then deleted.
      *
-     * @param {__AbstractStruct} struct
+     * @param {Struct_} struct
      * @return {boolean}
      */
-    deletes(struct: __AbstractStruct): boolean;
-    get keys(): Map<string, {
-        action: 'add' | 'update' | 'delete';
-        oldValue: any;
-        newValue: any;
-    }>;
-    /**
-     * @type {Array<{insert?: string | Array<any> | object | AbstractType_<any>, retain?: number, delete?: number, attributes?: Object<string, any>}>}
-     */
-    get delta(): Array<{
-        insert?: string | Array<any> | object | AbstractType_<any>;
-        retain?: number;
-        delete?: number;
-        attributes?: {
-            [s: string]: any;
-        };
-    }>;
+    deletes(struct: Struct_): boolean;
+    get keys(): Map<string, YEventKey>;
+    get delta(): YEventDelta[];
     /**
      * Check if a struct is added by this event.
      *
      * In contrast to change.deleted, this method also returns true if the struct was added and then deleted.
      */
-    adds(struct: __AbstractStruct): boolean;
-    get changes(): {
-        added: Set<Item>;
-        deleted: Set<Item>;
-        keys: Map<string, {
-            action: 'add' | 'update' | 'delete';
-            oldValue: any;
-        }>;
-        delta: Array<{
-            insert?: Array<any> | string;
-            delete?: number;
-            retain?: number;
-        }>;
-    };
+    adds(struct: Struct_): boolean;
+    get changes(): YEventChange;
 }

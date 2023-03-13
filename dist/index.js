@@ -95,7 +95,6 @@ const glo = (typeof globalThis !== 'undefined'
     ? globalThis
     : typeof window !== 'undefined'
         ? window
-        // @ts-ignore
         : typeof global !== 'undefined' ? global : {});
 const importIdentifier = '__ $YJS$ __';
 if (glo[importIdentifier] === true) {

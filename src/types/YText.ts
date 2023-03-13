@@ -17,7 +17,7 @@ import {
     iterateStructs,
     ContentType,
     ID, Doc, Item, Snapshot, Transaction, // eslint-disable-line
-    ArraySearchMarker_, equalAttributes_, UpdateDecoderAny_, UpdateEncoderAny_
+    ArraySearchMarker_, equalAttributes_, UpdateDecoderAny_, UpdateEncoderAny_, YEventDelta, YEventKey, YEventChange
 } from '../internals'
 
 import * as map from 'lib0/map'
@@ -429,25 +429,10 @@ const deleteText = (transaction: Transaction, currPos: ItemTextListPosition, len
     *         font-size: '40px'
     *     }
     */
-export type TextAttributes = {
-    [s: string]: any
-}
 
-export type YTextEventUpdateAction = 'add'|'update'|'delete'
-export type YTextEventDelta = {
-    insert?: Array<any> | string,
-    delete?: number, 
-    retain?: number,
-    attributes?: { [s: string]: any }
-}[]
-
-export type YTextEventChange = {
-    added: Set<Item>, 
-    deleted: Set<Item>, 
-    keys: Map<string, { action: YTextEventUpdateAction, oldValue: any }>,
-    delta: YTextEventDelta
-}
-
+export type TextAttributeValue = boolean|number|string|object|null|undefined
+export type TextAttributes = { [s: string]: TextAttributeValue }
+export type YTextAction = "delete"|"insert"|"retain"
 
 /** Event that describes the changes on a YText type. */
 export class YTextEvent extends YEvent<YText> {
@@ -461,9 +446,9 @@ export class YTextEvent extends YEvent<YText> {
     /**
      * @param {YText} ytext
      * @param {Transaction} transaction
-     * @param {Set<any>} subs The keys that changed
+     * @param {Set<string>} keysChanged The keys that changed
      */
-    constructor(ytext: YText, transaction: Transaction, subs: Set<any>) {
+    constructor(ytext: YText, transaction: Transaction, subs: Set<null|string>) {
         super(ytext, transaction)
 
         this.childListChanged = false
@@ -478,187 +463,148 @@ export class YTextEvent extends YEvent<YText> {
         })
     }
 
-    get changes(): YTextEventChange {
+    get changes() {
         if (this._changes === null) {
-            this._changes = { keys: this.keys, delta: this.delta, added: new Set(), deleted: new Set() }
-        }
-        return this._changes as YTextEventChange
+            const changes = { keys: this.keys, delta: this.delta, added: new Set(), deleted: new Set() }
+            this._changes = changes as any
+        } 
+        return this._changes as any
     }
 
     /**
      * Compute the changes in the delta format.
      * A {@link https://quilljs.com/docs/delta/|Quill Delta}) that represents the changes on the document.
      */
-    get delta(): YTextEventDelta {
-        if (this._delta === null) {
-            const y = this.target.doc as Doc
-            
-            const delta: YTextEventDelta = []
+    get delta(): YEventDelta[] {
+        if (this._delta != null) return this._delta
 
-            transact(y, transaction => {
-                const currentAttributes = new Map() // saves all current attributes for insert
-                const oldAttributes = new Map()
-                let item = this.target._start
-                let action: string | null = null
-                
-                const attributes: { [s: string]: any } = {} // counts added or removed new attributes for retain
-                
-                let insert: string|object = ''
-                let retain = 0
-                let deleteLen = 0
-                const addOp = () => {
-                    if (action !== null) {
-                        let op: any
-                        switch (action) {
-                            case 'delete':
-                                op = { delete: deleteLen }
-                                deleteLen = 0
-                                break
-                            case 'insert':
-                                op = { insert }
-                                if (currentAttributes.size > 0) {
-                                    op.attributes = {}
-                                    currentAttributes.forEach((value, key) => {
-                                        if (value !== null) {
-                                            op.attributes[key] = value
-                                        }
-                                    })
-                                }
-                                insert = ''
-                                break
-                            case 'retain':
-                                op = { retain }
-                                if (Object.keys(attributes).length > 0) {
-                                    op.attributes = {}
-                                    for (const key in attributes) {
-                                        op.attributes[key] = attributes[key]
-                                    }
-                                }
-                                retain = 0
-                                break
-                        }
-                        delta.push(op)
-                        action = null
+        const deltas: YEventDelta[] = []
+
+        transact(this.target.doc as Doc, transaction => {
+            const currentAttributes = new Map<string, TextAttributeValue>() // saves all current attributes for insert
+            const oldAttributes = new Map<string, TextAttributeValue>()
+            let item = this.target._start
+            let action: YTextAction | null = null
+            
+            const attributes: TextAttributes = {} // counts added or removed new attributes for retain
+            
+            let insert: string = ''
+            let retain = 0
+            let deleteLen = 0
+
+            const addDelta = () => {
+                if (action === null) return
+
+                let delta: YEventDelta
+
+                if (action == "delete") {
+                    delta = { delete: deleteLen }
+                    deleteLen = 0
+                } else if (action == "insert") {
+                    delta = { insert: insert }
+                    if (currentAttributes.size > 0) {
+                        delta.attributes = {}
+                        currentAttributes.forEach((value, key) => {
+                            if (value !== null) { delta.attributes![key] = value }
+                        })
                     }
+                    insert = ''
+                } else {
+                    delta = { retain: retain }
+                    if (Object.keys(attributes).length > 0) {
+                        delta.attributes = {}
+                        for (const key in attributes) { delta.attributes[key] = attributes[key] }
+                    }
+                    retain = 0
                 }
-                while (item !== null) {
-                    switch (item.content.constructor) {
-                        case ContentType:
-                        case ContentEmbed:
-                            if (this.adds(item)) {
-                                if (!this.deletes(item)) {
-                                    addOp()
-                                    action = 'insert'
-                                    insert = item.content.getContent()[0]
-                                    addOp()
+                deltas.push(delta)
+                action = null
+            }
+
+            while (item !== null) {
+                if (item.content instanceof ContentType || item.content instanceof ContentEmbed) {
+                    if (this.adds(item)) {
+                        if (!this.deletes(item)) {
+                            addDelta(); action = 'insert'
+                            insert = item.content.getContent()[0]; addDelta()
+                        }
+                    } else if (this.deletes(item)) {
+                        if (action !== 'delete') { addDelta(); action = 'delete' }
+                        deleteLen += 1
+                    } else if (!item.deleted) {
+                        if (action !== 'retain') { addDelta(); action = 'retain' }
+                        retain += 1
+                    }
+                } else if (item.content instanceof ContentString) {
+                    if (this.adds(item)) {
+                        if (!this.deletes(item)) {
+                            if (action !== 'insert') { addDelta(); action = 'insert' }
+                            insert += (item.content as ContentString).str
+                        }
+                    } else if (this.deletes(item)) {
+                        if (action !== 'delete') { addDelta(); action = 'delete' }
+                        deleteLen += item.length
+                    } else if (!item.deleted) {
+                        if (action !== 'retain') { addDelta(); action = 'retain' }
+                        retain += item.length
+                    }
+                } else if (item.content instanceof ContentFormat) {
+                    const { key, value } = (item.content as ContentFormat)
+                    if (this.adds(item)) {
+                        if (!this.deletes(item)) {
+                            const curVal = currentAttributes.get(key) || null
+                            if (!equalAttributes_(curVal, value)) {
+                                if (action === 'retain') { addDelta() }
+                                
+                                if (equalAttributes_(value, (oldAttributes.get(key) || null))) {
+                                    delete attributes[key]
+                                } else {
+                                    attributes[key] = value
                                 }
-                            } else if (this.deletes(item)) {
-                                if (action !== 'delete') {
-                                    addOp()
-                                    action = 'delete'
-                                }
-                                deleteLen += 1
-                            } else if (!item.deleted) {
-                                if (action !== 'retain') {
-                                    addOp()
-                                    action = 'retain'
-                                }
-                                retain += 1
+                            } else if (value !== null) {
+                                item.delete(transaction)
                             }
-                            break
-                        case ContentString:
-                            if (this.adds(item)) {
-                                if (!this.deletes(item)) {
-                                    if (action !== 'insert') {
-                                        addOp()
-                                        action = 'insert'
-                                    }
-                                    insert += (item.content as ContentString).str
-                                }
-                            } else if (this.deletes(item)) {
-                                if (action !== 'delete') {
-                                    addOp()
-                                    action = 'delete'
-                                }
-                                deleteLen += item.length
-                            } else if (!item.deleted) {
-                                if (action !== 'retain') {
-                                    addOp()
-                                    action = 'retain'
-                                }
-                                retain += item.length
+                        }
+                    } else if (this.deletes(item)) {
+                        oldAttributes.set(key, value)
+                        const curVal = currentAttributes.get(key) || null
+                        if (!equalAttributes_(curVal, value)) {
+                            if (action === 'retain') { addDelta() }
+                            attributes[key] = curVal
+                        }
+                    } else if (!item.deleted) {
+                        oldAttributes.set(key, value)
+                        const attr = attributes[key]
+                        if (attr !== undefined) {
+                            if (!equalAttributes_(attr, value)) {
+                                if (action === 'retain') { addDelta() }
+                                if (value === null) { delete attributes[key] } else { attributes[key] = value }
+                            } else if (attr !== null) { // this will be cleaned up automatically by the contextless cleanup function
+                                item.delete(transaction)
                             }
-                            break
-                        case ContentFormat: {
-                            const { key, value } = (item.content as ContentFormat)
-                            if (this.adds(item)) {
-                                if (!this.deletes(item)) {
-                                    const curVal = currentAttributes.get(key) || null
-                                    if (!equalAttributes_(curVal, value)) {
-                                        if (action === 'retain') {
-                                            addOp()
-                                        }
-                                        if (equalAttributes_(value, (oldAttributes.get(key) || null))) {
-                                            delete attributes[key]
-                                        } else {
-                                            attributes[key] = value
-                                        }
-                                    } else if (value !== null) {
-                                        item.delete(transaction)
-                                    }
-                                }
-                            } else if (this.deletes(item)) {
-                                oldAttributes.set(key, value)
-                                const curVal = currentAttributes.get(key) || null
-                                if (!equalAttributes_(curVal, value)) {
-                                    if (action === 'retain') {
-                                        addOp()
-                                    }
-                                    attributes[key] = curVal
-                                }
-                            } else if (!item.deleted) {
-                                oldAttributes.set(key, value)
-                                const attr = attributes[key]
-                                if (attr !== undefined) {
-                                    if (!equalAttributes_(attr, value)) {
-                                        if (action === 'retain') {
-                                            addOp()
-                                        }
-                                        if (value === null) {
-                                            delete attributes[key]
-                                        } else {
-                                            attributes[key] = value
-                                        }
-                                    } else if (attr !== null) { // this will be cleaned up automatically by the contextless cleanup function
-                                        item.delete(transaction)
-                                    }
-                                }
-                            }
-                            if (!item.deleted) {
-                                if (action === 'insert') {
-                                    addOp()
-                                }
-                                updateCurrentAttributes(currentAttributes, (item.content as ContentFormat))
-                            }
-                            break
                         }
                     }
-                    item = item.right
-                }
-                addOp()
-                while (delta.length > 0) {
-                    const lastOp = delta[delta.length - 1]
-                    if (lastOp.retain !== undefined && lastOp.attributes === undefined) {
-                        // retain delta's if they don't assign attributes
-                        delta.pop()
-                    } else {
-                        break
+                    if (!item.deleted) {
+                        if (action === 'insert') { addDelta() }
+                        updateCurrentAttributes(currentAttributes, (item.content as ContentFormat))
                     }
                 }
-            })
-            this._delta = delta
-        }
-        return this._delta as any
+                item = item.right
+            }
+            addDelta()
+            while (deltas.length > 0) {
+                const lastOp = deltas[deltas.length - 1]
+                if (lastOp.retain !== undefined && lastOp.attributes === undefined) {
+                    // retain delta's if they don't assign attributes
+                    deltas.pop()
+                } else {
+                    break
+                }
+            }
+        })
+
+        this._delta = deltas    
+        return deltas
     }
 }
 

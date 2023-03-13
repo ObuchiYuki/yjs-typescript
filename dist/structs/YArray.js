@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readYArray = exports.YArray = exports.YArrayEvent = void 0;
-const AbstractType_1 = require("./AbstractType_");
+const AbstractType_1 = require("../types/AbstractType_");
 const internals_1 = require("../internals");
 /** Event that describes the changes on a YArray */
 class YArrayEvent extends internals_1.YEvent {
@@ -36,15 +36,18 @@ class YArray extends AbstractType_1.AbstractType_ {
      * * Observer functions are fired
      */
     _integrate(y, item) {
+        var _a;
         super._integrate(y, item);
-        this.insert(0, this._prelimContent);
+        this.insert(0, (_a = this._prelimContent) !== null && _a !== void 0 ? _a : []);
         this._prelimContent = null;
     }
     _copy() { return new YArray(); }
     clone() {
-        const arr = new YArray();
-        arr.insert(0, this.toArray().map(el => el instanceof AbstractType_1.AbstractType_ ? el.clone() : el));
-        return arr;
+        const array = new YArray();
+        array.insert(0, this.toArray().map(element => element instanceof AbstractType_1.AbstractType_
+            ? element.clone()
+            : element));
+        return array;
     }
     get length() {
         return this._prelimContent === null ? this._length : this._prelimContent.length;

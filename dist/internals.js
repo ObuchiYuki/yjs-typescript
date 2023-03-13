@@ -33,7 +33,7 @@ __exportStar(require("./utils/UndoManager"), exports);
 __exportStar(require("./utils/updates"), exports);
 __exportStar(require("./utils/YEvent"), exports);
 // export * from './types/AbstractType'
-__exportStar(require("./types/YArray"), exports);
+__exportStar(require("./structs/YArray"), exports);
 __exportStar(require("./types/YMap"), exports);
 __exportStar(require("./types/YText"), exports);
 __exportStar(require("./types/YXmlFragment"), exports);
@@ -60,3 +60,4 @@ __exportStar(require("./structs/Content_"), exports);
 __exportStar(require("./structs/Struct_"), exports);
 __exportStar(require("./types/ArraySearchMarker_"), exports);
 __exportStar(require("./utils/createMapIterator"), exports);
+__exportStar(require("./utils/equalAttributes"), exports);

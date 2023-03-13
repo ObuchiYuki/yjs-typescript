@@ -1,21 +1,34 @@
 import {
     mergeDeleteSets,
     iterateDeletedStructs,
-    keepItem,
     transact,
     createID,
-    redoItem,
     isParentOf,
-    followRedone,
     getItemCleanStart,
     isDeleted,
     addToDeleteSet,
-    Transaction, Doc, Item, GC, DeleteSet, AbstractType_, YEvent // eslint-disable-line
+    Transaction, Doc, Item, GC, DeleteSet, AbstractType_, YEvent,
+    StructStore, ID, getItem
 } from '../internals'
 
 import * as time from 'lib0/time'
 import * as array from 'lib0/array'
 import { Observable } from 'lib0/observable'
+
+export const followRedone = (store: StructStore, id: ID): { item: Item, diff: number } => {
+    let nextID: ID|null = id
+    let diff = 0
+    let item: Item | null = null
+    do {
+        if (diff > 0) { nextID = createID(nextID.client, nextID.clock + diff) }
+        item = getItem(store, nextID)
+        diff = nextID.clock - item.id.clock
+        nextID = item.redone
+    } while (nextID !== null && item instanceof Item)
+    
+    return { item, diff }
+}
+
 
 class StackItem {
     deletions: DeleteSet
@@ -34,7 +47,7 @@ class StackItem {
 const clearUndoManagerStackItem = (tr: Transaction, um: UndoManager, stackItem: StackItem) => {
     iterateDeletedStructs(tr, stackItem.deletions, item => {
         if (item instanceof Item && um.scope.some(type => isParentOf(type, item))) {
-            keepItem(item, false)
+            Item.keepRecursive(item, false)
         }
     })
 }
@@ -79,7 +92,7 @@ const popStackItem = (undoManager: UndoManager, stack: Array<StackItem>, eventTy
                 }
             })
             itemsToRedo.forEach(struct => {
-                performedChange = redoItem(transaction, struct, itemsToRedo, stackItem.insertions, undoManager.ignoreRemoteMapChanges) !== null || performedChange
+                performedChange = struct.redo(transaction, itemsToRedo, stackItem.insertions, undoManager.ignoreRemoteMapChanges) !== null || performedChange
             })
             // We want to delete in reverse order so that children are deleted before
             // parents, so we have more information available when items are filtered.
@@ -233,7 +246,7 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
             // make sure that deleted structs are not gc'd
             iterateDeletedStructs(transaction, transaction.deleteSet, /** @param {Item|GC} item */ item => {
                 if (item instanceof Item && this.scope.some(type => isParentOf(type, item))) {
-                    keepItem(item, true)
+                    Item.keepRecursive(item, true)
                 }
             })
             const changeEvent = [{ stackItem: stack[stack.length - 1], origin: transaction.origin, type: undoing ? 'redo' : 'undo', changedParentTypes: transaction.changedParentTypes }, this]

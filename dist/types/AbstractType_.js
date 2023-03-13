@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AbstractType_ = void 0;
+const map = require("lib0/map");
 const internals_1 = require("../internals");
 class AbstractType_ {
     get parent() {
@@ -87,8 +88,8 @@ class AbstractType_ {
         const changedType = type;
         const changedParentTypes = transaction.changedParentTypes;
         while (true) {
-            // @ts-ignore
-            map.setIfUndefined(changedParentTypes, type, () => []).push(event);
+            map.setIfUndefined(changedParentTypes, type, () => [])
+                .push(event);
             if (type._item === null) {
                 break;
             }

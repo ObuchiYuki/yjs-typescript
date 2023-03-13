@@ -1,10 +1,25 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UndoManager = void 0;
+exports.UndoManager = exports.followRedone = void 0;
 const internals_1 = require("../internals");
 const time = require("lib0/time");
 const array = require("lib0/array");
 const observable_1 = require("lib0/observable");
+const followRedone = (store, id) => {
+    let nextID = id;
+    let diff = 0;
+    let item = null;
+    do {
+        if (diff > 0) {
+            nextID = (0, internals_1.createID)(nextID.client, nextID.clock + diff);
+        }
+        item = (0, internals_1.getItem)(store, nextID);
+        diff = nextID.clock - item.id.clock;
+        nextID = item.redone;
+    } while (nextID !== null && item instanceof internals_1.Item);
+    return { item, diff };
+};
+exports.followRedone = followRedone;
 class StackItem {
     constructor(deletions, insertions) {
         this.insertions = insertions;
@@ -15,7 +30,7 @@ class StackItem {
 const clearUndoManagerStackItem = (tr, um, stackItem) => {
     (0, internals_1.iterateDeletedStructs)(tr, stackItem.deletions, item => {
         if (item instanceof internals_1.Item && um.scope.some(type => (0, internals_1.isParentOf)(type, item))) {
-            (0, internals_1.keepItem)(item, false);
+            internals_1.Item.keepRecursive(item, false);
         }
     });
 };
@@ -36,7 +51,7 @@ const popStackItem = (undoManager, stack, eventType) => {
             (0, internals_1.iterateDeletedStructs)(transaction, stackItem.insertions, struct => {
                 if (struct instanceof internals_1.Item) {
                     if (struct.redone !== null) {
-                        let { item, diff } = (0, internals_1.followRedone)(store, struct.id);
+                        let { item, diff } = (0, exports.followRedone)(store, struct.id);
                         if (diff > 0) {
                             item = (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(item.id.client, item.id.clock + diff));
                         }
@@ -56,7 +71,7 @@ const popStackItem = (undoManager, stack, eventType) => {
                 }
             });
             itemsToRedo.forEach(struct => {
-                performedChange = (0, internals_1.redoItem)(transaction, struct, itemsToRedo, stackItem.insertions, undoManager.ignoreRemoteMapChanges) !== null || performedChange;
+                performedChange = struct.redo(transaction, itemsToRedo, stackItem.insertions, undoManager.ignoreRemoteMapChanges) !== null || performedChange;
             });
             // We want to delete in reverse order so that children are deleted before
             // parents, so we have more information available when items are filtered.
@@ -165,7 +180,7 @@ class UndoManager extends observable_1.Observable {
             // make sure that deleted structs are not gc'd
             (0, internals_1.iterateDeletedStructs)(transaction, transaction.deleteSet, /** @param {Item|GC} item */ /** @param {Item|GC} item */ item => {
                 if (item instanceof internals_1.Item && this.scope.some(type => (0, internals_1.isParentOf)(type, item))) {
-                    (0, internals_1.keepItem)(item, true);
+                    internals_1.Item.keepRecursive(item, true);
                 }
             });
             const changeEvent = [{ stackItem: stack[stack.length - 1], origin: transaction.origin, type: undoing ? 'redo' : 'undo', changedParentTypes: transaction.changedParentTypes }, this];

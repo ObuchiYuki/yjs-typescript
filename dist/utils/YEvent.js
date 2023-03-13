@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.YEvent = void 0;
 const internals_1 = require("../internals");
-const set = require("lib0/set");
 const array = require("lib0/array");
 /** YEvent describes the changes on a YType. */
 class YEvent {
@@ -11,12 +10,12 @@ class YEvent {
      * @param {Transaction} transaction
      */
     constructor(target, transaction) {
-        this.target = target;
-        this.currentTarget = target;
-        this.transaction = transaction;
         this._changes = null;
         this._keys = null;
         this._delta = null;
+        this.target = target;
+        this.currentTarget = target;
+        this.transaction = transaction;
     }
     /**
      * Computes the path from `y` to the changed type.
@@ -26,80 +25,72 @@ class YEvent {
      * The following property holds:
      * @example
      *     let type = y
-     *     event.path.forEach(dir => {
-     *         type = type.get(dir)
-     *     })
+     *     event.path.forEach(dir => { type = type.get(dir) })
      *     type === event.target // => true
      */
-    get path() {
-        // @ts-ignore _item is defined because target is integrated
-        return getPathTo(this.currentTarget, this.target);
-    }
+    get path() { return getPathTo(this.currentTarget, this.target); }
     /**
      * Check if a struct is deleted by this event.
      *
      * In contrast to change.deleted, this method also returns true if the struct was added and then deleted.
      *
-     * @param {__AbstractStruct} struct
+     * @param {Struct_} struct
      * @return {boolean}
      */
     deletes(struct) {
         return (0, internals_1.isDeleted)(this.transaction.deleteSet, struct.id);
     }
     get keys() {
-        if (this._keys === null) {
-            const keys = new Map();
-            const target = this.target;
-            const changed = this.transaction.changed.get(target);
-            changed.forEach(key => {
-                if (key !== null) {
-                    const item = target._map.get(key);
-                    let action;
-                    let oldValue;
-                    if (this.adds(item)) {
-                        let prev = item.left;
-                        while (prev !== null && this.adds(prev)) {
-                            prev = prev.left;
-                        }
-                        if (this.deletes(item)) {
-                            if (prev !== null && this.deletes(prev)) {
-                                action = 'delete';
-                                oldValue = array.last(prev.content.getContent());
-                            }
-                            else {
-                                return;
-                            }
+        if (this._keys != null)
+            return this._keys;
+        const keys = new Map();
+        const target = this.target;
+        const changed = this.transaction.changed.get(target);
+        for (const key in changed) {
+            if (key !== null) {
+                const item = target._map.get(key);
+                let action;
+                let oldValue;
+                if (this.adds(item)) {
+                    let prev = item.left;
+                    while (prev !== null && this.adds(prev)) {
+                        prev = prev.left;
+                    }
+                    if (this.deletes(item)) {
+                        if (prev !== null && this.deletes(prev)) {
+                            action = 'delete';
+                            oldValue = array.last(prev.content.getContent());
                         }
                         else {
-                            if (prev !== null && this.deletes(prev)) {
-                                action = 'update';
-                                oldValue = array.last(prev.content.getContent());
-                            }
-                            else {
-                                action = 'add';
-                                oldValue = undefined;
-                            }
+                            break;
                         }
                     }
                     else {
-                        if (this.deletes(item)) {
-                            action = 'delete';
-                            oldValue = array.last(item.content.getContent());
+                        if (prev !== null && this.deletes(prev)) {
+                            action = 'update';
+                            oldValue = array.last(prev.content.getContent());
                         }
                         else {
-                            return; // nop
+                            action = 'add';
+                            oldValue = undefined;
                         }
                     }
-                    keys.set(key, { action, oldValue });
                 }
-            });
-            this._keys = keys;
+                else {
+                    if (this.deletes(item)) {
+                        action = 'delete';
+                        oldValue = array.last(item.content.getContent());
+                    }
+                    else {
+                        break;
+                    }
+                }
+                keys.set(key, { action: action, oldValue: oldValue });
+            }
         }
-        return this._keys;
+        this._keys = keys;
+        return keys;
     }
-    /**
-     * @type {Array<{insert?: string | Array<any> | object | AbstractType_<any>, retain?: number, delete?: number, attributes?: Object<string, any>}>}
-     */
     get delta() {
         return this.changes.delta;
     }
@@ -112,61 +103,51 @@ class YEvent {
         return struct.id.clock >= (this.transaction.beforeState.get(struct.id.client) || 0);
     }
     get changes() {
-        let changes = this._changes;
-        if (changes === null) {
-            const target = this.target;
-            const added = set.create();
-            const deleted = set.create();
-            const delta = [];
-            changes = {
-                added,
-                deleted,
-                delta,
-                keys: this.keys
+        if (this.changes != null)
+            return this.changes;
+        const changes = { added: new Set(), deleted: new Set(), delta: [], keys: this.keys };
+        const changed = this.transaction.changed.get(this.target);
+        if (changed.has(null)) {
+            let lastDelta = null;
+            const packDelta = () => {
+                if (lastDelta) {
+                    changes.delta.push(lastDelta);
+                }
             };
-            const changed = this.transaction.changed.get(target);
-            if (changed.has(null)) {
-                let lastOp = null;
-                const packOp = () => {
-                    if (lastOp) {
-                        delta.push(lastOp);
-                    }
-                };
-                for (let item = target._start; item !== null; item = item.right) {
-                    if (item.deleted) {
-                        if (this.deletes(item) && !this.adds(item)) {
-                            if (lastOp === null || lastOp.delete === undefined) {
-                                packOp();
-                                lastOp = { delete: 0 };
-                            }
-                            lastOp.delete += item.length;
-                            deleted.add(item);
-                        } // else nop
+            for (let item = this.target._start; item !== null; item = item.right) {
+                if (item.deleted) {
+                    if (this.deletes(item) && !this.adds(item)) {
+                        if (lastDelta === null || lastDelta.delete === undefined) {
+                            packDelta();
+                            lastDelta = { delete: 0 };
+                        }
+                        lastDelta.delete += item.length;
+                        changes.deleted.add(item);
+                    } // else nop
+                }
+                else {
+                    if (this.adds(item)) {
+                        if (lastDelta === null || lastDelta.insert === undefined) {
+                            packDelta();
+                            lastDelta = { insert: [] };
+                        }
+                        lastDelta.insert = lastDelta.insert.concat(item.content.getContent());
+                        changes.added.add(item);
                     }
                     else {
-                        if (this.adds(item)) {
-                            if (lastOp === null || lastOp.insert === undefined) {
-                                packOp();
-                                lastOp = { insert: [] };
-                            }
-                            lastOp.insert = lastOp.insert.concat(item.content.getContent());
-                            added.add(item);
+                        if (lastDelta === null || lastDelta.retain === undefined) {
+                            packDelta();
+                            lastDelta = { retain: 0 };
                         }
-                        else {
-                            if (lastOp === null || lastOp.retain === undefined) {
-                                packOp();
-                                lastOp = { retain: 0 };
-                            }
-                            lastOp.retain += item.length;
-                        }
+                        lastDelta.retain += item.length;
                     }
                 }
-                if (lastOp !== null && lastOp.retain === undefined) {
-                    packOp();
-                }
             }
-            this._changes = changes;
+            if (lastDelta !== null && lastDelta.retain === undefined) {
+                packDelta();
+            }
         }
+        this._changes = changes;
         return changes;
     }
 }

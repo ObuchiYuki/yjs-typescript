@@ -3,17 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.readYText = exports.YText = exports.YTextEvent = exports.cleanupYTextFormatting = exports.ItemTextListPosition = void 0;
 const AbstractType_1 = require("./AbstractType_");
 const internals_1 = require("../internals");
-const object = require("lib0/object");
 const map = require("lib0/map");
 const error = require("lib0/error");
-const equalAttrs = (a, b) => {
-    if (a === b)
-        return true;
-    if (typeof a === 'object' && typeof b === 'object') {
-        return (a && b && object.equalFlat(a, b));
-    }
-    return false;
-};
 class ItemTextListPosition {
     constructor(left, right, index, currentAttributes) {
         this.left = left;
@@ -26,74 +17,70 @@ class ItemTextListPosition {
         if (this.right === null) {
             error.unexpectedCase();
         }
-        switch (this.right.content.constructor) {
-            case internals_1.ContentFormat:
-                if (!this.right.deleted) {
-                    updateCurrentAttributes(this.currentAttributes, this.right.content);
-                }
-                break;
-            default:
-                if (!this.right.deleted) {
-                    this.index += this.right.length;
-                }
-                break;
+        if (this.right.content.constructor === internals_1.ContentFormat) {
+            if (!this.right.deleted) {
+                updateCurrentAttributes(this.currentAttributes, this.right.content);
+            }
+        }
+        else {
+            if (!this.right.deleted) {
+                this.index += this.right.length;
+            }
         }
         this.left = this.right;
         this.right = this.right.right;
     }
+    /**
+     * @param {Transaction} transaction
+     * @param {ItemTextListPosition} pos
+     * @param {number} count steps to move forward
+     * @return {ItemTextListPosition}
+     *
+     * @private
+     * @function
+     */
+    findNext(transaction, count) {
+        while (this.right !== null && count > 0) {
+            if (this.right.content.constructor === internals_1.ContentFormat) {
+                if (!this.right.deleted) {
+                    updateCurrentAttributes(this.currentAttributes, this.right.content);
+                }
+            }
+            else {
+                if (!this.right.deleted) {
+                    if (count < this.right.length) {
+                        // split right
+                        (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(this.right.id.client, this.right.id.clock + count));
+                    }
+                    this.index += this.right.length;
+                    count -= this.right.length;
+                }
+            }
+            this.left = this.right;
+            this.right = this.right.right;
+            // pos.forward() - we don't forward because that would halve the performance because we already do the checks above
+        }
+        return this;
+    }
+    static find(transaction, parent, index) {
+        const currentAttributes = new Map();
+        const marker = internals_1.ArraySearchMarker_.find(parent, index);
+        if (marker && marker.item) {
+            const pos = new ItemTextListPosition(marker.item.left, marker.item, marker.index, currentAttributes);
+            return pos.findNext(transaction, index - marker.index);
+        }
+        else {
+            const pos = new ItemTextListPosition(null, parent._start, 0, currentAttributes);
+            return pos.findNext(transaction, index);
+        }
+    }
 }
 exports.ItemTextListPosition = ItemTextListPosition;
-/**
- * @param {Transaction} transaction
- * @param {ItemTextListPosition} pos
- * @param {number} count steps to move forward
- * @return {ItemTextListPosition}
- *
- * @private
- * @function
- */
-const findNextPosition = (transaction, pos, count) => {
-    while (pos.right !== null && count > 0) {
-        switch (pos.right.content.constructor) {
-            case internals_1.ContentFormat:
-                if (!pos.right.deleted) {
-                    updateCurrentAttributes(pos.currentAttributes, pos.right.content);
-                }
-                break;
-            default:
-                if (!pos.right.deleted) {
-                    if (count < pos.right.length) {
-                        // split right
-                        (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(pos.right.id.client, pos.right.id.clock + count));
-                    }
-                    pos.index += pos.right.length;
-                    count -= pos.right.length;
-                }
-                break;
-        }
-        pos.left = pos.right;
-        pos.right = pos.right.right;
-        // pos.forward() - we don't forward because that would halve the performance because we already do the checks above
-    }
-    return pos;
-};
-const findPosition = (transaction, parent, index) => {
-    const currentAttributes = new Map();
-    const marker = internals_1.ArraySearchMarker_.find(parent, index);
-    if (marker && marker.item) {
-        const pos = new ItemTextListPosition(marker.item.left, marker.item, marker.index, currentAttributes);
-        return findNextPosition(transaction, pos, index - marker.index);
-    }
-    else {
-        const pos = new ItemTextListPosition(null, parent._start, 0, currentAttributes);
-        return findNextPosition(transaction, pos, index);
-    }
-};
 /** Negate applied formats */
 const insertNegatedAttributes = (transaction, parent, currPos, negatedAttributes) => {
     // check if we really need to remove attributes
     while (currPos.right !== null && (currPos.right.deleted === true || (currPos.right.content.constructor === internals_1.ContentFormat &&
-        equalAttrs(negatedAttributes.get(currPos.right.content.key), currPos.right.content.value)))) {
+        (0, internals_1.equalAttributes_)(negatedAttributes.get(currPos.right.content.key), currPos.right.content.value)))) {
         if (!currPos.right.deleted) {
             negatedAttributes.delete(currPos.right.content.key);
         }
@@ -125,7 +112,7 @@ const minimizeAttributeChanges = (currPos, attributes) => {
         if (currPos.right === null) {
             break;
         }
-        else if (currPos.right.deleted || (currPos.right.content.constructor === internals_1.ContentFormat && equalAttrs(attributes[currPos.right.content.key] || null, currPos.right.content.value))) {
+        else if (currPos.right.deleted || (currPos.right.content.constructor === internals_1.ContentFormat && (0, internals_1.equalAttributes_)(attributes[currPos.right.content.key] || null, currPos.right.content.value))) {
             //
         }
         else {
@@ -142,7 +129,7 @@ const insertAttributes = (transaction, parent, currPos, attributes) => {
     for (const key in attributes) {
         const val = attributes[key];
         const currentVal = currPos.currentAttributes.get(key) || null;
-        if (!equalAttrs(currentVal, val)) {
+        if (!(0, internals_1.equalAttributes_)(currentVal, val)) {
             // save negated attribute (set null if currentVal undefined)
             negatedAttributes.set(key, currentVal);
             const { left, right } = currPos;
@@ -195,7 +182,7 @@ const formatText = (transaction, parent, currPos, length, attributes) => {
                     const { key, value } = currPos.right.content;
                     const attr = attributes[key];
                     if (attr !== undefined) {
-                        if (equalAttrs(attr, value)) {
+                        if ((0, internals_1.equalAttributes_)(attr, value)) {
                             negatedAttributes.delete(key);
                         }
                         else {
@@ -388,18 +375,18 @@ class YTextEvent extends internals_1.YEvent {
     /**
      * @param {YText} ytext
      * @param {Transaction} transaction
-     * @param {Set<any>} subs The keys that changed
+     * @param {Set<string>} subs The keys that changed
      */
-    constructor(ytext, transaction, subs) {
+    constructor(ytext, transaction, keysChanged) {
         super(ytext, transaction);
         this.childListChanged = false;
         this.keysChanged = new Set();
-        subs.forEach((sub) => {
-            if (sub === null) {
+        keysChanged.forEach((key) => {
+            if (key === null) {
                 this.childListChanged = true;
             }
             else {
-                this.keysChanged.add(sub);
+                this.keysChanged.add(key);
             }
         });
     }
@@ -414,182 +401,175 @@ class YTextEvent extends internals_1.YEvent {
      * A {@link https://quilljs.com/docs/delta/|Quill Delta}) that represents the changes on the document.
      */
     get delta() {
-        if (this._delta === null) {
-            const y = this.target.doc;
-            const delta = [];
-            (0, internals_1.transact)(y, transaction => {
-                const currentAttributes = new Map(); // saves all current attributes for insert
-                const oldAttributes = new Map();
-                let item = this.target._start;
-                let action = null;
-                const attributes = {}; // counts added or removed new attributes for retain
-                let insert = '';
-                let retain = 0;
-                let deleteLen = 0;
-                const addOp = () => {
-                    if (action !== null) {
-                        let op;
-                        switch (action) {
-                            case 'delete':
-                                op = { delete: deleteLen };
-                                deleteLen = 0;
-                                break;
-                            case 'insert':
-                                op = { insert };
-                                if (currentAttributes.size > 0) {
-                                    op.attributes = {};
-                                    currentAttributes.forEach((value, key) => {
-                                        if (value !== null) {
-                                            op.attributes[key] = value;
-                                        }
-                                    });
-                                }
-                                insert = '';
-                                break;
-                            case 'retain':
-                                op = { retain };
-                                if (Object.keys(attributes).length > 0) {
-                                    op.attributes = {};
-                                    for (const key in attributes) {
-                                        op.attributes[key] = attributes[key];
-                                    }
-                                }
-                                retain = 0;
-                                break;
-                        }
-                        delta.push(op);
-                        action = null;
+        if (this._delta != null)
+            return this._delta;
+        const deltas = [];
+        (0, internals_1.transact)(this.target.doc, transaction => {
+            const currentAttributes = new Map(); // saves all current attributes for insert
+            const oldAttributes = new Map();
+            let item = this.target._start;
+            let action = null;
+            const attributes = {}; // counts added or removed new attributes for retain
+            let insert = '';
+            let retain = 0;
+            let deleteLen = 0;
+            const addDelta = () => {
+                if (action === null)
+                    return;
+                let delta;
+                if (action == "delete") {
+                    delta = { delete: deleteLen };
+                    deleteLen = 0;
+                }
+                else if (action == "insert") {
+                    delta = { insert: insert };
+                    if (currentAttributes.size > 0) {
+                        delta.attributes = {};
+                        currentAttributes.forEach((value, key) => {
+                            if (value !== null) {
+                                delta.attributes[key] = value;
+                            }
+                        });
                     }
-                };
-                while (item !== null) {
-                    switch (item.content.constructor) {
-                        case internals_1.ContentType:
-                        case internals_1.ContentEmbed:
-                            if (this.adds(item)) {
-                                if (!this.deletes(item)) {
-                                    addOp();
-                                    action = 'insert';
-                                    insert = item.content.getContent()[0];
-                                    addOp();
-                                }
-                            }
-                            else if (this.deletes(item)) {
-                                if (action !== 'delete') {
-                                    addOp();
-                                    action = 'delete';
-                                }
-                                deleteLen += 1;
-                            }
-                            else if (!item.deleted) {
-                                if (action !== 'retain') {
-                                    addOp();
-                                    action = 'retain';
-                                }
-                                retain += 1;
-                            }
-                            break;
-                        case internals_1.ContentString:
-                            if (this.adds(item)) {
-                                if (!this.deletes(item)) {
-                                    if (action !== 'insert') {
-                                        addOp();
-                                        action = 'insert';
-                                    }
-                                    insert += item.content.str;
-                                }
-                            }
-                            else if (this.deletes(item)) {
-                                if (action !== 'delete') {
-                                    addOp();
-                                    action = 'delete';
-                                }
-                                deleteLen += item.length;
-                            }
-                            else if (!item.deleted) {
-                                if (action !== 'retain') {
-                                    addOp();
-                                    action = 'retain';
-                                }
-                                retain += item.length;
-                            }
-                            break;
-                        case internals_1.ContentFormat: {
-                            const { key, value } = item.content;
-                            if (this.adds(item)) {
-                                if (!this.deletes(item)) {
-                                    const curVal = currentAttributes.get(key) || null;
-                                    if (!equalAttrs(curVal, value)) {
-                                        if (action === 'retain') {
-                                            addOp();
-                                        }
-                                        if (equalAttrs(value, (oldAttributes.get(key) || null))) {
-                                            delete attributes[key];
-                                        }
-                                        else {
-                                            attributes[key] = value;
-                                        }
-                                    }
-                                    else if (value !== null) {
-                                        item.delete(transaction);
-                                    }
-                                }
-                            }
-                            else if (this.deletes(item)) {
-                                oldAttributes.set(key, value);
-                                const curVal = currentAttributes.get(key) || null;
-                                if (!equalAttrs(curVal, value)) {
-                                    if (action === 'retain') {
-                                        addOp();
-                                    }
-                                    attributes[key] = curVal;
-                                }
-                            }
-                            else if (!item.deleted) {
-                                oldAttributes.set(key, value);
-                                const attr = attributes[key];
-                                if (attr !== undefined) {
-                                    if (!equalAttrs(attr, value)) {
-                                        if (action === 'retain') {
-                                            addOp();
-                                        }
-                                        if (value === null) {
-                                            delete attributes[key];
-                                        }
-                                        else {
-                                            attributes[key] = value;
-                                        }
-                                    }
-                                    else if (attr !== null) { // this will be cleaned up automatically by the contextless cleanup function
-                                        item.delete(transaction);
-                                    }
-                                }
-                            }
-                            if (!item.deleted) {
-                                if (action === 'insert') {
-                                    addOp();
-                                }
-                                updateCurrentAttributes(currentAttributes, item.content);
-                            }
-                            break;
+                    insert = '';
+                }
+                else {
+                    delta = { retain: retain };
+                    if (Object.keys(attributes).length > 0) {
+                        delta.attributes = {};
+                        for (const key in attributes) {
+                            delta.attributes[key] = attributes[key];
                         }
                     }
-                    item = item.right;
+                    retain = 0;
                 }
-                addOp();
-                while (delta.length > 0) {
-                    const lastOp = delta[delta.length - 1];
-                    if (lastOp.retain !== undefined && lastOp.attributes === undefined) {
-                        // retain delta's if they don't assign attributes
-                        delta.pop();
+                deltas.push(delta);
+                action = null;
+            };
+            while (item !== null) {
+                if (item.content instanceof internals_1.ContentType || item.content instanceof internals_1.ContentEmbed) {
+                    if (this.adds(item)) {
+                        if (!this.deletes(item)) {
+                            addDelta();
+                            action = 'insert';
+                            insert = item.content.getContent()[0];
+                            addDelta();
+                        }
                     }
-                    else {
-                        break;
+                    else if (this.deletes(item)) {
+                        if (action !== 'delete') {
+                            addDelta();
+                            action = 'delete';
+                        }
+                        deleteLen += 1;
+                    }
+                    else if (!item.deleted) {
+                        if (action !== 'retain') {
+                            addDelta();
+                            action = 'retain';
+                        }
+                        retain += 1;
                     }
                 }
-            });
-            this._delta = delta;
-        }
-        return this._delta;
+                else if (item.content instanceof internals_1.ContentString) {
+                    if (this.adds(item)) {
+                        if (!this.deletes(item)) {
+                            if (action !== 'insert') {
+                                addDelta();
+                                action = 'insert';
+                            }
+                            insert += item.content.str;
+                        }
+                    }
+                    else if (this.deletes(item)) {
+                        if (action !== 'delete') {
+                            addDelta();
+                            action = 'delete';
+                        }
+                        deleteLen += item.length;
+                    }
+                    else if (!item.deleted) {
+                        if (action !== 'retain') {
+                            addDelta();
+                            action = 'retain';
+                        }
+                        retain += item.length;
+                    }
+                }
+                else if (item.content instanceof internals_1.ContentFormat) {
+                    const { key, value } = item.content;
+                    if (this.adds(item)) {
+                        if (!this.deletes(item)) {
+                            const curVal = currentAttributes.get(key) || null;
+                            if (!(0, internals_1.equalAttributes_)(curVal, value)) {
+                                if (action === 'retain') {
+                                    addDelta();
+                                }
+                                if ((0, internals_1.equalAttributes_)(value, (oldAttributes.get(key) || null))) {
+                                    delete attributes[key];
+                                }
+                                else {
+                                    attributes[key] = value;
+                                }
+                            }
+                            else if (value !== null) {
+                                item.delete(transaction);
+                            }
+                        }
+                    }
+                    else if (this.deletes(item)) {
+                        oldAttributes.set(key, value);
+                        const curVal = currentAttributes.get(key) || null;
+                        if (!(0, internals_1.equalAttributes_)(curVal, value)) {
+                            if (action === 'retain') {
+                                addDelta();
+                            }
+                            attributes[key] = curVal;
+                        }
+                    }
+                    else if (!item.deleted) {
+                        oldAttributes.set(key, value);
+                        const attr = attributes[key];
+                        if (attr !== undefined) {
+                            if (!(0, internals_1.equalAttributes_)(attr, value)) {
+                                if (action === 'retain') {
+                                    addDelta();
+                                }
+                                if (value === null) {
+                                    delete attributes[key];
+                                }
+                                else {
+                                    attributes[key] = value;
+                                }
+                            }
+                            else if (attr !== null) { // this will be cleaned up automatically by the contextless cleanup function
+                                item.delete(transaction);
+                            }
+                        }
+                    }
+                    if (!item.deleted) {
+                        if (action === 'insert') {
+                            addDelta();
+                        }
+                        updateCurrentAttributes(currentAttributes, item.content);
+                    }
+                }
+                item = item.right;
+            }
+            addDelta();
+            while (deltas.length > 0) {
+                const lastOp = deltas[deltas.length - 1];
+                if (lastOp.retain !== undefined && lastOp.attributes === undefined) {
+                    // retain delta's if they don't assign attributes
+                    deltas.pop();
+                }
+                else {
+                    break;
+                }
+            }
+        });
+        this._delta = deltas;
+        return deltas;
     }
 }
 exports.YTextEvent = YTextEvent;
@@ -856,7 +836,7 @@ class YText extends AbstractType_1.AbstractType_ {
         const y = this.doc;
         if (y !== null) {
             (0, internals_1.transact)(y, transaction => {
-                const pos = findPosition(transaction, this, index);
+                const pos = ItemTextListPosition.find(transaction, this, index);
                 if (!attributes) {
                     attributes = {};
                     pos.currentAttributes.forEach((v, k) => { attributes[k] = v; });
@@ -883,7 +863,7 @@ class YText extends AbstractType_1.AbstractType_ {
         const y = this.doc;
         if (y !== null) {
             (0, internals_1.transact)(y, transaction => {
-                const pos = findPosition(transaction, this, index);
+                const pos = ItemTextListPosition.find(transaction, this, index);
                 insertText(transaction, this, pos, embed, attributes);
             });
         }
@@ -907,7 +887,7 @@ class YText extends AbstractType_1.AbstractType_ {
         const y = this.doc;
         if (y !== null) {
             (0, internals_1.transact)(y, transaction => {
-                deleteText(transaction, findPosition(transaction, this, index), length);
+                deleteText(transaction, ItemTextListPosition.find(transaction, this, index), length);
             });
         }
         else {
@@ -932,7 +912,7 @@ class YText extends AbstractType_1.AbstractType_ {
         const y = this.doc;
         if (y !== null) {
             (0, internals_1.transact)(y, transaction => {
-                const pos = findPosition(transaction, this, index);
+                const pos = ItemTextListPosition.find(transaction, this, index);
                 if (pos.right === null) {
                     return;
                 }

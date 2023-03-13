@@ -287,20 +287,18 @@ const readAndApplyDeleteSet = (decoder, transaction, store) => {
                  * We can ignore the case of GC and Delete structs, because we are going to skip them
                  * @type {Item}
                  */
-                // @ts-ignore
                 let struct = structs[index];
                 // split the first item if necessary
                 if (!struct.deleted && struct.id.clock < clock) {
-                    structs.splice(index + 1, 0, (0, internals_1.splitItem)(transaction, struct, clock - struct.id.clock));
+                    structs.splice(index + 1, 0, struct.split(transaction, clock - struct.id.clock));
                     index++; // increase we now want to use the next struct
                 }
                 while (index < structs.length) {
-                    // @ts-ignore
                     struct = structs[index++];
                     if (struct.id.clock < clockEnd) {
                         if (!struct.deleted) {
                             if (clockEnd < struct.id.clock + struct.length) {
-                                structs.splice(index, 0, (0, internals_1.splitItem)(transaction, struct, clockEnd - struct.id.clock));
+                                structs.splice(index, 0, struct.split(transaction, clockEnd - struct.id.clock));
                             }
                             struct.delete(transaction);
                         }

@@ -161,7 +161,7 @@ const findIndexCleanStart = (transaction, structs, clock) => {
     const index = (0, exports.findIndexSS)(structs, clock);
     const struct = structs[index];
     if (struct.id.clock < clock && struct instanceof internals_1.Item) {
-        structs.splice(index + 1, 0, (0, internals_1.splitItem)(transaction, struct, clock - struct.id.clock));
+        structs.splice(index + 1, 0, struct.split(transaction, clock - struct.id.clock));
         return index + 1;
     }
     return index;
@@ -198,7 +198,7 @@ const getItemCleanEnd = (transaction, store, id) => {
     const index = (0, exports.findIndexSS)(structs, id.clock);
     const struct = structs[index];
     if (id.clock !== struct.id.clock + struct.length - 1 && struct.constructor !== internals_1.GC) {
-        structs.splice(index + 1, 0, (0, internals_1.splitItem)(transaction, struct, id.clock - struct.id.clock + 1));
+        structs.splice(index + 1, 0, struct.split(transaction, id.clock - struct.id.clock + 1));
     }
     return struct;
 };

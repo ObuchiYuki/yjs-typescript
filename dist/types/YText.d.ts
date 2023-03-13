@@ -1,5 +1,5 @@
 import { AbstractType_ } from "./AbstractType_";
-import { YEvent, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, ID, Doc, Item, Snapshot, Transaction } from '../internals';
+import { YEvent, ID, Doc, Item, Snapshot, Transaction, UpdateDecoderAny_, UpdateEncoderAny_, YEventDelta } from '../internals';
 export declare class ItemTextListPosition {
     left: Item | null;
     right: Item | null;
@@ -8,6 +8,17 @@ export declare class ItemTextListPosition {
     constructor(left: Item | null, right: Item | null, index: number, currentAttributes: Map<string, any>);
     /** Only call this if you know that this.right is defined */
     forward(): void;
+    /**
+     * @param {Transaction} transaction
+     * @param {ItemTextListPosition} pos
+     * @param {number} count steps to move forward
+     * @return {ItemTextListPosition}
+     *
+     * @private
+     * @function
+     */
+    findNext(transaction: Transaction, count: number): ItemTextListPosition;
+    static find(transaction: Transaction, parent: AbstractType_<any>, index: number): ItemTextListPosition;
 }
 /**
  * This function is experimental and subject to change / be removed.
@@ -45,27 +56,11 @@ export declare const cleanupYTextFormatting: (type: YText) => number;
     *         font-size: '40px'
     *     }
     */
+export type TextAttributeValue = boolean | number | string | object | null | undefined;
 export type TextAttributes = {
-    [s: string]: any;
+    [s: string]: TextAttributeValue;
 };
-export type YTextEventUpdateAction = 'add' | 'update' | 'delete';
-export type YTextEventDelta = {
-    insert?: Array<any> | string;
-    delete?: number;
-    retain?: number;
-    attributes?: {
-        [s: string]: any;
-    };
-}[];
-export type YTextEventChange = {
-    added: Set<Item>;
-    deleted: Set<Item>;
-    keys: Map<string, {
-        action: YTextEventUpdateAction;
-        oldValue: any;
-    }>;
-    delta: YTextEventDelta;
-};
+export type YTextAction = "delete" | "insert" | "retain";
 /** Event that describes the changes on a YText type. */
 export declare class YTextEvent extends YEvent<YText> {
     /** Whether the children changed. */
@@ -75,15 +70,15 @@ export declare class YTextEvent extends YEvent<YText> {
     /**
      * @param {YText} ytext
      * @param {Transaction} transaction
-     * @param {Set<any>} subs The keys that changed
+     * @param {Set<string>} subs The keys that changed
      */
-    constructor(ytext: YText, transaction: Transaction, subs: Set<any>);
-    get changes(): YTextEventChange;
+    constructor(ytext: YText, transaction: Transaction, keysChanged: Set<null | string>);
+    get changes(): import("../internals").YEventChange;
     /**
      * Compute the changes in the delta format.
      * A {@link https://quilljs.com/docs/delta/|Quill Delta}) that represents the changes on the document.
      */
-    get delta(): YTextEventDelta;
+    get delta(): YEventDelta[];
 }
 /**
  * Type that represents text with formatting information.
@@ -220,7 +215,7 @@ export declare class YText extends AbstractType_<YTextEvent> {
     /**
      * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
      */
-    _write(encoder: UpdateEncoderV1 | UpdateEncoderV2): void;
+    _write(encoder: UpdateEncoderAny_): void;
 }
 /**
  * @param {UpdateDecoderV1 | UpdateDecoderV2} _decoder
@@ -229,4 +224,4 @@ export declare class YText extends AbstractType_<YTextEvent> {
  * @private
  * @function
  */
-export declare const readYText: (_decoder: UpdateDecoderV1 | UpdateDecoderV2) => YText;
+export declare const readYText: (_decoder: UpdateDecoderAny_) => YText;

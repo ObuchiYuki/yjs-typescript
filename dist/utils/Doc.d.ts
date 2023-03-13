@@ -1,7 +1,8 @@
 /**
  * @module Y
  */
-import { StructStore, AbstractType_, YArray, YText, YMap, YXmlFragment, Item, Transaction, YEvent } from '../internals';
+import { StructStore, AbstractType_, YArray, YText, YMap, YXmlFragment, Item, Transaction, YEvent, // eslint-disable-line
+Contentable_ } from '../internals';
 import { Observable } from 'lib0/observable';
 import * as random from 'lib0/random';
 export declare const generateNewClientId: typeof random.uint32;
@@ -107,7 +108,7 @@ export declare class Doc extends Observable<string> {
      *
      * @public
      */
-    getArray<T>(name?: string): YArray<T>;
+    getArray<T extends Contentable_>(name?: string): YArray<T>;
     /**
      * @param {string} [name]
      * @return {YText}
@@ -122,7 +123,7 @@ export declare class Doc extends Observable<string> {
      *
      * @public
      */
-    getMap<T>(name?: string): YMap<T>;
+    getMap<T extends Contentable_>(name?: string): YMap<T>;
     /**
      * @param {string} [name]
      * @return {YXmlFragment}

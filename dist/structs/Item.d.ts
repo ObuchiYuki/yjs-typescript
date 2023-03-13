@@ -1,27 +1,6 @@
 import { Struct_ } from "./Struct_";
 import { DeleteSet, StructStore, ID, AbstractType_, Transaction, UpdateDecoderAny_, UpdateEncoderAny_, ContentDecoder_, Content_ } from '../internals';
-export declare const followRedone: (store: StructStore, id: ID) => {
-    item: Item;
-    diff: number;
-};
-/**
- * Make sure that neither item nor any of its parents is ever deleted.
- *
- * This property does not persist when storing it into a database or when
- * sending it to other peers
- */
-export declare const keepItem: (item: Item | null, keep: boolean) => void;
-/**
- * Split leftItem into two items
- */
-export declare const splitItem: (transaction: Transaction, leftItem: Item, diff: number) => Item;
-/**
- * Redoes the effect of this operation.
- */
-export declare const redoItem: (transaction: Transaction, item: Item, redoitems: Set<Item>, itemsToDelete: DeleteSet, ignoreRemoteMapChanges: boolean) => Item | null;
-/**
- * Abstract class that represents any content.
- */
+/** Abstract class that represents any content. */
 export declare class Item extends Struct_ {
     /** The item that was originally to the left of this item. */
     origin: ID | null;
@@ -49,20 +28,7 @@ export declare class Item extends Struct_ {
      * bit4: mark - mark node as fast-search-marker
      */
     info: number;
-    /**
-     * @param {ID} id
-     * @param {Item | null} left
-     * @param {ID | null} origin
-     * @param {Item | null} right
-     * @param {ID | null} rightOrigin
-     * @param {AbstractType_<any>|ID|null} parent Is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.
-     * @param {string | null} parentSub
-     * @param {Content_} content
-     */
-    constructor(id: ID, left: Item | null, origin: ID | null, right: Item | null, rightOrigin: ID | null, parent: AbstractType_<any> | ID | null, parentSub: string | null, content: Content_);
-    /**
-     * This is used to mark the item as an indexed fast-search marker
-     */
+    /** This is used to mark the item as an indexed fast-search marker */
     set marker(isMarked: boolean);
     get marker(): boolean;
     /** If true, do not garbage collect this Item. */
@@ -72,10 +38,21 @@ export declare class Item extends Struct_ {
     /** Whether this item was deleted or not. */
     get deleted(): boolean;
     set deleted(doDelete: boolean);
-    markDeleted(): void;
     /**
-     * Return the creator clientID of the missing op or define missing items and return null.
-     */
+    * Make sure that neither item nor any of its parents is ever deleted.
+    *
+    * This property does not persist when storing it into a database or when
+    * sending it to other peers
+    */
+    static keepRecursive(item: Item | null, keep: boolean): void;
+    /** parent is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.*/
+    constructor(id: ID, left: Item | null, origin: ID | null, right: Item | null, rightOrigin: ID | null, parent: AbstractType_<any> | ID | null, parentSub: string | null, content: Content_);
+    markDeleted(): void;
+    /** Split leftItem into two items; this -> leftItem */
+    split(transaction: Transaction, diff: number): Item;
+    /** Redoes the effect of this operation. */
+    redo(transaction: Transaction, redoitems: Set<Item>, itemsToDelete: DeleteSet, ignoreRemoteMapChanges: boolean): Item | null;
+    /** Return the creator clientID of the missing op or define missing items and return null. */
     getMissing(transaction: Transaction, store: StructStore): null | number;
     integrate(transaction: Transaction, offset: number): void;
     /** Returns the next non-deleted item */

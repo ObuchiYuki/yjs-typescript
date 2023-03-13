@@ -2,7 +2,7 @@ import * as Y from '../testHelper'
 import * as t from 'lib0/testing'
 import * as prng from 'lib0/prng'
 import * as math from 'lib0/math'
-import { YTextEventDelta } from '../../src/internals'
+import { YEventDelta } from '../../src/internals'
 
 const { init, compare } = Y
 
@@ -1663,7 +1663,7 @@ export const testDeltaAfterConcurrentFormatting = (tc: t.TestCase) => {
     text0.format(0, 3, { bold: true })
     text1.format(2, 2, { bold: true })
 
-    const deltas: YTextEventDelta[] = []
+    const deltas: YEventDelta[][] = []
     text1.observe(event => {
         if (event.delta.length > 0) {
             deltas.push(event.delta)
@@ -1681,7 +1681,7 @@ export const testDeltaAfterConcurrentFormatting = (tc: t.TestCase) => {
  */
 export const testBasicInsertAndDelete = (tc: t.TestCase) => {
     const { users, text0 } = init(tc, { users: 2 })
-    let delta: YTextEventDelta
+    let delta: YEventDelta[]
 
     text0.observe(event => {
         delta = event.delta
@@ -1716,7 +1716,7 @@ export const testBasicInsertAndDelete = (tc: t.TestCase) => {
  */
 export const testBasicFormat = (tc: t.TestCase) => {
     const { users, text0 } = init(tc, { users: 2 })
-    let delta: YTextEventDelta
+    let delta: YEventDelta[]
     text0.observe(event => {
         delta = event.delta
     })

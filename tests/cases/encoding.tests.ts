@@ -57,7 +57,7 @@ export const testPermanentUserData = async (tc: t.TestCase) => {
     await promise.wait(10)
     applyUpdate(ydoc2, encodeStateAsUpdate(ydoc1))
     applyUpdate(ydoc1, encodeStateAsUpdate(ydoc2))
-
+    
     // now sync a third doc with same name as doc1 and then create PermanentUserData
     const ydoc3 = new Doc()
     applyUpdate(ydoc3, encodeStateAsUpdate(ydoc1))
