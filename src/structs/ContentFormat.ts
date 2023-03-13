@@ -1,12 +1,12 @@
 
 import {
-    UpdateEncoderAny, StructStore, Item, Transaction,
-    AbstractContent_, AbstractContentDecoder_, AbstractType_
+    UpdateEncoderAny_, StructStore, Item, Transaction,
+    Content_, ContentDecoder_, AbstractType_
 } from '../internals'
 
 import * as error from 'lib0/error'
 
-export class ContentFormat implements AbstractContent_ {
+export class ContentFormat implements Content_ {
     constructor(
         public key: string,
         public value: object
@@ -33,7 +33,7 @@ export class ContentFormat implements AbstractContent_ {
     
     gc(store: StructStore) {}
     
-    write(encoder: UpdateEncoderAny, offset: number) {
+    write(encoder: UpdateEncoderAny_, offset: number) {
         encoder.writeKey(this.key)
         encoder.writeJSON(this.value)
     }
@@ -41,6 +41,6 @@ export class ContentFormat implements AbstractContent_ {
     getRef(): number { return 6 }
 }
 
-export const readContentFormat: AbstractContentDecoder_ = decoder => {
+export const readContentFormat: ContentDecoder_ = decoder => {
     return new ContentFormat(decoder.readKey(), decoder.readJSON())
 }

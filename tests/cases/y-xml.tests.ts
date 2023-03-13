@@ -1,4 +1,4 @@
-import { init, compare } from './testHelper'
+import { init, compare } from '../testHelper'
 import * as Y from '../../src/index'
 
 import * as t from 'lib0/testing'

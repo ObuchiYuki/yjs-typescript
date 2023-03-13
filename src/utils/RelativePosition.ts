@@ -9,7 +9,7 @@ import {
     createID,
     ContentType,
     followRedone,
-    ID, Doc, AbstractType // eslint-disable-line
+    ID, Doc, AbstractType_ // eslint-disable-line
 } from '../internals'
 
 import * as encoding from 'lib0/encoding'
@@ -101,11 +101,11 @@ export const createRelativePositionFromJSON = (json: any): RelativePosition => {
 }
 
 export class AbsolutePosition {
-    type: AbstractType<any>
+    type: AbstractType_<any>
     index: number
     assoc: number
 
-    constructor(type: AbstractType<any>, index: number, assoc: number = 0) {
+    constructor(type: AbstractType_<any>, index: number, assoc: number = 0) {
         this.type = type
         this.index = index
         this.assoc = assoc
@@ -113,24 +113,24 @@ export class AbsolutePosition {
 }
 
 /**
- * @param {AbstractType<any>} type
+ * @param {AbstractType_<any>} type
  * @param {number} index
  * @param {number} [assoc]
  *
  * @function
  */
-export const createAbsolutePosition = (type: AbstractType<any>, index: number, assoc: number = 0) => {
+export const createAbsolutePosition = (type: AbstractType_<any>, index: number, assoc: number = 0) => {
     return new AbsolutePosition(type, index, assoc)
 }
 
 /**
- * @param {AbstractType<any>} type
+ * @param {AbstractType_<any>} type
  * @param {ID|null} item
  * @param {number} [assoc]
  *
  * @function
  */
-export const createRelativePosition = (type: AbstractType<any>, item: ID | null, assoc: number) => {
+export const createRelativePosition = (type: AbstractType_<any>, item: ID | null, assoc: number) => {
     let typeid = null
     let tname = null
     if (type._item === null) {
@@ -144,14 +144,14 @@ export const createRelativePosition = (type: AbstractType<any>, item: ID | null,
 /**
  * Create a relativePosition based on a absolute position.
  *
- * @param {AbstractType<any>} type The base type (e.g. YText or YArray).
+ * @param {AbstractType_<any>} type The base type (e.g. YText or YArray).
  * @param {number} index The absolute position.
  * @param {number} [assoc]
  * @return {RelativePosition}
  *
  * @function
  */
-export const createRelativePositionFromTypeIndex = (type: AbstractType<any>, index: number, assoc: number = 0): RelativePosition => {
+export const createRelativePositionFromTypeIndex = (type: AbstractType_<any>, index: number, assoc: number = 0): RelativePosition => {
     let t = type._start
     if (assoc < 0) {
         // associated to the left character or the beginning of a type, increment index if possible.
@@ -170,7 +170,7 @@ export const createRelativePositionFromTypeIndex = (type: AbstractType<any>, ind
         }
         if (t.right === null && assoc < 0) {
             // left-associated position, return last available id
-            return createRelativePosition(type, t.lastId, assoc)
+            return createRelativePosition(type, t.lastID, assoc)
         }
         t = t.right
     }
@@ -271,7 +271,7 @@ export const createAbsolutePositionFromRelativePosition = (rpos: RelativePositio
         if (!(right instanceof Item)) {
             return null
         }
-        type = right.parent as AbstractType<any>
+        type = right.parent as AbstractType_<any>
         if (type._item === null || !type._item.deleted) {
             index = (right.deleted || !right.countable) ? 0 : (res.diff + (assoc >= 0 ? 0 : 1)) // adjust position based on left association if necessary
             let n = right.left

@@ -67,7 +67,7 @@ exports.readID = readID;
  * `type` does not store any information about the `keyname`.
  * This function finds the correct `keyname` for `type` and throws otherwise.
  *
- * @param {AbstractType<any>} type
+ * @param {AbstractType_<any>} type
  * @return {string}
  *
  * @private

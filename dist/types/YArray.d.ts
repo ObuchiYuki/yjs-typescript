@@ -1,7 +1,5 @@
-/**
- * @module YArray
- */
-import { YEvent, AbstractType, ArraySearchMarker, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item } from '../internals';
+import { AbstractType_ } from "./AbstractType_";
+import { YEvent, ArraySearchMarker, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item } from '../internals';
 /** Event that describes the changes on a YArray */
 export declare class YArrayEvent<T> extends YEvent<YArray<T>> {
     _transaction: Transaction;
@@ -12,7 +10,7 @@ export declare class YArrayEvent<T> extends YEvent<YArray<T>> {
     constructor(yarray: YArray<T>, transaction: Transaction);
 }
 /** A shared Array implementation. */
-export declare class YArray<T> extends AbstractType<YArrayEvent<T>> implements Iterable<T> {
+export declare class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable<T> {
     _prelimContent: any[] | null;
     _searchMarker: ArraySearchMarker[];
     constructor();

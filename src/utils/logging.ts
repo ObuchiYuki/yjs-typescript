@@ -1,6 +1,6 @@
 
 import {
-    AbstractType // eslint-disable-line
+    AbstractType_ // eslint-disable-line
 } from '../internals'
 
 /**
@@ -8,9 +8,9 @@ import {
  *
  * Do not use in productive systems as the output can be immense!
  *
- * @param {AbstractType<any>} type
+ * @param {AbstractType_<any>} type
  */
-export const logType = (type: AbstractType<any>) => {
+export const logType = (type: AbstractType_<any>) => {
     const res = []
     let n = type._start
     while (n) {

@@ -1,5 +1,5 @@
-import { UpdateEncoderAny, StructStore, Item, Transaction, AbstractContent_, AbstractContentDecoder_ } from '../internals';
-export declare class ContentFormat implements AbstractContent_ {
+import { UpdateEncoderAny_, StructStore, Item, Transaction, Content_, ContentDecoder_ } from '../internals';
+export declare class ContentFormat implements Content_ {
     key: string;
     value: object;
     constructor(key: string, value: object);
@@ -12,7 +12,7 @@ export declare class ContentFormat implements AbstractContent_ {
     integrate(transaction: Transaction, item: Item): void;
     delete(transaction: Transaction): void;
     gc(store: StructStore): void;
-    write(encoder: UpdateEncoderAny, offset: number): void;
+    write(encoder: UpdateEncoderAny_, offset: number): void;
     getRef(): number;
 }
-export declare const readContentFormat: AbstractContentDecoder_;
+export declare const readContentFormat: ContentDecoder_;

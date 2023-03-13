@@ -1,7 +1,5 @@
-/**
- * @module YText
- */
-import { YEvent, AbstractType, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, ID, Doc, Item, Snapshot, Transaction } from '../internals';
+import { AbstractType_ } from "./AbstractType_";
+import { YEvent, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, ID, Doc, Item, Snapshot, Transaction } from '../internals';
 export declare class ItemTextListPosition {
     left: Item | null;
     right: Item | null;
@@ -55,7 +53,7 @@ export type YTextEventDelta = {
     insert?: Array<any> | string;
     delete?: number;
     retain?: number;
-    attributes: {
+    attributes?: {
         [s: string]: any;
     };
 }[];
@@ -74,8 +72,6 @@ export declare class YTextEvent extends YEvent<YText> {
     childListChanged: boolean;
     /** Set of all changed attributes. */
     keysChanged: Set<string>;
-    _delta: YTextEventDelta;
-    _changes: YTextEventChange | null;
     /**
      * @param {YText} ytext
      * @param {Transaction} transaction
@@ -96,7 +92,7 @@ export declare class YTextEvent extends YEvent<YText> {
  * block formats (format information on a paragraph), embeds (complex elements
  * like pictures and videos), and text formats (**bold**, *italic*).
  */
-export declare class YText extends AbstractType<YTextEvent> {
+export declare class YText extends AbstractType_<YTextEvent> {
     /** Array of pending operations on this type */
     _pending: (() => void)[] | null;
     /**
@@ -149,13 +145,13 @@ export declare class YText extends AbstractType<YTextEvent> {
      * Inserts an embed at a index.
      *
      * @param {number} index The index to insert the embed at.
-     * @param {Object | AbstractType<any>} embed The Object that represents the embed.
+     * @param {Object | AbstractType_<any>} embed The Object that represents the embed.
      * @param {TextAttributes} attributes Attribute information to apply on the
      *                                                                        embed
      *
      * @public
      */
-    insertEmbed(index: number, embed: object | AbstractType<any>, attributes?: TextAttributes): void;
+    insertEmbed(index: number, embed: object | AbstractType_<any>, attributes?: TextAttributes): void;
     /**
      * Deletes text starting from an index.
      *

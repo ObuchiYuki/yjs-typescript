@@ -6,7 +6,7 @@ exports.logType = void 0;
  *
  * Do not use in productive systems as the output can be immense!
  *
- * @param {AbstractType<any>} type
+ * @param {AbstractType_<any>} type
  */
 const logType = (type) => {
     const res = [];

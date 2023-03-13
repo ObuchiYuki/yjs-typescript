@@ -1,20 +1,20 @@
 
 import {
     isDeleted,
-    Item, AbstractType, Transaction, AbstractStruct // eslint-disable-line
+    Item, AbstractType_, Transaction, __AbstractStruct // eslint-disable-line
 } from '../internals'
 
 import * as set from 'lib0/set'
 import * as array from 'lib0/array'
 
 /** YEvent describes the changes on a YType. */
-export class YEvent<T extends AbstractType<any>> {
+export class YEvent<T extends AbstractType_<any>> {
     target: T
-    currentTarget: AbstractType<any>
+    currentTarget: AbstractType_<any>
     transaction: Transaction
     _changes: object|null
     _keys: null | Map<string, { action: 'add' | 'update' | 'delete', oldValue: any, newValue: any }>
-    _delta: null | Array<{ insert?: string | Array<any> | object | AbstractType<any>, retain?: number, delete?: number, attributes?: { [s: string]: any }}>
+    _delta: null | Array<{ insert?: string | Array<any> | object | AbstractType_<any>, retain?: number, delete?: number, attributes?: { [s: string]: any }}>
 
     /**
      * @param {T} target The changed type.
@@ -52,10 +52,10 @@ export class YEvent<T extends AbstractType<any>> {
      *
      * In contrast to change.deleted, this method also returns true if the struct was added and then deleted.
      *
-     * @param {AbstractStruct} struct
+     * @param {__AbstractStruct} struct
      * @return {boolean}
      */
-    deletes(struct: AbstractStruct): boolean {
+    deletes(struct: __AbstractStruct): boolean {
         return isDeleted(this.transaction.deleteSet, struct.id)
     }
 
@@ -107,9 +107,9 @@ export class YEvent<T extends AbstractType<any>> {
     }
 
     /**
-     * @type {Array<{insert?: string | Array<any> | object | AbstractType<any>, retain?: number, delete?: number, attributes?: Object<string, any>}>}
+     * @type {Array<{insert?: string | Array<any> | object | AbstractType_<any>, retain?: number, delete?: number, attributes?: Object<string, any>}>}
      */
-    get delta(): Array<{insert?: string | Array<any> | object | AbstractType<any>, retain?: number, delete?: number, attributes?: { [s: string]: any }}> {
+    get delta(): Array<{insert?: string | Array<any> | object | AbstractType_<any>, retain?: number, delete?: number, attributes?: { [s: string]: any }}> {
         return this.changes.delta
     }
 
@@ -118,7 +118,7 @@ export class YEvent<T extends AbstractType<any>> {
      *
      * In contrast to change.deleted, this method also returns true if the struct was added and then deleted.
      */
-    adds (struct: AbstractStruct): boolean {
+    adds (struct: __AbstractStruct): boolean {
         return struct.id.clock >= (this.transaction.beforeState.get(struct.id.client) || 0)
     }
 
@@ -190,14 +190,14 @@ export class YEvent<T extends AbstractType<any>> {
  *     console.log(path) // might look like => [2, 'key1']
  *     child === type.get(path[0]).get(path[1])
  *
- * @param {AbstractType<any>} parent
- * @param {AbstractType<any>} child target
+ * @param {AbstractType_<any>} parent
+ * @param {AbstractType_<any>} child target
  * @return {Array<string|number>} Path to the target
  *
  * @private
  * @function
  */
-const getPathTo = (parent: AbstractType<any>, child: AbstractType<any>): Array<string | number> => {
+const getPathTo = (parent: AbstractType_<any>, child: AbstractType_<any>): Array<string | number> => {
     const path = []
     while (child._item !== null && child !== parent) {
         if (child._item.parentSub !== null) {
@@ -206,7 +206,7 @@ const getPathTo = (parent: AbstractType<any>, child: AbstractType<any>): Array<s
         } else {
             // parent is array-ish
             let i = 0
-            let c = (child._item.parent as AbstractType<any>)._start
+            let c = (child._item.parent as AbstractType_<any>)._start
             while (c !== child._item && c !== null) {
                 if (!c.deleted) {
                     i++
@@ -215,7 +215,7 @@ const getPathTo = (parent: AbstractType<any>, child: AbstractType<any>): Array<s
             }
             path.unshift(i)
         }
-        child = child._item.parent as AbstractType<any>
+        child = child._item.parent as AbstractType_<any>
     }
     return path
 }

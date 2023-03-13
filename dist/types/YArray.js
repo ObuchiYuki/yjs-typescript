@@ -1,11 +1,9 @@
 "use strict";
-/**
- * @module YArray
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readYArray = exports.YArray = exports.YArrayEvent = void 0;
+const AbstractType_1 = require("./AbstractType_");
 const internals_1 = require("../internals");
-const AbstractType_js_1 = require("./AbstractType.js");
+const AbstractType_2 = require("./AbstractType");
 /** Event that describes the changes on a YArray */
 class YArrayEvent extends internals_1.YEvent {
     /**
@@ -19,7 +17,7 @@ class YArrayEvent extends internals_1.YEvent {
 }
 exports.YArrayEvent = YArrayEvent;
 /** A shared Array implementation. */
-class YArray extends internals_1.AbstractType {
+class YArray extends AbstractType_1.AbstractType_ {
     constructor() {
         super();
         this._prelimContent = [];
@@ -46,7 +44,7 @@ class YArray extends internals_1.AbstractType {
     _copy() { return new YArray(); }
     clone() {
         const arr = new YArray();
-        arr.insert(0, this.toArray().map(el => el instanceof internals_1.AbstractType ? el.clone() : el));
+        arr.insert(0, this.toArray().map(el => el instanceof AbstractType_1.AbstractType_ ? el.clone() : el));
         return arr;
     }
     get length() {
@@ -144,13 +142,13 @@ class YArray extends internals_1.AbstractType {
     }
     /** Transforms this YArray to a JavaScript Array. */
     slice(start = 0, end = this.length) {
-        return (0, AbstractType_js_1.typeListSlice)(this, start, end);
+        return (0, AbstractType_2.typeListSlice)(this, start, end);
     }
     /**
      * Transforms this Shared Type to a JSON object.
      */
     toJSON() {
-        return this.map((c) => c instanceof internals_1.AbstractType ? c.toJSON() : c);
+        return this.map((c) => c instanceof AbstractType_1.AbstractType_ ? c.toJSON() : c);
     }
     /**
      * Returns an Array with the result of calling a provided function on every

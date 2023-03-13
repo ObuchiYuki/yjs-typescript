@@ -1,9 +1,9 @@
 import {
-    UpdateEncoderAny, UpdateDecoderAny, Transaction, Item, StructStore, 
-    AbstractContent_, AbstractContentDecoder_
+    UpdateEncoderAny_, UpdateDecoderAny_, Transaction, Item, StructStore, 
+    Content_, ContentDecoder_
 } from '../internals'
 
-export class ContentAny implements AbstractContent_ {
+export class ContentAny implements Content_ {
     constructor(public array: any[]) {}
 
     getLength(): number { return this.array.length }
@@ -31,7 +31,7 @@ export class ContentAny implements AbstractContent_ {
     
     gc(store: StructStore) {}
     
-    write(encoder: UpdateEncoderAny, offset: number) {
+    write(encoder: UpdateEncoderAny_, offset: number) {
         const len = this.array.length
         encoder.writeLen(len - offset)
         for (let i = offset; i < len; i++) {
@@ -43,7 +43,7 @@ export class ContentAny implements AbstractContent_ {
     getRef(): number { return 8 }
 }
 
-export const readContentAny: AbstractContentDecoder_ = decoder => {
+export const readContentAny: ContentDecoder_ = decoder => {
     const len = decoder.readLen()
     const cs = []
     for (let i = 0; i < len; i++) {

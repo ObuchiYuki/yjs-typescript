@@ -5,7 +5,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readYMap = exports.YMap = exports.YMapEvent = void 0;
 const internals_1 = require("../internals");
-const AbstractType_1 = require("./AbstractType");
+const AbstractType_1 = require("./AbstractType_");
 const iterator = require("lib0/iterator");
 /** Event that describes the changes on a YMap. */
 class YMapEvent extends internals_1.YEvent {
@@ -24,10 +24,10 @@ exports.YMapEvent = YMapEvent;
  * @template MapType
  * A shared Map implementation.
  *
- * @extends AbstractType<YMapEvent<MapType>>
+ * @extends AbstractType_<YMapEvent<MapType>>
  * @implements {Iterable<MapType>}
  */
-class YMap extends AbstractType_1.AbstractType {
+class YMap extends AbstractType_1.AbstractType_ {
     /**
      *
      * @param {Iterable<readonly [string, any]>=} entries - an optional iterable to initialize the YMap
@@ -62,7 +62,7 @@ class YMap extends AbstractType_1.AbstractType {
     clone() {
         const map = new YMap();
         this.forEach((value, key) => {
-            map.set(key, value instanceof AbstractType_1.AbstractType ? value.clone() : value);
+            map.set(key, value instanceof AbstractType_1.AbstractType_ ? value.clone() : value);
         });
         return map;
     }
@@ -81,7 +81,7 @@ class YMap extends AbstractType_1.AbstractType {
         this._map.forEach((item, key) => {
             if (!item.deleted) {
                 const v = item.content.getContent()[item.length - 1];
-                map[key] = v instanceof AbstractType_1.AbstractType ? v.toJSON() : v;
+                map[key] = v instanceof AbstractType_1.AbstractType_ ? v.toJSON() : v;
             }
         });
         return map;

@@ -1,4 +1,4 @@
-import { Transaction, Doc, Item, DeleteSet, AbstractType } from '../internals';
+import { Transaction, Doc, Item, DeleteSet, AbstractType_ } from '../internals';
 import { Observable } from 'lib0/observable';
 declare class StackItem {
     deletions: DeleteSet;
@@ -37,7 +37,7 @@ export type UndoManagerOptions = {
  * @extends {Observable<'stack-item-added'|'stack-item-popped'|'stack-cleared'|'stack-item-updated'>}
  */
 export declare class UndoManager extends Observable<'stack-item-added' | 'stack-item-popped' | 'stack-cleared' | 'stack-item-updated'> {
-    scope: AbstractType<any>[];
+    scope: AbstractType_<any>[];
     deleteFilter: (item: Item) => boolean;
     trackedOrigins: Set<any>;
     captureTransaction: (transaction: Transaction) => boolean;
@@ -51,11 +51,11 @@ export declare class UndoManager extends Observable<'stack-item-added' | 'stack-
     captureTimeout: number;
     afterTransactionHandler: (transaction: Transaction) => void;
     /**
-     * @param {AbstractType<any>|Array<AbstractType<any>>} typeScope Accepts either a single type, or an array of types
+     * @param {AbstractType_<any>|Array<AbstractType_<any>>} typeScope Accepts either a single type, or an array of types
      * @param {UndoManagerOptions} options
      */
-    constructor(typeScope: AbstractType<any> | Array<AbstractType<any>>, { captureTimeout, captureTransaction, deleteFilter, trackedOrigins, ignoreRemoteMapChanges, doc }?: UndoManagerOptions);
-    addToScope(ytypes: Array<AbstractType<any>> | AbstractType<any>): void;
+    constructor(typeScope: AbstractType_<any> | Array<AbstractType_<any>>, { captureTimeout, captureTransaction, deleteFilter, trackedOrigins, ignoreRemoteMapChanges, doc }?: UndoManagerOptions);
+    addToScope(ytypes: Array<AbstractType_<any>> | AbstractType_<any>): void;
     addTrackedOrigin(origin: any): void;
     removeTrackedOrigin(origin: any): void;
     clear(clearUndoStack?: boolean, clearRedoStack?: boolean): void;

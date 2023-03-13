@@ -1,7 +1,7 @@
 /**
  * @module Y
  */
-import { StructStore, AbstractType, YArray, YText, YMap, YXmlFragment, Item, Transaction, YEvent } from '../internals';
+import { StructStore, AbstractType_, YArray, YText, YMap, YXmlFragment, Item, Transaction, YEvent } from '../internals';
 import { Observable } from 'lib0/observable';
 import * as random from 'lib0/random';
 export declare const generateNewClientId: typeof random.uint32;
@@ -34,7 +34,7 @@ export declare class Doc extends Observable<string> {
     clientID: number;
     guid: string;
     collectionid: string | null;
-    share: Map<string, AbstractType<YEvent<any>>>;
+    share: Map<string, AbstractType_<YEvent<any>>>;
     store: StructStore;
     _transaction: Transaction | null;
     _transactionCleanups: Transaction[];
@@ -95,11 +95,11 @@ export declare class Doc extends Observable<string> {
      *
      * @param {string} name
      * @param {Function} TypeConstructor The constructor of the type definition. E.g. Y.Text, Y.Array, Y.Map, ...
-     * @return {AbstractType<any>} The created type. Constructed with TypeConstructor
+     * @return {AbstractType_<any>} The created type. Constructed with TypeConstructor
      *
      * @public
      */
-    get(name: string, TypeConstructor?: Function): AbstractType<any>;
+    get(name: string, TypeConstructor?: Function): AbstractType_<any>;
     /**
      * @template T
      * @param {string} [name]

@@ -1,4 +1,4 @@
-import { DeleteSet, Item, UpdateEncoderV1, UpdateEncoderV2, StructStore, AbstractType, AbstractStruct, YEvent, Doc } from '../internals';
+import { DeleteSet, Item, UpdateEncoderV1, UpdateEncoderV2, StructStore, AbstractType_, __AbstractStruct, YEvent, Doc } from '../internals';
 /**
  * A transaction is created for every change on the Yjs model. It is possible
  * to bundle changes on the Yjs model in a single transaction to
@@ -37,12 +37,12 @@ export declare class Transaction {
      * inserted/deleted). New types are not included in this Set.
      * Maps from type to parentSubs (`item.parentSub = null` for YArray)
      */
-    changed: Map<AbstractType<YEvent<any>>, Set<string | null>>;
+    changed: Map<AbstractType_<YEvent<any>>, Set<string | null>>;
     /**
      * Stores the events for the types that observe also child elements.
      * It is mainly used by `observeDeep`.
      */
-    changedParentTypes: Map<AbstractType<YEvent<any>>, Array<YEvent<any>>>;
+    changedParentTypes: Map<AbstractType_<YEvent<any>>, Array<YEvent<any>>>;
     /** Stores meta information on the transaction */
     meta: Map<any, any>;
     /** Whether this change originates from this doc. */
@@ -50,7 +50,7 @@ export declare class Transaction {
     subdocsAdded: Set<Doc>;
     subdocsRemoved: Set<Doc>;
     subdocsLoaded: Set<Doc>;
-    _mergeStructs: AbstractStruct[];
+    _mergeStructs: __AbstractStruct[];
     origin: any;
     constructor(doc: Doc, origin: any, local: boolean);
 }
@@ -72,10 +72,10 @@ export declare const nextID: (transaction: Transaction) => import("./ID").ID;
  * did not change, it was just added and we should not fire events for `type`.
  *
  * @param {Transaction} transaction
- * @param {AbstractType<YEvent<any>>} type
+ * @param {AbstractType_<YEvent<any>>} type
  * @param {string|null} parentSub
  */
-export declare const addChangedTypeToTransaction: (transaction: Transaction, type: AbstractType<YEvent<any>>, parentSub: string | null) => void;
+export declare const addChangedTypeToTransaction: (transaction: Transaction, type: AbstractType_<YEvent<any>>, parentSub: string | null) => void;
 /**
  * @param {DeleteSet} ds
  * @param {StructStore} store

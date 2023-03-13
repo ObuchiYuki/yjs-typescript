@@ -1,14 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GC = exports.structGCRefNumber = void 0;
+const Struct_1 = require("./Struct_");
 const internals_1 = require("../internals");
 exports.structGCRefNumber = 0;
-// AbstractStruct で constructor チェックをしている部分はないので、implements にして良い
-class GC {
-    constructor(id, length) {
-        this.id = id;
-        this.length = length;
-    }
+class GC extends Struct_1.Struct_ {
     get deleted() { return true; }
     delete() { }
     mergeWith(right) {

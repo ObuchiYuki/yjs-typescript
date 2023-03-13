@@ -1,5 +1,5 @@
-import { Doc, Transaction, EventHandler, YEvent, Item, UpdateEncoderAny, ArraySearchMarker } from '../internals';
-export interface AbstractType_<EventType> {
+import { Doc, Transaction, EventHandler, YEvent, Item, UpdateEncoderAny_, ArraySearchMarker } from '../internals';
+export declare abstract class AbstractType_<EventType> {
     doc: Doc | null;
     _item: Item | null;
     _map: Map<string, Item>;
@@ -10,6 +10,7 @@ export interface AbstractType_<EventType> {
     /** Deep event handlers */
     _dEH: EventHandler<Array<YEvent<any>>, Transaction>;
     _searchMarker: null | Array<ArraySearchMarker>;
+    constructor();
     get parent(): AbstractType_<any> | null;
     /**
      * Integrate this type into the Yjs instance.
@@ -19,9 +20,9 @@ export interface AbstractType_<EventType> {
      * * Observer functions are fired
      */
     _integrate(y: Doc, item: Item | null): void;
-    _copy(): AbstractType_<EventType>;
-    clone(): AbstractType_<EventType>;
-    _write(encoder: UpdateEncoderAny): void;
+    abstract _copy(): AbstractType_<EventType>;
+    abstract clone(): AbstractType_<EventType>;
+    _write(_encoder: UpdateEncoderAny_): void;
     /** The first non-deleted item */
     get _first(): Item | null;
     /**

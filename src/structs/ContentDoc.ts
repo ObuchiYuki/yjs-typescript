@@ -1,7 +1,7 @@
 
 import {
-    Doc, UpdateEncoderAny, StructStore, Transaction, Item,
-    AbstractContent_, AbstractContentDecoder_
+    Doc, UpdateEncoderAny_, StructStore, Transaction, Item,
+    Content_, ContentDecoder_
 } from '../internals'
 
 import * as error from 'lib0/error'
@@ -17,7 +17,7 @@ export type ContentDocOpts = {
     shouldLoad?: boolean
 }
 
-export class ContentDoc implements AbstractContent_ {
+export class ContentDoc implements Content_ {
     doc: Doc
     opts: ContentDocOpts
 
@@ -65,7 +65,7 @@ export class ContentDoc implements AbstractContent_ {
 
     gc(store: StructStore) { }
 
-    write(encoder: UpdateEncoderAny, offset: number) {
+    write(encoder: UpdateEncoderAny_, offset: number) {
         encoder.writeString(this.doc.guid)
         encoder.writeAny(this.opts)
     }
@@ -73,6 +73,6 @@ export class ContentDoc implements AbstractContent_ {
     getRef(): number { return 9 }
 }
 
-export const readContentDoc: AbstractContentDecoder_ = decoder => {
+export const readContentDoc: ContentDecoder_ = decoder => {
     return new ContentDoc(createDocFromOpts(decoder.readString(), decoder.readAny()))
 }

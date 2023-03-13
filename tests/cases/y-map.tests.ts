@@ -1,4 +1,4 @@
-import { init, compare, applyRandomTests, Doc } from './testHelper' // eslint-disable-line
+import { init, compare, applyRandomTests, Doc } from '../testHelper' // eslint-disable-line
 
 import {
   compareIDs

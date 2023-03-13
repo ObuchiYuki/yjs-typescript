@@ -1,9 +1,7 @@
 "use strict";
-/**
- * @module YText
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readYText = exports.YText = exports.YTextEvent = exports.cleanupYTextFormatting = exports.ItemTextListPosition = void 0;
+const AbstractType_1 = require("./AbstractType_");
 const internals_1 = require("../internals");
 const object = require("lib0/object");
 const map = require("lib0/map");
@@ -106,7 +104,7 @@ const insertNegatedAttributes = (transaction, parent, currPos, negatedAttributes
     negatedAttributes.forEach((val, key) => {
         const left = currPos.left;
         const right = currPos.right;
-        const nextFormat = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastId, right, right && right.id, parent, null, new internals_1.ContentFormat(key, val));
+        const nextFormat = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new internals_1.ContentFormat(key, val));
         nextFormat.integrate(transaction, 0);
         currPos.right = nextFormat;
         currPos.forward();
@@ -148,7 +146,7 @@ const insertAttributes = (transaction, parent, currPos, attributes) => {
             // save negated attribute (set null if currentVal undefined)
             negatedAttributes.set(key, currentVal);
             const { left, right } = currPos;
-            currPos.right = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastId, right, right && right.id, parent, null, new internals_1.ContentFormat(key, val));
+            currPos.right = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new internals_1.ContentFormat(key, val));
             currPos.right.integrate(transaction, 0);
             currPos.forward();
         }
@@ -166,12 +164,12 @@ const insertText = (transaction, parent, currPos, text, attributes) => {
     minimizeAttributeChanges(currPos, attributes);
     const negatedAttributes = insertAttributes(transaction, parent, currPos, attributes);
     // insert content
-    const content = text.constructor === String ? new internals_1.ContentString(text) : (text instanceof internals_1.AbstractType ? new internals_1.ContentType(text) : new internals_1.ContentEmbed(text));
+    const content = text.constructor === String ? new internals_1.ContentString(text) : (text instanceof AbstractType_1.AbstractType_ ? new internals_1.ContentType(text) : new internals_1.ContentEmbed(text));
     let { left, right, index } = currPos;
     if (parent._searchMarker) {
         (0, internals_1.updateMarkerChanges)(parent._searchMarker, currPos.index, content.getLength());
     }
-    right = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastId, right, right && right.id, parent, null, content);
+    right = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, content);
     right.integrate(transaction, 0);
     currPos.right = right;
     currPos.index = index;
@@ -233,7 +231,7 @@ const formatText = (transaction, parent, currPos, length, attributes) => {
         for (; length > 0; length--) {
             newlines += '\n';
         }
-        currPos.right = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), currPos.left, currPos.left && currPos.left.lastId, currPos.right, currPos.right && currPos.right.id, parent, null, new internals_1.ContentString(newlines));
+        currPos.right = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), currPos.left, currPos.left && currPos.left.lastID, currPos.right, currPos.right && currPos.right.id, parent, null, new internals_1.ContentString(newlines));
         currPos.right.integrate(transaction, 0);
         currPos.forward();
     }
@@ -394,8 +392,6 @@ class YTextEvent extends internals_1.YEvent {
      */
     constructor(ytext, transaction, subs) {
         super(ytext, transaction);
-        this._delta = [];
-        this._changes = null;
         this.childListChanged = false;
         this.keysChanged = new Set();
         subs.forEach((sub) => {
@@ -593,7 +589,7 @@ class YTextEvent extends internals_1.YEvent {
             });
             this._delta = delta;
         }
-        return /** @type {any} */ (this._delta);
+        return this._delta;
     }
 }
 exports.YTextEvent = YTextEvent;
@@ -604,7 +600,7 @@ exports.YTextEvent = YTextEvent;
  * block formats (format information on a paragraph), embeds (complex elements
  * like pictures and videos), and text formats (**bold**, *italic*).
  */
-class YText extends internals_1.AbstractType {
+class YText extends AbstractType_1.AbstractType_ {
     /**
      * @param {String} [string] The initial value of the YText.
      */
@@ -876,7 +872,7 @@ class YText extends internals_1.AbstractType {
      * Inserts an embed at a index.
      *
      * @param {number} index The index to insert the embed at.
-     * @param {Object | AbstractType<any>} embed The Object that represents the embed.
+     * @param {Object | AbstractType_<any>} embed The Object that represents the embed.
      * @param {TextAttributes} attributes Attribute information to apply on the
      *                                                                        embed
      *

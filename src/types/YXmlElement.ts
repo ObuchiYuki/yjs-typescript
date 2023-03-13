@@ -9,7 +9,7 @@ import {
     typeMapGetAll,
     typeListForEach,
     YXmlElementRefID,
-    YXmlText, ContentType, AbstractType, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Item // eslint-disable-line
+    YXmlText, ContentType, AbstractType_, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Item // eslint-disable-line
 } from '../internals'
 
 /**
@@ -67,7 +67,7 @@ export class YXmlElement extends YXmlFragment {
         }
 
         el.insert(0, this.toArray().map((item): YXmlText | YXmlElement => {
-            return (item instanceof AbstractType ? item.clone() : item) as YXmlText | YXmlElement
+            return (item instanceof AbstractType_ ? item.clone() : item) as YXmlText | YXmlElement
         }))
         return el
     }

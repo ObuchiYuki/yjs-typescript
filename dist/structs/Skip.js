@@ -1,14 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Skip = exports.structSkipRefNumber = void 0;
+const Struct_1 = require("./Struct_");
 const error = require("lib0/error");
 const encoding = require("lib0/encoding");
 exports.structSkipRefNumber = 10;
-class Skip {
-    constructor(id, length) {
-        this.id = id;
-        this.length = length;
-    }
+class Skip extends Struct_1.Struct_ {
     get deleted() { return true; }
     delete() { }
     mergeWith(right) {

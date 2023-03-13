@@ -27,7 +27,7 @@ class Doc extends observable_1.Observable {
         this.guid = guid;
         this.collectionid = collectionid;
         /**
-         * @type {Map<string, AbstractType<YEvent<any>>>}
+         * @type {Map<string, AbstractType_<YEvent<any>>>}
          */
         this.share = new Map();
         this.store = new internals_1.StructStore();
@@ -161,11 +161,11 @@ class Doc extends observable_1.Observable {
      *
      * @param {string} name
      * @param {Function} TypeConstructor The constructor of the type definition. E.g. Y.Text, Y.Array, Y.Map, ...
-     * @return {AbstractType<any>} The created type. Constructed with TypeConstructor
+     * @return {AbstractType_<any>} The created type. Constructed with TypeConstructor
      *
      * @public
      */
-    get(name, TypeConstructor = internals_1.AbstractType) {
+    get(name, TypeConstructor = internals_1.AbstractType_) {
         const type = map.setIfUndefined(this.share, name, () => {
             // @ts-ignore
             const t = new TypeConstructor();
@@ -173,8 +173,8 @@ class Doc extends observable_1.Observable {
             return t;
         });
         const Constr = type.constructor;
-        if (TypeConstructor !== internals_1.AbstractType && Constr !== TypeConstructor) {
-            if (Constr === internals_1.AbstractType) {
+        if (TypeConstructor !== internals_1.AbstractType_ && Constr !== TypeConstructor) {
+            if (Constr === internals_1.AbstractType_) {
                 // @ts-ignore
                 const t = new TypeConstructor();
                 t._map = type._map;

@@ -1,5 +1,5 @@
-import { UpdateEncoderAny, StructStore, Item, Transaction, AbstractContent_, AbstractContentDecoder_ } from '../internals';
-export declare class ContentBinary implements AbstractContent_ {
+import { UpdateEncoderAny_, StructStore, Item, Transaction, Content_, ContentDecoder_ } from '../internals';
+export declare class ContentBinary implements Content_ {
     content: Uint8Array;
     constructor(content: Uint8Array);
     getLength(): number;
@@ -11,7 +11,7 @@ export declare class ContentBinary implements AbstractContent_ {
     integrate(transaction: Transaction, item: Item): void;
     delete(transaction: Transaction): void;
     gc(store: StructStore): void;
-    write(encoder: UpdateEncoderAny, offset: number): void;
+    write(encoder: UpdateEncoderAny_, offset: number): void;
     getRef(): number;
 }
-export declare const readContentBinary: AbstractContentDecoder_;
+export declare const readContentBinary: ContentDecoder_;

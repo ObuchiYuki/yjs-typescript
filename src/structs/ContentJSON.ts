@@ -1,12 +1,12 @@
 import {
     Transaction, Item, StructStore, 
-    AbstractContent_, AbstractContentDecoder_, UpdateEncoderAny
+    Content_, ContentDecoder_, UpdateEncoderAny_
 } from '../internals'
 
 /**
  * @private
  */
-export class ContentJSON implements AbstractContent_ {
+export class ContentJSON implements Content_ {
     constructor(public arr: any[]) {}
 
     getLength(): number { return this.arr.length }
@@ -34,7 +34,7 @@ export class ContentJSON implements AbstractContent_ {
     
     gc(store: StructStore) {}
     
-    write(encoder: UpdateEncoderAny, offset: number) {
+    write(encoder: UpdateEncoderAny_, offset: number) {
         const len = this.arr.length
         encoder.writeLen(len - offset)
         for (let i = offset; i < len; i++) {
@@ -46,7 +46,7 @@ export class ContentJSON implements AbstractContent_ {
     getRef(): number { return 2 }
 }
 
-export const readContentJSON: AbstractContentDecoder_ = decoder => {
+export const readContentJSON: ContentDecoder_ = decoder => {
     const len = decoder.readLen()
     const cs = []
     for (let i = 0; i < len; i++) {

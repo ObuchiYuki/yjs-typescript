@@ -92,7 +92,7 @@ exports.nextID = nextID;
  * did not change, it was just added and we should not fire events for `type`.
  *
  * @param {Transaction} transaction
- * @param {AbstractType<YEvent<any>>} type
+ * @param {AbstractType_<YEvent<any>>} type
  * @param {string|null} parentSub
  */
 const addChangedTypeToTransaction = (transaction, type, parentSub) => {
@@ -103,7 +103,7 @@ const addChangedTypeToTransaction = (transaction, type, parentSub) => {
 };
 exports.addChangedTypeToTransaction = addChangedTypeToTransaction;
 /**
- * @param {Array<AbstractStruct>} structs
+ * @param {Array<__AbstractStruct>} structs
  * @param {number} pos
  */
 const tryToMergeWithLeft = (structs, pos) => {

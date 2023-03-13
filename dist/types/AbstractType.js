@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createMapIterator = exports.typeMapGetSnapshot = exports.typeMapHas = exports.typeMapGetAll = exports.typeMapGet = exports.typeMapSet = exports.typeMapDelete = exports.typeListDelete = exports.typeListPushGenerics = exports.typeListInsertGenerics = exports.typeListInsertGenericsAfter = exports.typeListGet = exports.typeListForEachSnapshot = exports.typeListCreateIterator = exports.typeListMap = exports.typeListForEach = exports.typeListToArraySnapshot = exports.typeListToArray = exports.typeListSlice = exports.AbstractType = exports.callTypeObservers = exports.getTypeChildren = exports.updateMarkerChanges = exports.findMarker = exports.ArraySearchMarker = void 0;
+exports.createMapIterator = exports.typeMapGetSnapshot = exports.typeMapHas = exports.typeMapGetAll = exports.typeMapGet = exports.typeMapSet = exports.typeMapDelete = exports.typeListDelete = exports.typeListPushGenerics = exports.typeListInsertGenerics = exports.typeListInsertGenericsAfter = exports.typeListGet = exports.typeListForEachSnapshot = exports.typeListCreateIterator = exports.typeListMap = exports.typeListForEach = exports.typeListToArraySnapshot = exports.typeListToArray = exports.typeListSlice = exports.callTypeObservers = exports.getTypeChildren = exports.updateMarkerChanges = exports.findMarker = exports.ArraySearchMarker = void 0;
 const internals_1 = require("../internals");
 const map = require("lib0/map");
 const iterator = require("lib0/iterator");
@@ -96,30 +96,6 @@ const findMarker = (yarray, index) => {
             pindex -= p.length;
         }
     }
-    // @todo remove!
-    // assure position
-    // {
-    //     let start = yarray._start
-    //     let pos = 0
-    //     while (start !== p) {
-    //         if (!start.deleted && start.countable) {
-    //             pos += start.length
-    //         }
-    //         start = /** @type {Item} */ (start.right)
-    //     }
-    //     if (pos !== pindex) {
-    //         debugger
-    //         throw new Error('Gotcha position fail!')
-    //     }
-    // }
-    // if (marker) {
-    //     if (window.lengthes == null) {
-    //         window.lengthes = []
-    //         window.getLengthes = () => window.lengthes.sort((a, b) => a - b)
-    //     }
-    //     window.lengthes.push(marker.index - pindex)
-    //     console.log('distance', marker.index - pindex, 'len', p && p.parent.length)
-    // }
     if (marker !== null && math.abs(marker.index - pindex) < p.parent.length / maxSearchMarker) {
         // adjust existing marker
         overwriteMarker(marker, p, pindex);
@@ -200,75 +176,71 @@ exports.callTypeObservers = callTypeObservers;
 /**
  * Abstract Yjs Type class
  */
-class AbstractType {
-    constructor() {
-        this.doc = null;
-        this._item = null;
-        this._map = new Map();
-        this._start = null;
-        this._length = 0;
-        /** Event handlers */
-        this._eH = (0, internals_1.createEventHandler)();
-        /** Deep event handlers */
-        this._dEH = (0, internals_1.createEventHandler)();
-        this._searchMarker = null;
-    }
-    get parent() {
-        return this._item ? this._item.parent : null;
-    }
-    /**
-     * Integrate this type into the Yjs instance.
-     *
-     * * Save this struct in the os
-     * * This type is sent to other client
-     * * Observer functions are fired
-     */
-    _integrate(y, item) {
-        this.doc = y;
-        this._item = item;
-    }
-    _copy() { throw error.methodUnimplemented(); }
-    clone() { throw error.methodUnimplemented(); }
-    _write(_encoder) { }
-    /** The first non-deleted item */
-    get _first() {
-        let n = this._start;
-        while (n !== null && n.deleted) {
-            n = n.right;
-        }
-        return n;
-    }
-    /**
-     * Creates YEvent and calls all type observers.
-     * Must be implemented by each type.
-     *
-     * @param {Transaction} transaction
-     * @param {Set<null|string>} _parentSubs Keys changed on this type. `null` if list was modified.
-     */
-    _callObserver(transaction, _parentSubs) {
-        if (!transaction.local && this._searchMarker) {
-            this._searchMarker.length = 0;
-        }
-    }
-    /** Observe all events that are created on this type. */
-    observe(f) {
-        (0, internals_1.addEventHandlerListener)(this._eH, f);
-    }
-    /** Observe all events that are created by this type and its children. */
-    observeDeep(f) {
-        (0, internals_1.addEventHandlerListener)(this._dEH, f);
-    }
-    /** Unregister an observer function. */
-    unobserve(f) {
-        (0, internals_1.removeEventHandlerListener)(this._eH, f);
-    }
-    /** Unregister an observer function. */
-    unobserveDeep(f) {
-        (0, internals_1.removeEventHandlerListener)(this._dEH, f);
-    }
-    toJSON() { }
-}
-exports.AbstractType = AbstractType;
+// export class AbstractType_<EventType> {
+//     doc: Doc|null = null
+//     _item: Item|null = null
+//     _map: Map<string, Item> = new Map()
+//     _start: Item|null = null
+//     _length: number = 0
+//     /** Event handlers */
+//     _eH: EventHandler<EventType,Transaction> = createEventHandler()
+//     /** Deep event handlers */
+//     _dEH: EventHandler<Array<YEvent<any>>,Transaction> = createEventHandler()
+//     _searchMarker: null | Array<ArraySearchMarker> = null
+//     constructor () {}
+//     get parent(): AbstractType_<any>|null {
+//         return this._item ? (this._item.parent as AbstractType_<any>) : null
+//     }
+//     /**
+//      * Integrate this type into the Yjs instance.
+//      *
+//      * * Save this struct in the os
+//      * * This type is sent to other client
+//      * * Observer functions are fired
+//      */
+//     _integrate(y: Doc, item: Item|null) {
+//         this.doc = y
+//         this._item = item
+//     }
+//     _copy(): AbstractType_<EventType> { throw error.methodUnimplemented() }
+//     clone(): AbstractType_<EventType> { throw error.methodUnimplemented() }
+//     _write (_encoder: UpdateEncoderV1 | UpdateEncoderV2) { }
+//     /** The first non-deleted item */
+//     get _first() {
+//         let n = this._start
+//         while (n !== null && n.deleted) { n = n.right }
+//         return n
+//     }
+//     /**
+//      * Creates YEvent and calls all type observers.
+//      * Must be implemented by each type.
+//      *
+//      * @param {Transaction} transaction
+//      * @param {Set<null|string>} _parentSubs Keys changed on this type. `null` if list was modified.
+//      */
+//     _callObserver(transaction: Transaction, _parentSubs: Set<null|string>) {
+//         if (!transaction.local && this._searchMarker) {
+//             this._searchMarker.length = 0
+//         }
+//     }
+//     /** Observe all events that are created on this type. */
+//     observe(f: (type: EventType, transaction: Transaction) => void) {
+//         addEventHandlerListener(this._eH, f)
+//     }
+//     /** Observe all events that are created by this type and its children. */
+//     observeDeep(f: (events: Array<YEvent<any>>, transaction: Transaction) => void) {
+//         addEventHandlerListener(this._dEH, f)
+//     }
+//     /** Unregister an observer function. */
+//     unobserve(f: (type: EventType, transaction: Transaction) => void) {
+//         removeEventHandlerListener(this._eH, f)
+//     }
+//     /** Unregister an observer function. */
+//     unobserveDeep(f: (events: Array<YEvent<any>>, transaction: Transaction) => void) {
+//         removeEventHandlerListener(this._dEH, f)
+//     }
+//     toJSON(): any {}
+// }
 const typeListSlice = (type, start, end) => {
     if (start < 0) {
         start = type._length + start;
@@ -331,7 +303,7 @@ exports.typeListToArraySnapshot = typeListToArraySnapshot;
 /**
  * Executes a provided function on once on overy element of this YArray.
  *
- * @param {AbstractType<any>} type
+ * @param {AbstractType_<any>} type
  * @param {function(any,number,any):void} f A function to execute on every element of this YArray.
  */
 const typeListForEach = (type, f) => {
@@ -399,8 +371,8 @@ exports.typeListCreateIterator = typeListCreateIterator;
  * Executes a provided function on once on overy element of this YArray.
  * Operates on a snapshotted state of the document.
  *
- * @param {AbstractType<any>} type
- * @param {function(any,number,AbstractType<any>):void} f A function to execute on every element of this YArray.
+ * @param {AbstractType_<any>} type
+ * @param {function(any,number,AbstractType_<any>):void} f A function to execute on every element of this YArray.
  * @param {Snapshot} snapshot
  *
  * @private
@@ -446,7 +418,7 @@ const typeListInsertGenericsAfter = (transaction, parent, referenceItem, content
     let jsonContent = [];
     const packJsonContent = () => {
         if (jsonContent.length > 0) {
-            left = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId)), left, left && left.lastId, right, right && right.id, parent, null, new internals_1.ContentAny(jsonContent));
+            left = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new internals_1.ContentAny(jsonContent));
             left.integrate(transaction, 0);
             jsonContent = [];
         }
@@ -469,16 +441,16 @@ const typeListInsertGenericsAfter = (transaction, parent, referenceItem, content
                     switch (c.constructor) {
                         case Uint8Array:
                         case ArrayBuffer:
-                            left = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId)), left, left && left.lastId, right, right && right.id, parent, null, new internals_1.ContentBinary(new Uint8Array(c)));
+                            left = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new internals_1.ContentBinary(new Uint8Array(c)));
                             left.integrate(transaction, 0);
                             break;
                         case internals_1.Doc:
-                            left = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId)), left, left && left.lastId, right, right && right.id, parent, null, new internals_1.ContentDoc(c));
+                            left = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new internals_1.ContentDoc(c));
                             left.integrate(transaction, 0);
                             break;
                         default:
-                            if (c instanceof AbstractType) {
-                                left = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId)), left, left && left.lastId, right, right && right.id, parent, null, new internals_1.ContentType(c));
+                            if (c instanceof internals_1.AbstractType_) {
+                                left = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new internals_1.ContentType(c));
                                 left.integrate(transaction, 0);
                             }
                             else {
@@ -620,7 +592,7 @@ const typeMapSet = (transaction, parent, key, value) => {
                 content = new internals_1.ContentDoc(value);
                 break;
             default:
-                if (value instanceof AbstractType) {
+                if (value instanceof internals_1.AbstractType_) {
                     content = new internals_1.ContentType(value);
                 }
                 else {
@@ -628,7 +600,7 @@ const typeMapSet = (transaction, parent, key, value) => {
                 }
         }
     }
-    new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastId, null, null, parent, key, content).integrate(transaction, 0);
+    new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastID, null, null, parent, key, content).integrate(transaction, 0);
 };
 exports.typeMapSet = typeMapSet;
 const typeMapGet = (parent, key) => {

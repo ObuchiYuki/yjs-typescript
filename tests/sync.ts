@@ -1,4 +1,4 @@
-import * as Y from '../../src/index'
+import * as Y from '../src/index'
 
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'

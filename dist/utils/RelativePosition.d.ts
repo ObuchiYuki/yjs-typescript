@@ -1,4 +1,4 @@
-import { ID, Doc, AbstractType } from '../internals';
+import { ID, Doc, AbstractType_ } from '../internals';
 import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
 /**
@@ -51,38 +51,38 @@ export declare const relativePositionToJSON: (rpos: RelativePosition) => any;
  */
 export declare const createRelativePositionFromJSON: (json: any) => RelativePosition;
 export declare class AbsolutePosition {
-    type: AbstractType<any>;
+    type: AbstractType_<any>;
     index: number;
     assoc: number;
-    constructor(type: AbstractType<any>, index: number, assoc?: number);
+    constructor(type: AbstractType_<any>, index: number, assoc?: number);
 }
 /**
- * @param {AbstractType<any>} type
+ * @param {AbstractType_<any>} type
  * @param {number} index
  * @param {number} [assoc]
  *
  * @function
  */
-export declare const createAbsolutePosition: (type: AbstractType<any>, index: number, assoc?: number) => AbsolutePosition;
+export declare const createAbsolutePosition: (type: AbstractType_<any>, index: number, assoc?: number) => AbsolutePosition;
 /**
- * @param {AbstractType<any>} type
+ * @param {AbstractType_<any>} type
  * @param {ID|null} item
  * @param {number} [assoc]
  *
  * @function
  */
-export declare const createRelativePosition: (type: AbstractType<any>, item: ID | null, assoc: number) => RelativePosition;
+export declare const createRelativePosition: (type: AbstractType_<any>, item: ID | null, assoc: number) => RelativePosition;
 /**
  * Create a relativePosition based on a absolute position.
  *
- * @param {AbstractType<any>} type The base type (e.g. YText or YArray).
+ * @param {AbstractType_<any>} type The base type (e.g. YText or YArray).
  * @param {number} index The absolute position.
  * @param {number} [assoc]
  * @return {RelativePosition}
  *
  * @function
  */
-export declare const createRelativePositionFromTypeIndex: (type: AbstractType<any>, index: number, assoc?: number) => RelativePosition;
+export declare const createRelativePositionFromTypeIndex: (type: AbstractType_<any>, index: number, assoc?: number) => RelativePosition;
 /**
  * @param {encoding.Encoder} encoder
  * @param {RelativePosition} rpos

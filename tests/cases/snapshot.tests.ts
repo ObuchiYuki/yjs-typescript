@@ -1,6 +1,6 @@
 import * as Y from '../../src/index'
 import * as t from 'lib0/testing'
-import { init } from './testHelper'
+import { init } from '../testHelper'
 
 /**
  * @param {t.TestCase} tc

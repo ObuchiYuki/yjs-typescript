@@ -94,7 +94,7 @@ const popStackItem = (undoManager, stack, eventType) => {
  */
 class UndoManager extends observable_1.Observable {
     /**
-     * @param {AbstractType<any>|Array<AbstractType<any>>} typeScope Accepts either a single type, or an array of types
+     * @param {AbstractType_<any>|Array<AbstractType_<any>>} typeScope Accepts either a single type, or an array of types
      * @param {UndoManagerOptions} options
      */
     constructor(typeScope, { captureTimeout = 500, captureTransaction = tr => true, deleteFilter = () => true, trackedOrigins = new Set([null]), ignoreRemoteMapChanges = false, doc = (array.isArray(typeScope) ? typeScope[0].doc : typeScope.doc) } = {}) {

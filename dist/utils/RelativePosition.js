@@ -93,7 +93,7 @@ class AbsolutePosition {
 }
 exports.AbsolutePosition = AbsolutePosition;
 /**
- * @param {AbstractType<any>} type
+ * @param {AbstractType_<any>} type
  * @param {number} index
  * @param {number} [assoc]
  *
@@ -104,7 +104,7 @@ const createAbsolutePosition = (type, index, assoc = 0) => {
 };
 exports.createAbsolutePosition = createAbsolutePosition;
 /**
- * @param {AbstractType<any>} type
+ * @param {AbstractType_<any>} type
  * @param {ID|null} item
  * @param {number} [assoc]
  *
@@ -125,7 +125,7 @@ exports.createRelativePosition = createRelativePosition;
 /**
  * Create a relativePosition based on a absolute position.
  *
- * @param {AbstractType<any>} type The base type (e.g. YText or YArray).
+ * @param {AbstractType_<any>} type The base type (e.g. YText or YArray).
  * @param {number} index The absolute position.
  * @param {number} [assoc]
  * @return {RelativePosition}
@@ -151,7 +151,7 @@ const createRelativePositionFromTypeIndex = (type, index, assoc = 0) => {
         }
         if (t.right === null && assoc < 0) {
             // left-associated position, return last available id
-            return (0, exports.createRelativePosition)(type, t.lastId, assoc);
+            return (0, exports.createRelativePosition)(type, t.lastID, assoc);
         }
         t = t.right;
     }

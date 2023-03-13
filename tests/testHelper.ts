@@ -6,8 +6,8 @@ import * as decoding from 'lib0/decoding'
 import * as syncProtocol from './sync'
 import * as object from 'lib0/object'
 import * as map from 'lib0/map'
-import * as Y from '../../src/index'
-export * from '../../src/index'
+import * as Y from '../src/index'
+export * from '../src/index'
 
 if (typeof window !== 'undefined') {
     // @ts-ignore
@@ -365,7 +365,7 @@ export const compare = (users: Array<TestYInstance>) => {
      */
     const mapRes: { [s: string]: any } = {}
     for (const [k, v] of users[0].getMap('map')) {
-        mapRes[k] = v instanceof Y.AbstractType ? v.toJSON() : v
+        mapRes[k] = v instanceof Y.AbstractType_ ? v.toJSON() : v
     }
     t.compare(userMapValues[0], mapRes)
     // Compare all users
@@ -376,7 +376,7 @@ export const compare = (users: Array<TestYInstance>) => {
         t.compare(userXmlValues[i], userXmlValues[i + 1])
         t.compare(userTextValues[i].map(/** @param {any} a */ (a: any) => typeof a.insert === 'string' ? a.insert : ' ').join('').length, users[i].getText('text').length)
         t.compare(userTextValues[i], userTextValues[i + 1], '', (_constructor, a, b) => {
-            if (a instanceof Y.AbstractType) {
+            if (a instanceof Y.AbstractType_) {
                 t.compare(a.toJSON(), b.toJSON())
             } else if (a !== b) {
                 t.fail('Deltas dont match')
@@ -401,10 +401,10 @@ export const compareItemIDs = (a: Y.Item | null, b: Y.Item | null): boolean => a
  * @param {import('../../src/internals.js').StructStore} ss1
  * @param {import('../../src/internals.js').StructStore} ss2
  */
-export const compareStructStores = (ss1: import('../../src/internals.js').StructStore, ss2: import('../../src/internals.js').StructStore) => {
+export const compareStructStores = (ss1: import('../src/internals.js').StructStore, ss2: import('../src/internals.js').StructStore) => {
     t.assert(ss1.clients.size === ss2.clients.size)
     for (const [client, structs1] of ss1.clients) {
-        const structs2 = ss2.clients.get(client) as Y.AbstractStruct[]
+        const structs2 = ss2.clients.get(client) as Y.Struct_[]
         t.assert(structs2 !== undefined && structs1.length === structs2.length)
         for (let i = 0; i < structs1.length; i++) {
             const s1 = structs1[i]
@@ -422,7 +422,7 @@ export const compareStructStores = (ss1: import('../../src/internals.js').Struct
             if (s1 instanceof Y.Item) {
                 if (
                     !(s2 instanceof Y.Item) ||
-                    !((s1.left === null && s2.left === null) || (s1.left !== null && s2.left !== null && Y.compareIDs(s1.left.lastId, s2.left.lastId))) ||
+                    !((s1.left === null && s2.left === null) || (s1.left !== null && s2.left !== null && Y.compareIDs(s1.left.lastID, s2.left.lastID))) ||
                     !compareItemIDs(s1.right, s2.right) ||
                     !Y.compareIDs(s1.origin, s2.origin) ||
                     !Y.compareIDs(s1.rightOrigin, s2.rightOrigin) ||
@@ -444,10 +444,10 @@ export const compareStructStores = (ss1: import('../../src/internals.js').Struct
  * @param {import('../src/internals.js').DeleteSet} ds1
  * @param {import('../src/internals.js').DeleteSet} ds2
  */
-export const compareDS = (ds1: import('../../src/internals.js').DeleteSet, ds2: import('../../src/internals.js').DeleteSet) => {
+export const compareDS = (ds1: import('../src/internals.js').DeleteSet, ds2: import('../src/internals.js').DeleteSet) => {
     t.assert(ds1.clients.size === ds2.clients.size)
     ds1.clients.forEach((deleteItems1, client) => {
-        const deleteItems2 = (ds2.clients.get(client)) as (import('../../src/internals.js').DeleteItem)[]
+        const deleteItems2 = (ds2.clients.get(client)) as (import('../src/internals.js').DeleteItem)[]
         t.assert(deleteItems2 !== undefined && deleteItems1.length === deleteItems2.length)
         for (let i = 0; i < deleteItems1.length; i++) {
             const di1 = deleteItems1[i]

@@ -1,4 +1,5 @@
-import { AbstractStruct, DeleteSet, StructStore, ID, AbstractType, Transaction, UpdateDecoderAny, UpdateEncoderAny } from '../internals';
+import { Struct_ } from "./Struct_";
+import { DeleteSet, StructStore, ID, AbstractType_, Transaction, UpdateDecoderAny_, UpdateEncoderAny_, ContentDecoder_, Content_ } from '../internals';
 export declare const followRedone: (store: StructStore, id: ID) => {
     item: Item;
     diff: number;
@@ -21,7 +22,7 @@ export declare const redoItem: (transaction: Transaction, item: Item, redoitems:
 /**
  * Abstract class that represents any content.
  */
-export declare class Item extends AbstractStruct {
+export declare class Item extends Struct_ {
     /** The item that was originally to the left of this item. */
     origin: ID | null;
     /** The item that is currently to the left of this item. */
@@ -30,7 +31,7 @@ export declare class Item extends AbstractStruct {
     right: Item | null;
     /** The item that was originally to the right of this item. */
     rightOrigin: ID | null;
-    parent: AbstractType<any> | ID | null;
+    parent: AbstractType_<any> | ID | null;
     /**
      * If the parent refers to this item with some kind of key (e.g. YMap, the
      * key is specified here. The key is then used to refer to the list in which
@@ -40,7 +41,7 @@ export declare class Item extends AbstractStruct {
     parentSub: string | null;
     /** If this type's effect is redone this type refers to the type that undid this operation. */
     redone: ID | null;
-    content: AbstractContent;
+    content: Content_;
     /**
      * bit1: keep
      * bit2: countable
@@ -54,11 +55,11 @@ export declare class Item extends AbstractStruct {
      * @param {ID | null} origin
      * @param {Item | null} right
      * @param {ID | null} rightOrigin
-     * @param {AbstractType<any>|ID|null} parent Is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.
+     * @param {AbstractType_<any>|ID|null} parent Is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.
      * @param {string | null} parentSub
-     * @param {AbstractContent} content
+     * @param {Content_} content
      */
-    constructor(id: ID, left: Item | null, origin: ID | null, right: Item | null, rightOrigin: ID | null, parent: AbstractType<any> | ID | null, parentSub: string | null, content: AbstractContent);
+    constructor(id: ID, left: Item | null, origin: ID | null, right: Item | null, rightOrigin: ID | null, parent: AbstractType_<any> | ID | null, parentSub: string | null, content: Content_);
     /**
      * This is used to mark the item as an indexed fast-search marker
      */
@@ -84,7 +85,7 @@ export declare class Item extends AbstractStruct {
     /**
      * Computes the last content address of this Item.
      */
-    get lastId(): ID;
+    get lastID(): ID;
     /** Try to merge two items */
     mergeWith(right: Item): boolean;
     /** Mark this Item as deleted. */
@@ -96,34 +97,8 @@ export declare class Item extends AbstractStruct {
      *
      * This is called when this Item is sent to a remote peer.
      */
-    write(encoder: UpdateEncoderAny, offset: number): void;
+    write(encoder: UpdateEncoderAny_, offset: number): void;
 }
-export declare const readItemContent: (decoder: UpdateDecoderAny, info: number) => AbstractContent;
-export type ContentRef = (decoder: UpdateDecoderAny) => AbstractContent;
-/**
- * A lookup map for reading Item content.
- */
-export declare const contentRefs: ContentRef[];
-/**
- * Do not implement this class!
- */
-export declare class AbstractContent {
-    getLength(): number;
-    getContent(): any[];
-    /**
-     * Should return false if this Item is some kind of meta information
-     * (e.g. format information).
-     *
-     * * Whether this Item should be addressable via `yarray.get(i)`
-     * * Whether this Item should be counted when computing yarray.length
-     */
-    isCountable(): boolean;
-    copy(): AbstractContent;
-    splice(offset: number): AbstractContent;
-    mergeWith(right: AbstractContent): boolean;
-    integrate(transaction: Transaction, item: Item): void;
-    delete(transaction: Transaction): void;
-    gc(store: StructStore): void;
-    write(encoder: UpdateEncoderAny, offset: number): void;
-    getRef(): number;
-}
+export declare const readItemContent: (decoder: UpdateDecoderAny_, info: number) => Content_;
+/** A lookup map for reading Item content. */
+export declare const contentDecoders_: ContentDecoder_[];

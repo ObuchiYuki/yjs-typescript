@@ -4,7 +4,7 @@
 
 import {
     StructStore,
-    AbstractType,
+    AbstractType_,
     YArray,
     YText,
     YMap,
@@ -52,7 +52,7 @@ export class Doc extends Observable<string> {
     clientID: number
     guid: string
     collectionid: string | null
-    share: Map<string, AbstractType<YEvent<any>>>
+    share: Map<string, AbstractType_<YEvent<any>>>
     store: StructStore
     _transaction: Transaction | null
     _transactionCleanups: Transaction[]
@@ -77,7 +77,7 @@ export class Doc extends Observable<string> {
         this.guid = guid
         this.collectionid = collectionid
         /**
-         * @type {Map<string, AbstractType<YEvent<any>>>}
+         * @type {Map<string, AbstractType_<YEvent<any>>>}
          */
         this.share = new Map()
         this.store = new StructStore()
@@ -216,11 +216,11 @@ export class Doc extends Observable<string> {
      *
      * @param {string} name
      * @param {Function} TypeConstructor The constructor of the type definition. E.g. Y.Text, Y.Array, Y.Map, ...
-     * @return {AbstractType<any>} The created type. Constructed with TypeConstructor
+     * @return {AbstractType_<any>} The created type. Constructed with TypeConstructor
      *
      * @public
      */
-    get (name: string, TypeConstructor: Function = AbstractType): AbstractType<any> {
+    get (name: string, TypeConstructor: Function = AbstractType_): AbstractType_<any> {
         const type = map.setIfUndefined(this.share, name, () => {
             // @ts-ignore
             const t = new TypeConstructor()
@@ -228,8 +228,8 @@ export class Doc extends Observable<string> {
             return t
         })
         const Constr = type.constructor
-        if (TypeConstructor !== AbstractType && Constr !== TypeConstructor) {
-            if (Constr === AbstractType) {
+        if (TypeConstructor !== AbstractType_ && Constr !== TypeConstructor) {
+            if (Constr === AbstractType_) {
                 // @ts-ignore
                 const t = new TypeConstructor()
                 t._map = type._map

@@ -1,8 +1,8 @@
-import { Transaction, Item, StructStore, AbstractContent_, AbstractContentDecoder_, UpdateEncoderAny } from '../internals';
+import { Transaction, Item, StructStore, Content_, ContentDecoder_, UpdateEncoderAny_ } from '../internals';
 /**
  * @private
  */
-export declare class ContentJSON implements AbstractContent_ {
+export declare class ContentJSON implements Content_ {
     arr: any[];
     constructor(arr: any[]);
     getLength(): number;
@@ -14,7 +14,7 @@ export declare class ContentJSON implements AbstractContent_ {
     integrate(transaction: Transaction, item: Item): void;
     delete(transaction: Transaction): void;
     gc(store: StructStore): void;
-    write(encoder: UpdateEncoderAny, offset: number): void;
+    write(encoder: UpdateEncoderAny_, offset: number): void;
     getRef(): number;
 }
-export declare const readContentJSON: AbstractContentDecoder_;
+export declare const readContentJSON: ContentDecoder_;

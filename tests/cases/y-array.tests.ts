@@ -1,4 +1,4 @@
-import { init, compare, applyRandomTests, Doc } from './testHelper' // eslint-disable-line
+import { init, compare, applyRandomTests, Doc } from '../testHelper' // eslint-disable-line
 
 import * as Y from '../../src/index'
 import * as t from 'lib0/testing'

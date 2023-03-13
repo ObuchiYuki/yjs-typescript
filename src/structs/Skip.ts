@@ -1,6 +1,8 @@
+import { Struct_ } from "./Struct_"
 
 import {
-    StructStore, Transaction, ID, AbstractStruct, UpdateEncoderAny
+    StructStore, Transaction, ID,
+    UpdateEncoderAny_
 } from '../internals'
 
 import * as error from 'lib0/error'
@@ -8,7 +10,7 @@ import * as encoding from 'lib0/encoding'
 
 export const structSkipRefNumber = 10
 
-export class Skip extends AbstractStruct {
+export class Skip extends Struct_ {
     
     get deleted(): boolean { return true }
 
@@ -25,7 +27,7 @@ export class Skip extends AbstractStruct {
         error.unexpectedCase()
     }
 
-    write(encoder: UpdateEncoderAny, offset: number) {
+    write(encoder: UpdateEncoderAny_, offset: number) {
         encoder.writeInfo(structSkipRefNumber)
         // write as VarUint because Skips can't make use of predictable length-encoding
         encoding.writeVarUint(encoder.restEncoder, this.length - offset)

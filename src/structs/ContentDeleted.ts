@@ -1,11 +1,11 @@
 
 import {
     addToDeleteSet,
-    UpdateEncoderAny, StructStore, Item, Transaction,
-    AbstractContent_, AbstractContentDecoder_
+    UpdateEncoderAny_, StructStore, Item, Transaction,
+    Content_, ContentDecoder_
 } from '../internals'
 
-export class ContentDeleted implements AbstractContent_ {
+export class ContentDeleted implements Content_ {
     constructor(public len: number) {}
 
     getLength(): number { return this.len }
@@ -36,11 +36,11 @@ export class ContentDeleted implements AbstractContent_ {
     
     gc(store: StructStore) {}
     
-    write(encoder: UpdateEncoderAny, offset: number) { encoder.writeLen(this.len - offset) }
+    write(encoder: UpdateEncoderAny_, offset: number) { encoder.writeLen(this.len - offset) }
 
     getRef(): number { return 1 }
 }
 
-export const readContentDeleted: AbstractContentDecoder_ = decoder => {
+export const readContentDeleted: ContentDecoder_ = decoder => {
     return new ContentDeleted(decoder.readLen())
 }

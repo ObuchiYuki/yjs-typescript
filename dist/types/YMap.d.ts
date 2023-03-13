@@ -2,7 +2,7 @@
  * @module YMap
  */
 import { YEvent, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item } from '../internals';
-import { AbstractType } from "./AbstractType";
+import { AbstractType_ } from "./AbstractType_";
 /** Event that describes the changes on a YMap. */
 export declare class YMapEvent<T> extends YEvent<YMap<T>> {
     keysChanged: Set<any>;
@@ -17,10 +17,10 @@ export declare class YMapEvent<T> extends YEvent<YMap<T>> {
  * @template MapType
  * A shared Map implementation.
  *
- * @extends AbstractType<YMapEvent<MapType>>
+ * @extends AbstractType_<YMapEvent<MapType>>
  * @implements {Iterable<MapType>}
  */
-export declare class YMap<MapType> extends AbstractType<YMapEvent<MapType>> implements Iterable<MapType> {
+export declare class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> implements Iterable<MapType> {
     _prelimContent: Map<string, any> | null;
     /**
      *

@@ -1,7 +1,5 @@
-/**
- * @module YXml
- */
-import { YXmlEvent, YXmlElement, AbstractType, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item, YXmlText, YXmlHook } from '../internals';
+import { AbstractType_ } from "./AbstractType_";
+import { YXmlEvent, YXmlElement, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item, YXmlText, YXmlHook } from '../internals';
 /**
  * Define the elements to which a set of CSS queries apply.
  * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors|CSS_Selectors}
@@ -32,11 +30,11 @@ type CSS_Selector = string;
  * @implements {Iterable<YXmlElement|YXmlText|YXmlElement|YXmlHook>}
  */
 export declare class YXmlTreeWalker {
-    _filter: (type: AbstractType<any>) => boolean;
+    _filter: (type: AbstractType_<any>) => boolean;
     _root: YXmlFragment | YXmlElement;
     _currentNode: Item;
     _firstCall: boolean;
-    constructor(root: YXmlFragment | YXmlElement, f?: (type: AbstractType<any>) => boolean);
+    constructor(root: YXmlFragment | YXmlElement, f?: (type: AbstractType_<any>) => boolean);
     [Symbol.iterator](): this;
     /** Get the next node. */
     next(): IteratorResult<YXmlElement | YXmlText | YXmlHook>;
@@ -48,7 +46,7 @@ export declare class YXmlTreeWalker {
  * element - in this case the attributes and the nodeName are not shared.
  *
  */
-export declare class YXmlFragment extends AbstractType<YXmlEvent> {
+export declare class YXmlFragment extends AbstractType_<YXmlEvent> {
     _prelimContent: any[] | null;
     constructor();
     get firstChild(): YXmlElement | YXmlText | null;
@@ -73,14 +71,14 @@ export declare class YXmlFragment extends AbstractType<YXmlEvent> {
      *     nop(node)
      * }
      *
-     * @param {function(AbstractType<any>):boolean} filter Function that is called on each child element and
+     * @param {function(AbstractType_<any>):boolean} filter Function that is called on each child element and
      *                                                    returns a Boolean indicating whether the child
      *                                                    is to be included in the subtree.
      * @return {YXmlTreeWalker} A subtree and a position within it.
      *
      * @public
      */
-    createTreeWalker(filter: (type: AbstractType<any>) => boolean): YXmlTreeWalker;
+    createTreeWalker(filter: (type: AbstractType_<any>) => boolean): YXmlTreeWalker;
     /**
      * Returns the first YXmlElement that matches the query.
      * Similar to DOM's {@link querySelector}.

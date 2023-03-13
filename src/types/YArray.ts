@@ -1,10 +1,7 @@
-/**
- * @module YArray
- */
+import { AbstractType_ } from "./AbstractType_"
 
 import {
     YEvent,
-    AbstractType,
     typeListGet,
     typeListToArray,
     typeListForEach,
@@ -18,6 +15,7 @@ import {
     transact,
     ArraySearchMarker, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Transaction, Item // eslint-disable-line
 } from '../internals'
+
 import { typeListSlice } from './AbstractType'
 
 /** Event that describes the changes on a YArray */
@@ -35,7 +33,7 @@ export class YArrayEvent<T> extends YEvent<YArray<T>> {
 }
 
 /** A shared Array implementation. */
-export class YArray<T> extends AbstractType<YArrayEvent<T>> implements Iterable<T> {
+export class YArray<T> extends AbstractType_<YArrayEvent<T>> implements Iterable<T> {
     _prelimContent: any[]|null = []
     _searchMarker: ArraySearchMarker[] = []
 
@@ -66,7 +64,7 @@ export class YArray<T> extends AbstractType<YArrayEvent<T>> implements Iterable<
     clone(): YArray<T> {
         const arr = new YArray<T>()
         arr.insert(0, this.toArray().map(el =>
-            el instanceof AbstractType ? (el.clone() as typeof el) : el
+            el instanceof AbstractType_ ? (el.clone() as typeof el) : el
         ))
         return arr
     }
@@ -178,7 +176,7 @@ export class YArray<T> extends AbstractType<YArrayEvent<T>> implements Iterable<
      * Transforms this Shared Type to a JSON object.
      */
     toJSON(): Array<any> {
-        return this.map((c: T) => c instanceof AbstractType ? c.toJSON() : c)
+        return this.map((c: T) => c instanceof AbstractType_ ? c.toJSON() : c)
     }
 
     /**

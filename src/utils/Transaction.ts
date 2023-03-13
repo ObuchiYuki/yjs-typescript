@@ -11,7 +11,7 @@ import {
     Item,
     generateNewClientId,
     createID,
-    UpdateEncoderV1, UpdateEncoderV2, GC, StructStore, AbstractType, AbstractStruct, YEvent, Doc // eslint-disable-line
+    UpdateEncoderV1, UpdateEncoderV2, GC, StructStore, AbstractType_, __AbstractStruct, YEvent, Doc // eslint-disable-line
 } from '../internals'
 
 import * as map from 'lib0/map'
@@ -63,13 +63,13 @@ export class Transaction {
      * inserted/deleted). New types are not included in this Set.
      * Maps from type to parentSubs (`item.parentSub = null` for YArray)
      */
-    changed: Map<AbstractType<YEvent<any>>, Set<string | null>> = new Map()
+    changed: Map<AbstractType_<YEvent<any>>, Set<string | null>> = new Map()
 
     /**
      * Stores the events for the types that observe also child elements.
      * It is mainly used by `observeDeep`.
      */
-    changedParentTypes: Map<AbstractType<YEvent<any>>, Array<YEvent<any>>> = new Map()
+    changedParentTypes: Map<AbstractType_<YEvent<any>>, Array<YEvent<any>>> = new Map()
 
     /** Stores meta information on the transaction */
     meta: Map<any, any> = new Map()
@@ -81,7 +81,7 @@ export class Transaction {
     subdocsRemoved: Set<Doc> = new Set()
     subdocsLoaded: Set<Doc> = new Set()
 
-    _mergeStructs: AbstractStruct[] = []
+    _mergeStructs: __AbstractStruct[] = []
 
     origin: any
 
@@ -124,10 +124,10 @@ export const nextID = (transaction: Transaction) => {
  * did not change, it was just added and we should not fire events for `type`.
  *
  * @param {Transaction} transaction
- * @param {AbstractType<YEvent<any>>} type
+ * @param {AbstractType_<YEvent<any>>} type
  * @param {string|null} parentSub
  */
-export const addChangedTypeToTransaction = (transaction: Transaction, type: AbstractType<YEvent<any>>, parentSub: string | null) => {
+export const addChangedTypeToTransaction = (transaction: Transaction, type: AbstractType_<YEvent<any>>, parentSub: string | null) => {
     const item = type._item
     if (item === null || (item.id.clock < (transaction.beforeState.get(item.id.client) || 0) && !item.deleted)) {
         map.setIfUndefined(transaction.changed, type, set.create).add(parentSub)
@@ -135,17 +135,17 @@ export const addChangedTypeToTransaction = (transaction: Transaction, type: Abst
 }
 
 /**
- * @param {Array<AbstractStruct>} structs
+ * @param {Array<__AbstractStruct>} structs
  * @param {number} pos
  */
-const tryToMergeWithLeft = (structs: Array<AbstractStruct>, pos: number) => {
+const tryToMergeWithLeft = (structs: Array<__AbstractStruct>, pos: number) => {
     const left = structs[pos - 1]
     const right = structs[pos]
     if (left.deleted === right.deleted && left.constructor === right.constructor) {
         if (left.mergeWith(right)) {
             structs.splice(pos, 1)
-            if (right instanceof Item && right.parentSub !== null && (right.parent as AbstractType<any>)._map.get(right.parentSub) === right) {
-                (right.parent as AbstractType<any>)._map.set(right.parentSub, left as Item)
+            if (right instanceof Item && right.parentSub !== null && (right.parent as AbstractType_<any>)._map.get(right.parentSub) === right) {
+                (right.parent as AbstractType_<any>)._map.set(right.parentSub, left as Item)
             }
         }
     }

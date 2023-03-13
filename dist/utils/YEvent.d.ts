@@ -1,8 +1,8 @@
-import { Item, AbstractType, Transaction, AbstractStruct } from '../internals';
+import { Item, AbstractType_, Transaction, __AbstractStruct } from '../internals';
 /** YEvent describes the changes on a YType. */
-export declare class YEvent<T extends AbstractType<any>> {
+export declare class YEvent<T extends AbstractType_<any>> {
     target: T;
-    currentTarget: AbstractType<any>;
+    currentTarget: AbstractType_<any>;
     transaction: Transaction;
     _changes: object | null;
     _keys: null | Map<string, {
@@ -11,7 +11,7 @@ export declare class YEvent<T extends AbstractType<any>> {
         newValue: any;
     }>;
     _delta: null | Array<{
-        insert?: string | Array<any> | object | AbstractType<any>;
+        insert?: string | Array<any> | object | AbstractType_<any>;
         retain?: number;
         delete?: number;
         attributes?: {
@@ -42,20 +42,20 @@ export declare class YEvent<T extends AbstractType<any>> {
      *
      * In contrast to change.deleted, this method also returns true if the struct was added and then deleted.
      *
-     * @param {AbstractStruct} struct
+     * @param {__AbstractStruct} struct
      * @return {boolean}
      */
-    deletes(struct: AbstractStruct): boolean;
+    deletes(struct: __AbstractStruct): boolean;
     get keys(): Map<string, {
         action: 'add' | 'update' | 'delete';
         oldValue: any;
         newValue: any;
     }>;
     /**
-     * @type {Array<{insert?: string | Array<any> | object | AbstractType<any>, retain?: number, delete?: number, attributes?: Object<string, any>}>}
+     * @type {Array<{insert?: string | Array<any> | object | AbstractType_<any>, retain?: number, delete?: number, attributes?: Object<string, any>}>}
      */
     get delta(): Array<{
-        insert?: string | Array<any> | object | AbstractType<any>;
+        insert?: string | Array<any> | object | AbstractType_<any>;
         retain?: number;
         delete?: number;
         attributes?: {
@@ -67,7 +67,7 @@ export declare class YEvent<T extends AbstractType<any>> {
      *
      * In contrast to change.deleted, this method also returns true if the struct was added and then deleted.
      */
-    adds(struct: AbstractStruct): boolean;
+    adds(struct: __AbstractStruct): boolean;
     get changes(): {
         added: Set<Item>;
         deleted: Set<Item>;

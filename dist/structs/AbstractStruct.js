@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AbstractStruct = void 0;
+exports.__AbstractStruct = void 0;
 const error = require("lib0/error");
-class AbstractStruct {
+class __AbstractStruct {
     constructor(id, length) {
         this.id = id;
         this.length = length;
@@ -14,7 +14,7 @@ class AbstractStruct {
      * Merge this struct with the item to the right.
      * This method is already assuming that `this.id.clock + this.length === this.id.clock`.
      * Also this method does *not* remove right from StructStore!
-     * @param {AbstractStruct} right
+     * @param {__AbstractStruct} right
      * @return {boolean} wether this merged with right
      */
     mergeWith(right) {
@@ -36,4 +36,4 @@ class AbstractStruct {
         throw error.methodUnimplemented();
     }
 }
-exports.AbstractStruct = AbstractStruct;
+exports.__AbstractStruct = __AbstractStruct;

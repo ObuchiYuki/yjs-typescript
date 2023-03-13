@@ -49,7 +49,7 @@ class YXmlElement extends internals_1.YXmlFragment {
             el.setAttribute(key, attrs[key]);
         }
         el.insert(0, this.toArray().map((item) => {
-            return (item instanceof internals_1.AbstractType ? item.clone() : item);
+            return (item instanceof internals_1.AbstractType_ ? item.clone() : item);
         }));
         return el;
     }

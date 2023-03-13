@@ -7,16 +7,16 @@ import {
     readYXmlFragment,
     readYXmlHook,
     readYXmlText,
-    UpdateEncoderAny, UpdateDecoderAny,
+    UpdateEncoderAny_, UpdateDecoderAny_,
     
-    StructStore, Transaction, Item, AbstractType,
+    StructStore, Transaction, Item, AbstractType_,
 
-    AbstractContent_, AbstractContentDecoder_
+    Content_, ContentDecoder_
 } from '../internals'
 
 import * as error from 'lib0/error'
 
-export const typeRefs: ( (decoder: UpdateDecoderAny) => AbstractType<any> )[] = [
+export const typeRefs: ((decoder: UpdateDecoderAny_) => AbstractType_<any>)[] = [
     readYArray,
     readYMap,
     readYText,
@@ -34,8 +34,8 @@ export const YXmlFragmentRefID = 4
 export const YXmlHookRefID = 5
 export const YXmlTextRefID = 6
 
-export class ContentType implements AbstractContent_ {
-    constructor(public type: AbstractType<any>) {}
+export class ContentType implements Content_ {
+    constructor(public type: AbstractType_<any>) {}
 
     getLength(): number { return 1 }
 
@@ -94,13 +94,13 @@ export class ContentType implements AbstractContent_ {
         this.type._map = new Map()
     }
 
-    write (encoder: UpdateEncoderAny, offset: number) {
+    write (encoder: UpdateEncoderAny_, offset: number) {
         this.type._write(encoder)
     }
 
     getRef(): number { return 7 }
 }
 
-export const readContentType: AbstractContentDecoder_ = decoder => {
+export const readContentType: ContentDecoder_ = decoder => {
     return new ContentType(typeRefs[decoder.readTypeRef()](decoder))
 }

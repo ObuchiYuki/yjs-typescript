@@ -5,7 +5,7 @@ import {
 
 import * as error from 'lib0/error'
 
-export class AbstractStruct {
+export class __AbstractStruct {
     
     constructor(
         public id: ID,
@@ -20,10 +20,10 @@ export class AbstractStruct {
      * Merge this struct with the item to the right.
      * This method is already assuming that `this.id.clock + this.length === this.id.clock`.
      * Also this method does *not* remove right from StructStore!
-     * @param {AbstractStruct} right
+     * @param {__AbstractStruct} right
      * @return {boolean} wether this merged with right
      */
-    mergeWith(right: AbstractStruct): boolean {
+    mergeWith(right: __AbstractStruct): boolean {
         return false
     }
 

@@ -1,31 +1,17 @@
+import { Struct_ } from "./Struct_"
 
 import {
-    GC,
-    getState,
-    AbstractStruct,
-    replaceStruct,
-    addStruct,
-    addToDeleteSet,
+    GC, getState,
+    replaceStruct, addStruct, addToDeleteSet,
     findRootTypeKey,
-    compareIDs,
-    getItem,
-    getItemCleanEnd,
-    getItemCleanStart,
-    readContentDeleted,
-    readContentBinary,
-    readContentJSON,
-    readContentAny,
-    readContentString,
-    readContentEmbed,
-    readContentDoc,
-    createID,
-    readContentFormat,
-    readContentType,
+    compareIDs, createID,
+    getItem, getItemCleanEnd, getItemCleanStart,
+    readContentDeleted, readContentBinary, readContentJSON, readContentAny, readContentString, readContentEmbed, readContentDoc, readContentFormat, readContentType,
     addChangedTypeToTransaction,
     isDeleted,
-    DeleteSet, ContentType, ContentDeleted, StructStore, ID, AbstractType, Transaction,
+    DeleteSet, ContentType, ContentDeleted, StructStore, ID, AbstractType_, Transaction,
 
-    UpdateDecoderAny, UpdateEncoderAny
+    UpdateDecoderAny_, UpdateEncoderAny_, __AbstractStruct, ContentDecoder_, Content_,
 } from '../internals'
 
 import * as error from 'lib0/error'
@@ -34,11 +20,9 @@ import * as binary from 'lib0/binary'
 export const followRedone = (store: StructStore, id: ID): { item: Item, diff: number } => {
     let nextID: ID|null = id
     let diff = 0
-    let item: Item | null
+    let item: Item | null = null
     do {
-        if (diff > 0) {
-            nextID = createID(nextID.client, nextID.clock + diff)
-        }
+        if (diff > 0) { nextID = createID(nextID.client, nextID.clock + diff) }
         item = getItem(store, nextID)
         diff = nextID.clock - item.id.clock
         nextID = item.redone
@@ -56,7 +40,7 @@ export const followRedone = (store: StructStore, id: ID): { item: Item, diff: nu
 export const keepItem = (item: Item|null, keep: boolean) => {
     while (item !== null && item.keep !== keep) {
         item.keep = keep
-        item = (item.parent as AbstractType<any>)._item
+        item = (item.parent as AbstractType_<any>)._item
     }
 }
 
@@ -95,7 +79,7 @@ export const splitItem = (transaction: Transaction, leftItem: Item, diff: number
     transaction._mergeStructs.push(rightItem)
     // update parent._map
     if (rightItem.parentSub !== null && rightItem.right === null) {
-        (rightItem.parent as AbstractType<any>)._map.set(rightItem.parentSub, rightItem)
+        (rightItem.parent as AbstractType_<any>)._map.set(rightItem.parentSub, rightItem)
     }
     leftItem.length = diff
     return rightItem
@@ -112,7 +96,7 @@ export const redoItem = (transaction: Transaction, item: Item, redoitems: Set<It
     if (redone !== null) {
         return getItemCleanStart(transaction, redone)
     }
-    let parentItem = (item.parent as AbstractType<any>)._item
+    let parentItem = (item.parent as AbstractType_<any>)._item
     /**
      * @type {Item|null}
      */
@@ -131,7 +115,7 @@ export const redoItem = (transaction: Transaction, item: Item, redoitems: Set<It
             parentItem = getItemCleanStart(transaction, parentItem.redone)
         }
     }
-    const parentType = parentItem === null ? (item.parent as AbstractType<any>) : (parentItem.content as ContentType).type
+    const parentType = parentItem === null ? (item.parent as AbstractType_<any>) : (parentItem.content as ContentType).type
 
     if (item.parentSub === null) {
         // Is an array item. Insert at the old position
@@ -142,10 +126,10 @@ export const redoItem = (transaction: Transaction, item: Item, redoitems: Set<It
 
             let leftTrace: Item|null = left
             // trace redone until parent matches
-            while (leftTrace !== null && (leftTrace.parent as AbstractType<any>)._item !== parentItem) {
+            while (leftTrace !== null && (leftTrace.parent as AbstractType_<any>)._item !== parentItem) {
                 leftTrace = leftTrace.redone === null ? null : getItemCleanStart(transaction, leftTrace.redone)
             }
-            if (leftTrace !== null && (leftTrace.parent as AbstractType<any>)._item === parentItem) {
+            if (leftTrace !== null && (leftTrace.parent as AbstractType_<any>)._item === parentItem) {
                 left = leftTrace
                 break
             }
@@ -155,10 +139,10 @@ export const redoItem = (transaction: Transaction, item: Item, redoitems: Set<It
 
             let rightTrace: Item|null = right
             // trace redone until parent matches
-            while (rightTrace !== null && (rightTrace.parent as AbstractType<any>)._item !== parentItem) {
+            while (rightTrace !== null && (rightTrace.parent as AbstractType_<any>)._item !== parentItem) {
                 rightTrace = rightTrace.redone === null ? null : getItemCleanStart(transaction, rightTrace.redone)
             }
-            if (rightTrace !== null && (rightTrace.parent as AbstractType<any>)._item === parentItem) {
+            if (rightTrace !== null && (rightTrace.parent as AbstractType_<any>)._item === parentItem) {
                 right = rightTrace
                 break
             }
@@ -191,7 +175,7 @@ export const redoItem = (transaction: Transaction, item: Item, redoitems: Set<It
     const nextId = createID(ownClientID, nextClock)
     const redoneItem = new Item(
         nextId,
-        left, left && left.lastId,
+        left, left && left.lastID,
         right, right && right.id,
         parentType,
         item.parentSub,
@@ -206,7 +190,7 @@ export const redoItem = (transaction: Transaction, item: Item, redoitems: Set<It
 /**
  * Abstract class that represents any content.
  */
-export class Item extends AbstractStruct {
+export class Item extends Struct_ {
     /** The item that was originally to the left of this item. */
     origin: ID|null
 
@@ -219,7 +203,7 @@ export class Item extends AbstractStruct {
     /** The item that was originally to the right of this item. */
     rightOrigin: ID | null
     
-    parent: AbstractType<any>|ID|null
+    parent: AbstractType_<any>|ID|null
     /**
      * If the parent refers to this item with some kind of key (e.g. YMap, the
      * key is specified here. The key is then used to refer to the list in which
@@ -231,7 +215,7 @@ export class Item extends AbstractStruct {
     /** If this type's effect is redone this type refers to the type that undid this operation. */
     redone: ID | null
     
-    content: AbstractContent
+    content: Content_
 
     /**
      * bit1: keep
@@ -247,9 +231,9 @@ export class Item extends AbstractStruct {
      * @param {ID | null} origin
      * @param {Item | null} right
      * @param {ID | null} rightOrigin
-     * @param {AbstractType<any>|ID|null} parent Is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.
+     * @param {AbstractType_<any>|ID|null} parent Is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.
      * @param {string | null} parentSub
-     * @param {AbstractContent} content
+     * @param {Content_} content
      */
     constructor(
         id: ID, 
@@ -257,9 +241,9 @@ export class Item extends AbstractStruct {
         origin: ID | null,
         right: Item | null, 
         rightOrigin: ID | null,
-        parent: AbstractType<any>|ID|null,
+        parent: AbstractType_<any>|ID|null,
         parentSub: string | null,
-        content: AbstractContent
+        content: Content_
     ) {
         super(id, content.getLength())
         this.origin = origin
@@ -277,7 +261,7 @@ export class Item extends AbstractStruct {
      * This is used to mark the item as an indexed fast-search marker
      */
     set marker(isMarked: boolean) {
-        if (((this.info & binary.BIT4) > 0) !== isMarked) { this.info ^= binary.BIT4 }
+        if (((this.info & binary.BIT4) > 0) !== isMarked) {  this.info ^= binary.BIT4  }
     }
 
     get marker () { return (this.info & binary.BIT4) > 0 }
@@ -294,9 +278,7 @@ export class Item extends AbstractStruct {
         return (this.info & binary.BIT3) > 0
     }
     set deleted(doDelete: boolean) {
-        if (this.deleted !== doDelete) {
-            this.info ^= binary.BIT3
-        }
+        if (this.deleted !== doDelete) { this.info ^= binary.BIT3 }
     }
 
     markDeleted() { this.info |= binary.BIT3 }
@@ -319,7 +301,7 @@ export class Item extends AbstractStruct {
 
         if (this.origin) {
             this.left = getItemCleanEnd(transaction, store, this.origin)
-            this.origin = this.left.lastId
+            this.origin = this.left.lastID
         }
         if (this.rightOrigin) {
             this.right = getItemCleanStart(transaction, this.rightOrigin)
@@ -353,7 +335,7 @@ export class Item extends AbstractStruct {
         if (offset > 0) {
             this.id.clock += offset
             this.left = getItemCleanEnd(transaction, transaction.doc.store, createID(this.id.client, this.id.clock - 1))
-            this.origin = this.left.lastId
+            this.origin = this.left.lastID
             this.content = this.content.splice(offset)
             this.length -= offset
         }
@@ -367,15 +349,14 @@ export class Item extends AbstractStruct {
                 if (left !== null) {
                     o = left.right
                 } else if (this.parentSub !== null) {
-                    o = (this.parent as AbstractType<any>)._map.get(this.parentSub) || null
+                    o = (this.parent as AbstractType_<any>)._map.get(this.parentSub) || null
                     while (o !== null && o.left !== null) {
                         o = o.left
                     }
                 } else {
-                    o = (this.parent as AbstractType<any>)._start
+                    o = (this.parent as AbstractType_<any>)._start
                 }
-                // TODO: use something like DeleteSet here (a tree implementation would be best)
-                // @todo use global set definitions
+                
                 const conflictingItems: Set<Item> = new Set()
                 const itemsBeforeOrigin: Set<Item> = new Set()
                 // Let c in conflictingItems, b in itemsBeforeOrigin
@@ -394,7 +375,8 @@ export class Item extends AbstractStruct {
                             // Since this is to the left of o, we can break here
                             break
                         } // else, o might be integrated before an item that this conflicts with. If so, we will find it in the next iterations
-                    } else if (o.origin !== null && itemsBeforeOrigin.has(getItem(transaction.doc.store, o.origin))) { // use getItem instead of getItemCleanEnd because we don't want / need to split items.
+                    } else if (o.origin !== null && itemsBeforeOrigin.has(getItem(transaction.doc.store, o.origin))) { 
+                        // use getItem instead of getItemCleanEnd because we don't want / need to split items.
                         // case 2
                         if (!conflictingItems.has(getItem(transaction.doc.store, o.origin))) {
                             left = o
@@ -415,13 +397,13 @@ export class Item extends AbstractStruct {
             } else {
                 let r
                 if (this.parentSub !== null) {
-                    r = (this.parent as AbstractType<any>)._map.get(this.parentSub) || null
+                    r = (this.parent as AbstractType_<any>)._map.get(this.parentSub) || null
                     while (r !== null && r.left !== null) {
                         r = r.left
                     }
                 } else {
-                    r = (this.parent as AbstractType<any>)._start
-                    ; (this.parent as AbstractType<any>)._start = this
+                    r = (this.parent as AbstractType_<any>)._start
+                    ; (this.parent as AbstractType_<any>)._start = this
                 }
                 this.right = r
             }
@@ -429,7 +411,7 @@ export class Item extends AbstractStruct {
                 this.right.left = this
             } else if (this.parentSub !== null) {
                 // set as current parent value if right === null and this is parentSub
-                (this.parent as AbstractType<any>)._map.set(this.parentSub, this)
+                (this.parent as AbstractType_<any>)._map.set(this.parentSub, this)
                 if (this.left !== null) {
                     // this is the current attribute value of parent. delete right
                     this.left.delete(transaction)
@@ -437,13 +419,13 @@ export class Item extends AbstractStruct {
             }
             // adjust length of parent
             if (this.parentSub === null && this.countable && !this.deleted) {
-                (this.parent as AbstractType<any>)._length += this.length
+                (this.parent as AbstractType_<any>)._length += this.length
             }
             addStruct(transaction.doc.store, this)
             this.content.integrate(transaction, this)
             // add parent to transaction.changed
-            addChangedTypeToTransaction(transaction, (this.parent as AbstractType<any>), this.parentSub)
-            if (((this.parent as AbstractType<any>)._item !== null && (this.parent as AbstractType<any>)._item!.deleted) || (this.parentSub !== null && this.right !== null)) {
+            addChangedTypeToTransaction(transaction, (this.parent as AbstractType_<any>), this.parentSub)
+            if (((this.parent as AbstractType_<any>)._item !== null && (this.parent as AbstractType_<any>)._item!.deleted) || (this.parentSub !== null && this.right !== null)) {
                 // delete if parent is deleted or if this is not the current attribute value of parent
                 this.delete(transaction)
             }
@@ -454,14 +436,14 @@ export class Item extends AbstractStruct {
     }
 
     /** Returns the next non-deleted item */
-    get next () {
+    get next() {
         let n = this.right
         while (n !== null && n.deleted) { n = n.right }
         return n
     }
 
     /** Returns the previous non-deleted item */
-    get prev () {
+    get prev() {
         let n = this.left
         while (n !== null && n.deleted) { n = n.left }
         return n
@@ -470,7 +452,7 @@ export class Item extends AbstractStruct {
     /**
      * Computes the last content address of this Item.
      */
-    get lastId () {
+    get lastID() {
         // allocating ids is pretty costly because of the amount of ids created, so we try to reuse whenever possible
         return this.length === 1 ? this.id : createID(this.id.client, this.id.clock + this.length - 1)
     }
@@ -479,7 +461,7 @@ export class Item extends AbstractStruct {
     mergeWith(right: Item): boolean {
         if (
             this.constructor === right.constructor &&
-            compareIDs(right.origin, this.lastId) &&
+            compareIDs(right.origin, this.lastID) &&
             this.right === right &&
             compareIDs(this.rightOrigin, right.rightOrigin) &&
             this.id.client === right.id.client &&
@@ -490,7 +472,7 @@ export class Item extends AbstractStruct {
             this.content.constructor === right.content.constructor &&
             this.content.mergeWith(right.content)
         ) {
-            const searchMarker = (this.parent as AbstractType<any>)._searchMarker
+            const searchMarker = (this.parent as AbstractType_<any>)._searchMarker
             if (searchMarker) {
                 searchMarker.forEach(marker => {
                     if (marker.p === right) {
@@ -519,7 +501,7 @@ export class Item extends AbstractStruct {
     /** Mark this Item as deleted. */
     delete(transaction: Transaction) {
         if (!this.deleted) {
-            const parent = this.parent as AbstractType<any>
+            const parent = this.parent as AbstractType_<any>
             // adjust the length of parent
             if (this.countable && this.parentSub === null) {
                 parent._length -= this.length
@@ -549,7 +531,7 @@ export class Item extends AbstractStruct {
      *
      * This is called when this Item is sent to a remote peer.
      */
-    write(encoder: UpdateEncoderAny, offset: number) {
+    write(encoder: UpdateEncoderAny_, offset: number) {
         const origin = offset > 0 ? createID(this.id.client, this.id.clock + offset - 1) : this.origin
         const rightOrigin = this.rightOrigin
         const parentSub = this.parentSub
@@ -565,7 +547,7 @@ export class Item extends AbstractStruct {
             encoder.writeRightID(rightOrigin)
         }
         if (origin === null && rightOrigin === null) {
-            const parent = (this.parent as AbstractType<any>)
+            const parent = (this.parent as AbstractType_<any>)
             if (parent._item !== undefined) {
                 const parentItem = parent._item
                 if (parentItem === null) {
@@ -595,16 +577,12 @@ export class Item extends AbstractStruct {
     }
 }
 
-export const readItemContent = (decoder: UpdateDecoderAny, info: number): AbstractContent => {
-    return contentRefs[info & binary.BITS5](decoder)
+export const readItemContent = (decoder: UpdateDecoderAny_, info: number): Content_ => {
+    return contentDecoders_[info & binary.BITS5](decoder)
 }
 
-export type ContentRef = (decoder: UpdateDecoderAny) => AbstractContent
-
-/**
- * A lookup map for reading Item content.
- */
-export const contentRefs: ContentRef[] = [
+/** A lookup map for reading Item content. */
+export const contentDecoders_: ContentDecoder_[] = [
     () => { error.unexpectedCase() }, // GC is not ItemContent
     readContentDeleted, // 1
     readContentJSON, // 2
@@ -617,37 +595,3 @@ export const contentRefs: ContentRef[] = [
     readContentDoc, // 9
     () => { error.unexpectedCase() } // 10 - Skip is not ItemContent
 ]
-
-/**
- * Do not implement this class!
- */
-export class AbstractContent {
-    getLength(): number { throw error.methodUnimplemented() }
-
-    getContent(): any[] { throw error.methodUnimplemented() }
-
-    /**
-     * Should return false if this Item is some kind of meta information
-     * (e.g. format information).
-     *
-     * * Whether this Item should be addressable via `yarray.get(i)`
-     * * Whether this Item should be counted when computing yarray.length
-     */
-    isCountable(): boolean { throw error.methodUnimplemented() }
-
-    copy(): AbstractContent { throw error.methodUnimplemented() }
-
-    splice(offset: number): AbstractContent { throw error.methodUnimplemented() }
-
-    mergeWith(right: AbstractContent): boolean { throw error.methodUnimplemented() }
-
-    integrate(transaction: Transaction, item: Item) { throw error.methodUnimplemented() }
-
-    delete(transaction: Transaction) { throw error.methodUnimplemented() }
-
-    gc(store: StructStore) { throw error.methodUnimplemented() }
-
-    write(encoder: UpdateEncoderAny, offset: number) { throw error.methodUnimplemented() }
-
-    getRef(): number { throw error.methodUnimplemented() }
-}

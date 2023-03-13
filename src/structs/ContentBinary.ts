@@ -1,12 +1,12 @@
 import {
-    UpdateEncoderAny, UpdateDecoderAny, StructStore, Item, Transaction,
-    AbstractContent_, AbstractContentDecoder_
+    UpdateEncoderAny_, UpdateDecoderAny_, StructStore, Item, Transaction,
+    Content_, ContentDecoder_
 
 } from '../internals'
 
 import * as error from 'lib0/error'
 
-export class ContentBinary implements AbstractContent_ {
+export class ContentBinary implements Content_ {
     constructor (public content: Uint8Array) {}
 
     getLength(): number { return 1 }
@@ -27,11 +27,11 @@ export class ContentBinary implements AbstractContent_ {
     
     gc(store: StructStore) {}
     
-    write(encoder: UpdateEncoderAny, offset: number) { encoder.writeBuf(this.content) }
+    write(encoder: UpdateEncoderAny_, offset: number) { encoder.writeBuf(this.content) }
 
     getRef(): number { return 3 }
 }
 
-export const readContentBinary: AbstractContentDecoder_ = decoder => {
+export const readContentBinary: ContentDecoder_ = decoder => {
     return new ContentBinary(decoder.readBuf())
 }

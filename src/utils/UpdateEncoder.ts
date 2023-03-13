@@ -283,4 +283,4 @@ export class UpdateEncoderV2 extends DSEncoderV2 {
     }
 }
 
-export type UpdateEncoderAny = UpdateEncoderV1 | UpdateEncoderV2
+export type UpdateEncoderAny_ = UpdateEncoderV1 | UpdateEncoderV2

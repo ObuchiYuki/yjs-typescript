@@ -1,11 +1,8 @@
-/**
- * @module YXml
- */
+import { AbstractType_ } from "./AbstractType_"
 
 import {
     YXmlEvent,
     YXmlElement,
-    AbstractType,
     typeListMap,
     typeListForEach,
     typeListInsertGenerics,
@@ -56,12 +53,12 @@ type CSS_Selector = string
  * @implements {Iterable<YXmlElement|YXmlText|YXmlElement|YXmlHook>}
  */
 export class YXmlTreeWalker {
-    _filter: (type: AbstractType<any>) => boolean
+    _filter: (type: AbstractType_<any>) => boolean
     _root: YXmlFragment | YXmlElement
     _currentNode: Item
     _firstCall: boolean
 
-    constructor(root: YXmlFragment | YXmlElement, f: (type: AbstractType<any>) => boolean = () => true) {
+    constructor(root: YXmlFragment | YXmlElement, f: (type: AbstractType_<any>) => boolean = () => true) {
         this._filter = f
         this._root = root
         this._currentNode = root._start as Item
@@ -91,7 +88,7 @@ export class YXmlTreeWalker {
                         } else if (n.parent === this._root) {
                             n = null
                         } else {
-                            n = (n.parent as AbstractType<any>)._item
+                            n = (n.parent as AbstractType_<any>)._item
                         }
                     }
                 }
@@ -114,7 +111,7 @@ export class YXmlTreeWalker {
  * element - in this case the attributes and the nodeName are not shared.
  *
  */
-export class YXmlFragment extends AbstractType<YXmlEvent> {
+export class YXmlFragment extends AbstractType_<YXmlEvent> {
     _prelimContent: any[]|null
 
     constructor () {
@@ -147,7 +144,7 @@ export class YXmlFragment extends AbstractType<YXmlEvent> {
     clone(): YXmlFragment {
         const el = new YXmlFragment()
         // @ts-ignore
-        el.insert(0, this.toArray().map(item => item instanceof AbstractType ? item.clone() : item))
+        el.insert(0, this.toArray().map(item => item instanceof AbstractType_ ? item.clone() : item))
         return el
     }
 
@@ -165,14 +162,14 @@ export class YXmlFragment extends AbstractType<YXmlEvent> {
      *     nop(node)
      * }
      *
-     * @param {function(AbstractType<any>):boolean} filter Function that is called on each child element and
+     * @param {function(AbstractType_<any>):boolean} filter Function that is called on each child element and
      *                                                    returns a Boolean indicating whether the child
      *                                                    is to be included in the subtree.
      * @return {YXmlTreeWalker} A subtree and a position within it.
      *
      * @public
      */
-    createTreeWalker(filter: (type: AbstractType<any>) => boolean): YXmlTreeWalker {
+    createTreeWalker(filter: (type: AbstractType_<any>) => boolean): YXmlTreeWalker {
         return new YXmlTreeWalker(this, filter)
     }
 
@@ -306,7 +303,7 @@ export class YXmlFragment extends AbstractType<YXmlEvent> {
     insertAfter(ref: null | Item | YXmlElement | YXmlText, content: Array<YXmlElement | YXmlText>) {
         if (this.doc !== null) {
             transact(this.doc, transaction => {
-                const refItem = (ref && ref instanceof AbstractType) ? ref._item : ref
+                const refItem = (ref && ref instanceof AbstractType_) ? ref._item : ref
                 typeListInsertGenericsAfter(transaction, this, refItem, content)
             })
         } else {

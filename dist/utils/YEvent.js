@@ -40,7 +40,7 @@ class YEvent {
      *
      * In contrast to change.deleted, this method also returns true if the struct was added and then deleted.
      *
-     * @param {AbstractStruct} struct
+     * @param {__AbstractStruct} struct
      * @return {boolean}
      */
     deletes(struct) {
@@ -98,7 +98,7 @@ class YEvent {
         return this._keys;
     }
     /**
-     * @type {Array<{insert?: string | Array<any> | object | AbstractType<any>, retain?: number, delete?: number, attributes?: Object<string, any>}>}
+     * @type {Array<{insert?: string | Array<any> | object | AbstractType_<any>, retain?: number, delete?: number, attributes?: Object<string, any>}>}
      */
     get delta() {
         return this.changes.delta;
@@ -181,8 +181,8 @@ exports.YEvent = YEvent;
  *     console.log(path) // might look like => [2, 'key1']
  *     child === type.get(path[0]).get(path[1])
  *
- * @param {AbstractType<any>} parent
- * @param {AbstractType<any>} child target
+ * @param {AbstractType_<any>} parent
+ * @param {AbstractType_<any>} child target
  * @return {Array<string|number>} Path to the target
  *
  * @private

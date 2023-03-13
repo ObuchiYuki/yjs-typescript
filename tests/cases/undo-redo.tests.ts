@@ -1,4 +1,4 @@
-import { init } from './testHelper' // eslint-disable-line
+import { init } from '../testHelper' // eslint-disable-line
 
 import * as Y from '../../src/index'
 import * as t from 'lib0/testing'

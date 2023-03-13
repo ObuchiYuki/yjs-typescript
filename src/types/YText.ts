@@ -1,11 +1,7 @@
-
-/**
- * @module YText
- */
+import { AbstractType_ } from "./AbstractType_"
 
 import {
     YEvent,
-    AbstractType,
     getItemCleanStart,
     getState,
     isVisible,
@@ -105,7 +101,7 @@ const findNextPosition = (transaction: Transaction, pos: ItemTextListPosition, c
     return pos
 }
 
-const findPosition = (transaction: Transaction, parent: AbstractType<any>, index: number): ItemTextListPosition => {
+const findPosition = (transaction: Transaction, parent: AbstractType_<any>, index: number): ItemTextListPosition => {
     const currentAttributes = new Map()
     const marker = findMarker(parent, index)
     if (marker) {
@@ -118,7 +114,7 @@ const findPosition = (transaction: Transaction, parent: AbstractType<any>, index
 }
 
 /** Negate applied formats */
-const insertNegatedAttributes = (transaction: Transaction, parent: AbstractType<any>, currPos: ItemTextListPosition, negatedAttributes: Map<string, any>) => {
+const insertNegatedAttributes = (transaction: Transaction, parent: AbstractType_<any>, currPos: ItemTextListPosition, negatedAttributes: Map<string, any>) => {
     // check if we really need to remove attributes
     while (
         currPos.right !== null && (
@@ -141,7 +137,7 @@ const insertNegatedAttributes = (transaction: Transaction, parent: AbstractType<
     negatedAttributes.forEach((val, key) => {
         const left = currPos.left
         const right = currPos.right
-        const nextFormat = new Item(createID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastId, right, right && right.id, parent, null, new ContentFormat(key, val))
+        const nextFormat = new Item(createID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new ContentFormat(key, val))
         nextFormat.integrate(transaction, 0)
         currPos.right = nextFormat
         currPos.forward()
@@ -171,7 +167,7 @@ const minimizeAttributeChanges = (currPos: ItemTextListPosition, attributes: { [
     }
 }
 
-const insertAttributes = (transaction: Transaction, parent: AbstractType<any>, currPos: ItemTextListPosition, attributes: { [s: string]: any }): Map<string, any> => {
+const insertAttributes = (transaction: Transaction, parent: AbstractType_<any>, currPos: ItemTextListPosition, attributes: { [s: string]: any }): Map<string, any> => {
     const doc = transaction.doc
     const ownClientId = doc.clientID
     const negatedAttributes = new Map()
@@ -183,7 +179,7 @@ const insertAttributes = (transaction: Transaction, parent: AbstractType<any>, c
             // save negated attribute (set null if currentVal undefined)
             negatedAttributes.set(key, currentVal)
             const { left, right } = currPos
-            currPos.right = new Item(createID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastId, right, right && right.id, parent, null, new ContentFormat(key, val))
+            currPos.right = new Item(createID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new ContentFormat(key, val))
             currPos.right.integrate(transaction, 0)
             currPos.forward()
         }
@@ -191,7 +187,7 @@ const insertAttributes = (transaction: Transaction, parent: AbstractType<any>, c
     return negatedAttributes
 }
 
-const insertText = (transaction: Transaction, parent: AbstractType<any>, currPos: ItemTextListPosition, text: string | object | AbstractType<any>, attributes: { [s: string]: any }) => {
+const insertText = (transaction: Transaction, parent: AbstractType_<any>, currPos: ItemTextListPosition, text: string | object | AbstractType_<any>, attributes: { [s: string]: any }) => {
     currPos.currentAttributes.forEach((_val, key) => {
         if (attributes[key] === undefined) {
             attributes[key] = null
@@ -202,12 +198,12 @@ const insertText = (transaction: Transaction, parent: AbstractType<any>, currPos
     minimizeAttributeChanges(currPos, attributes)
     const negatedAttributes = insertAttributes(transaction, parent, currPos, attributes)
     // insert content
-    const content = text.constructor === String ? new ContentString((text as string)) : (text instanceof AbstractType ? new ContentType(text) : new ContentEmbed(text as object))
+    const content = text.constructor === String ? new ContentString((text as string)) : (text instanceof AbstractType_ ? new ContentType(text) : new ContentEmbed(text as object))
     let { left, right, index } = currPos
     if (parent._searchMarker) {
         updateMarkerChanges(parent._searchMarker, currPos.index, content.getLength())
     }
-    right = new Item(createID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastId, right, right && right.id, parent, null, content)
+    right = new Item(createID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, content)
     right.integrate(transaction, 0)
     currPos.right = right
     currPos.index = index
@@ -215,7 +211,7 @@ const insertText = (transaction: Transaction, parent: AbstractType<any>, currPos
     insertNegatedAttributes(transaction, parent, currPos, negatedAttributes)
 }
 
-const formatText = (transaction: Transaction, parent: AbstractType<any>, currPos: ItemTextListPosition, length: number, attributes: { [s: string]: any }) => {
+const formatText = (transaction: Transaction, parent: AbstractType_<any>, currPos: ItemTextListPosition, length: number, attributes: { [s: string]: any }) => {
     const doc = transaction.doc
     const ownClientId = doc.clientID
     minimizeAttributeChanges(currPos, attributes)
@@ -273,7 +269,7 @@ const formatText = (transaction: Transaction, parent: AbstractType<any>, currPos
         for (; length > 0; length--) {
             newlines += '\n'
         }
-        currPos.right = new Item(createID(ownClientId, getState(doc.store, ownClientId)), currPos.left, currPos.left && currPos.left.lastId, currPos.right, currPos.right && currPos.right.id, parent, null, new ContentString(newlines))
+        currPos.right = new Item(createID(ownClientId, getState(doc.store, ownClientId)), currPos.left, currPos.left && currPos.left.lastID, currPos.right, currPos.right && currPos.right.id, parent, null, new ContentString(newlines))
         currPos.right.integrate(transaction, 0)
         currPos.forward()
     }
@@ -420,7 +416,7 @@ const deleteText = (transaction: Transaction, currPos: ItemTextListPosition, len
     if (start) {
         cleanupFormattingGap(transaction, start, currPos.right, startAttrs, currPos.currentAttributes)
     }
-    const parent = ((currPos.left || currPos.right as Item).parent as AbstractType<any>)
+    const parent = ((currPos.left || currPos.right as Item).parent as AbstractType_<any>)
     if (parent._searchMarker) {
         updateMarkerChanges(parent._searchMarker, currPos.index, -startLength + length)
     }
@@ -691,7 +687,7 @@ export class YTextEvent extends YEvent<YText> {
  * block formats (format information on a paragraph), embeds (complex elements
  * like pictures and videos), and text formats (**bold**, *italic*).
  */
-export class YText extends AbstractType<YTextEvent> {
+export class YText extends AbstractType_<YTextEvent> {
     
     /** Array of pending operations on this type */
     _pending: (() => void)[] | null
@@ -969,13 +965,13 @@ export class YText extends AbstractType<YTextEvent> {
      * Inserts an embed at a index.
      *
      * @param {number} index The index to insert the embed at.
-     * @param {Object | AbstractType<any>} embed The Object that represents the embed.
+     * @param {Object | AbstractType_<any>} embed The Object that represents the embed.
      * @param {TextAttributes} attributes Attribute information to apply on the
      *                                                                        embed
      *
      * @public
      */
-    insertEmbed(index: number, embed: object | AbstractType<any>, attributes: TextAttributes = {}) {
+    insertEmbed(index: number, embed: object | AbstractType_<any>, attributes: TextAttributes = {}) {
         const y = this.doc
         if (y !== null) {
             transact(y, transaction => {

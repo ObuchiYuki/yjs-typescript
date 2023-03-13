@@ -10,7 +10,7 @@ import {
     getItemCleanStart,
     isDeleted,
     addToDeleteSet,
-    Transaction, Doc, Item, GC, DeleteSet, AbstractType, YEvent // eslint-disable-line
+    Transaction, Doc, Item, GC, DeleteSet, AbstractType_, YEvent // eslint-disable-line
 } from '../internals'
 
 import * as time from 'lib0/time'
@@ -140,7 +140,7 @@ export type UndoManagerOptions = {
  */
 export class UndoManager extends Observable<'stack-item-added'|'stack-item-popped'|'stack-cleared'|'stack-item-updated'> {
 
-    scope: AbstractType<any>[]
+    scope: AbstractType_<any>[]
     deleteFilter: (item: Item) => boolean
     trackedOrigins: Set<any>
     captureTransaction: (transaction: Transaction) => boolean    
@@ -155,10 +155,10 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
     afterTransactionHandler: (transaction: Transaction) => void
 
     /**
-     * @param {AbstractType<any>|Array<AbstractType<any>>} typeScope Accepts either a single type, or an array of types
+     * @param {AbstractType_<any>|Array<AbstractType_<any>>} typeScope Accepts either a single type, or an array of types
      * @param {UndoManagerOptions} options
      */
-    constructor (typeScope: AbstractType<any> | Array<AbstractType<any>>, {
+    constructor (typeScope: AbstractType_<any> | Array<AbstractType_<any>>, {
         captureTimeout = 500,
         captureTransaction = tr => true,
         deleteFilter = () => true,
@@ -249,7 +249,7 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
         })
     }
 
-    addToScope(ytypes: Array<AbstractType<any>> | AbstractType<any>) {
+    addToScope(ytypes: Array<AbstractType_<any>> | AbstractType_<any>) {
         ytypes = array.isArray(ytypes) ? ytypes : [ytypes]
         ytypes.forEach(ytype => {
             if (this.scope.every(yt => yt !== ytype)) {

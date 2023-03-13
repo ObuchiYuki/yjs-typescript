@@ -1,13 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AbstractContent = exports.contentRefs = exports.readItemContent = exports.Item = exports.redoItem = exports.splitItem = exports.keepItem = exports.followRedone = void 0;
+exports.contentDecoders_ = exports.readItemContent = exports.Item = exports.redoItem = exports.splitItem = exports.keepItem = exports.followRedone = void 0;
+const Struct_1 = require("./Struct_");
 const internals_1 = require("../internals");
 const error = require("lib0/error");
 const binary = require("lib0/binary");
 const followRedone = (store, id) => {
     let nextID = id;
     let diff = 0;
-    let item;
+    let item = null;
     do {
         if (diff > 0) {
             nextID = (0, internals_1.createID)(nextID.client, nextID.clock + diff);
@@ -151,7 +152,7 @@ const redoItem = (transaction, item, redoitems, itemsToDelete, ignoreRemoteMapCh
     }
     const nextClock = (0, internals_1.getState)(store, ownClientID);
     const nextId = (0, internals_1.createID)(ownClientID, nextClock);
-    const redoneItem = new Item(nextId, left, left && left.lastId, right, right && right.id, parentType, item.parentSub, item.content.copy());
+    const redoneItem = new Item(nextId, left, left && left.lastID, right, right && right.id, parentType, item.parentSub, item.content.copy());
     item.redone = nextId;
     (0, exports.keepItem)(redoneItem, true);
     redoneItem.integrate(transaction, 0);
@@ -161,16 +162,16 @@ exports.redoItem = redoItem;
 /**
  * Abstract class that represents any content.
  */
-class Item extends internals_1.AbstractStruct {
+class Item extends Struct_1.Struct_ {
     /**
      * @param {ID} id
      * @param {Item | null} left
      * @param {ID | null} origin
      * @param {Item | null} right
      * @param {ID | null} rightOrigin
-     * @param {AbstractType<any>|ID|null} parent Is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.
+     * @param {AbstractType_<any>|ID|null} parent Is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.
      * @param {string | null} parentSub
-     * @param {AbstractContent} content
+     * @param {Content_} content
      */
     constructor(id, left, origin, right, rightOrigin, parent, parentSub, content) {
         super(id, content.getLength());
@@ -225,7 +226,7 @@ class Item extends internals_1.AbstractStruct {
         // We have all missing ids, now find the items
         if (this.origin) {
             this.left = (0, internals_1.getItemCleanEnd)(transaction, store, this.origin);
-            this.origin = this.left.lastId;
+            this.origin = this.left.lastID;
         }
         if (this.rightOrigin) {
             this.right = (0, internals_1.getItemCleanStart)(transaction, this.rightOrigin);
@@ -260,7 +261,7 @@ class Item extends internals_1.AbstractStruct {
         if (offset > 0) {
             this.id.clock += offset;
             this.left = (0, internals_1.getItemCleanEnd)(transaction, transaction.doc.store, (0, internals_1.createID)(this.id.client, this.id.clock - 1));
-            this.origin = this.left.lastId;
+            this.origin = this.left.lastID;
             this.content = this.content.splice(offset);
             this.length -= offset;
         }
@@ -281,8 +282,6 @@ class Item extends internals_1.AbstractStruct {
                 else {
                     o = this.parent._start;
                 }
-                // TODO: use something like DeleteSet here (a tree implementation would be best)
-                // @todo use global set definitions
                 const conflictingItems = new Set();
                 const itemsBeforeOrigin = new Set();
                 // Let c in conflictingItems, b in itemsBeforeOrigin
@@ -303,7 +302,8 @@ class Item extends internals_1.AbstractStruct {
                             break;
                         } // else, o might be integrated before an item that this conflicts with. If so, we will find it in the next iterations
                     }
-                    else if (o.origin !== null && itemsBeforeOrigin.has((0, internals_1.getItem)(transaction.doc.store, o.origin))) { // use getItem instead of getItemCleanEnd because we don't want / need to split items.
+                    else if (o.origin !== null && itemsBeforeOrigin.has((0, internals_1.getItem)(transaction.doc.store, o.origin))) {
+                        // use getItem instead of getItemCleanEnd because we don't want / need to split items.
                         // case 2
                         if (!conflictingItems.has((0, internals_1.getItem)(transaction.doc.store, o.origin))) {
                             left = o;
@@ -385,14 +385,14 @@ class Item extends internals_1.AbstractStruct {
     /**
      * Computes the last content address of this Item.
      */
-    get lastId() {
+    get lastID() {
         // allocating ids is pretty costly because of the amount of ids created, so we try to reuse whenever possible
         return this.length === 1 ? this.id : (0, internals_1.createID)(this.id.client, this.id.clock + this.length - 1);
     }
     /** Try to merge two items */
     mergeWith(right) {
         if (this.constructor === right.constructor &&
-            (0, internals_1.compareIDs)(right.origin, this.lastId) &&
+            (0, internals_1.compareIDs)(right.origin, this.lastID) &&
             this.right === right &&
             (0, internals_1.compareIDs)(this.rightOrigin, right.rightOrigin) &&
             this.id.client === right.id.client &&
@@ -510,13 +510,11 @@ class Item extends internals_1.AbstractStruct {
 }
 exports.Item = Item;
 const readItemContent = (decoder, info) => {
-    return exports.contentRefs[info & binary.BITS5](decoder);
+    return exports.contentDecoders_[info & binary.BITS5](decoder);
 };
 exports.readItemContent = readItemContent;
-/**
- * A lookup map for reading Item content.
- */
-exports.contentRefs = [
+/** A lookup map for reading Item content. */
+exports.contentDecoders_ = [
     () => { error.unexpectedCase(); },
     internals_1.readContentDeleted,
     internals_1.readContentJSON,
@@ -529,27 +527,3 @@ exports.contentRefs = [
     internals_1.readContentDoc,
     () => { error.unexpectedCase(); } // 10 - Skip is not ItemContent
 ];
-/**
- * Do not implement this class!
- */
-class AbstractContent {
-    getLength() { throw error.methodUnimplemented(); }
-    getContent() { throw error.methodUnimplemented(); }
-    /**
-     * Should return false if this Item is some kind of meta information
-     * (e.g. format information).
-     *
-     * * Whether this Item should be addressable via `yarray.get(i)`
-     * * Whether this Item should be counted when computing yarray.length
-     */
-    isCountable() { throw error.methodUnimplemented(); }
-    copy() { throw error.methodUnimplemented(); }
-    splice(offset) { throw error.methodUnimplemented(); }
-    mergeWith(right) { throw error.methodUnimplemented(); }
-    integrate(transaction, item) { throw error.methodUnimplemented(); }
-    delete(transaction) { throw error.methodUnimplemented(); }
-    gc(store) { throw error.methodUnimplemented(); }
-    write(encoder, offset) { throw error.methodUnimplemented(); }
-    getRef() { throw error.methodUnimplemented(); }
-}
-exports.AbstractContent = AbstractContent;

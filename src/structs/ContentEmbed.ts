@@ -1,12 +1,12 @@
 
 import {
-    UpdateEncoderAny, StructStore, Item, Transaction,
-    AbstractContent_, AbstractContentDecoder_
+    UpdateEncoderAny_, StructStore, Item, Transaction,
+    Content_, ContentDecoder_
 } from '../internals'
 
 import * as error from 'lib0/error'
 
-export class ContentEmbed implements AbstractContent_ {
+export class ContentEmbed implements Content_ {
     constructor(public embed: object) {}
 
     getLength(): number { return 1 }
@@ -27,11 +27,11 @@ export class ContentEmbed implements AbstractContent_ {
     
     gc(store: StructStore) {}
 
-    write (encoder: UpdateEncoderAny, offset: number) { encoder.writeJSON(this.embed) }
+    write (encoder: UpdateEncoderAny_, offset: number) { encoder.writeJSON(this.embed) }
 
     getRef(): number { return 5 }
 }
 
-export const readContentEmbed: AbstractContentDecoder_ = decoder => {
+export const readContentEmbed: ContentDecoder_ = decoder => {
     return new ContentEmbed(decoder.readJSON())
 }

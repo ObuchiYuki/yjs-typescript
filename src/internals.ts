@@ -46,5 +46,6 @@ export * from './structs/Skip'
 
 export * from "./types/AbstractType_"
 
-export * from "./structs/AbstractContent_"
-export * from "./structs/AbstractStruct_"
+export * from "./structs/Content_"
+export * from "./structs/Struct_"
+

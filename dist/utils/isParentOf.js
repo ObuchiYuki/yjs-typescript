@@ -4,7 +4,7 @@ exports.isParentOf = void 0;
 /**
  * Check if `parent` is a parent of `child`.
  *
- * @param {AbstractType<any>} parent
+ * @param {AbstractType_<any>} parent
  * @param {Item|null} child
  * @return {Boolean} Whether `parent` is a parent of `child`.
  *

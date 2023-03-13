@@ -1,4 +1,4 @@
-import * as Y from './testHelper'
+import * as Y from '../testHelper'
 import * as t from 'lib0/testing'
 import * as prng from 'lib0/prng'
 import * as math from 'lib0/math'
@@ -1840,7 +1840,7 @@ export const testTypesAsEmbed = (tc: t.TestCase) => {
     text1.observe(event => {
         const d = event.delta
         t.assert(d.length === 1)
-        t.compare(d.map(x => (x.insert as unknown as Y.AbstractType<any>).toJSON()), [{ key: 'val' }])
+        t.compare(d.map(x => (x.insert as unknown as Y.AbstractType_<any>).toJSON()), [{ key: 'val' }])
         firedEvent = true
     })
     testConnector.flushAllMessages()
@@ -2505,7 +2505,7 @@ const checkResult = (result: any) => {
         /**
          * @param {any} d
          */
-        const typeToObject = (d: any) => d.insert instanceof Y.AbstractType ? d.insert.toJSON() : d
+        const typeToObject = (d: any) => d.insert instanceof Y.AbstractType_ ? d.insert.toJSON() : d
         const p1 = result.users[i].getText('text').toDelta().map(typeToObject)
         const p2 = result.users[i].getText('text').toDelta().map(typeToObject)
         t.compare(p1, p2)

@@ -1,9 +1,7 @@
 "use strict";
-/**
- * @module YXml
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readYXmlFragment = exports.YXmlFragment = exports.YXmlTreeWalker = void 0;
+const AbstractType_1 = require("./AbstractType_");
 const internals_1 = require("../internals");
 const error = require("lib0/error");
 const array = require("lib0/array");
@@ -79,7 +77,7 @@ exports.YXmlTreeWalker = YXmlTreeWalker;
  * element - in this case the attributes and the nodeName are not shared.
  *
  */
-class YXmlFragment extends internals_1.AbstractType {
+class YXmlFragment extends AbstractType_1.AbstractType_ {
     constructor() {
         super();
         this._prelimContent = [];
@@ -106,7 +104,7 @@ class YXmlFragment extends internals_1.AbstractType {
     clone() {
         const el = new YXmlFragment();
         // @ts-ignore
-        el.insert(0, this.toArray().map(item => item instanceof internals_1.AbstractType ? item.clone() : item));
+        el.insert(0, this.toArray().map(item => item instanceof AbstractType_1.AbstractType_ ? item.clone() : item));
         return el;
     }
     get length() {
@@ -122,7 +120,7 @@ class YXmlFragment extends internals_1.AbstractType {
      *     nop(node)
      * }
      *
-     * @param {function(AbstractType<any>):boolean} filter Function that is called on each child element and
+     * @param {function(AbstractType_<any>):boolean} filter Function that is called on each child element and
      *                                                    returns a Boolean indicating whether the child
      *                                                    is to be included in the subtree.
      * @return {YXmlTreeWalker} A subtree and a position within it.
@@ -257,7 +255,7 @@ class YXmlFragment extends internals_1.AbstractType {
     insertAfter(ref, content) {
         if (this.doc !== null) {
             (0, internals_1.transact)(this.doc, transaction => {
-                const refItem = (ref && ref instanceof internals_1.AbstractType) ? ref._item : ref;
+                const refItem = (ref && ref instanceof AbstractType_1.AbstractType_) ? ref._item : ref;
                 (0, internals_1.typeListInsertGenericsAfter)(transaction, this, refItem, content);
             });
         }

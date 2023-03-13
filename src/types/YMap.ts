@@ -17,8 +17,8 @@ import {
 } from '../internals'
 
 import {
-    AbstractType
-} from "./AbstractType"
+    AbstractType_
+} from "./AbstractType_"
 
 import * as iterator from 'lib0/iterator'
 
@@ -41,10 +41,10 @@ export class YMapEvent<T> extends YEvent<YMap<T>> {
  * @template MapType
  * A shared Map implementation.
  *
- * @extends AbstractType<YMapEvent<MapType>>
+ * @extends AbstractType_<YMapEvent<MapType>>
  * @implements {Iterable<MapType>}
  */
-export class YMap<MapType> extends AbstractType<YMapEvent<MapType>> implements Iterable<MapType> {
+export class YMap<MapType> extends AbstractType_<YMapEvent<MapType>> implements Iterable<MapType> {
     _prelimContent: Map<string, any> | null
 
     /**
@@ -85,7 +85,7 @@ export class YMap<MapType> extends AbstractType<YMapEvent<MapType>> implements I
     clone(): YMap<MapType> {
         const map = new YMap<MapType>()
         this.forEach((value, key) => {
-            map.set(key, value instanceof AbstractType ? (value.clone() as typeof value) : value)
+            map.set(key, value instanceof AbstractType_ ? (value.clone() as typeof value) : value)
         })
         return map
     }
@@ -106,7 +106,7 @@ export class YMap<MapType> extends AbstractType<YMapEvent<MapType>> implements I
         this._map.forEach((item, key) => {
             if (!item.deleted) {
                 const v = item.content.getContent()[item.length - 1]
-                map[key] = v instanceof AbstractType ? v.toJSON() : v
+                map[key] = v instanceof AbstractType_ ? v.toJSON() : v
             }
         })
         return map
