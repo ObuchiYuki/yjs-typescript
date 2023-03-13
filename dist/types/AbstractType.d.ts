@@ -1,27 +1,6 @@
 import { Snapshot, Transaction, Item, // eslint-disable-line
 AbstractType_ } from '../internals';
-export declare class ArraySearchMarker {
-    p: Item;
-    index: number;
-    timestamp: number;
-    constructor(p: Item, index: number);
-}
-/**
- * Search marker help us to find positions in the associative array faster.
- *
- * They speed up the process of finding a position without much bookkeeping.
- *
- * A maximum of `maxSearchMarker` objects are created.
- *
- * This function always returns a refreshed marker (updated timestamp)
- */
-export declare const findMarker: (yarray: AbstractType_<any>, index: number) => ArraySearchMarker | null;
-/**
- * Update markers when a change happened.
- *
- * This should be called before doing a deletion!
- */
-export declare const updateMarkerChanges: (searchMarker: ArraySearchMarker[], index: number, len: number) => void;
+export * from "./ArraySearchMarker";
 /**
  * Accumulate all (list) children of a type and return them as an Array.
  */
@@ -31,9 +10,6 @@ export declare const getTypeChildren: (t: AbstractType_<any>) => Item[];
  * parents (for `.observeDeep` handlers).
  */
 export declare const callTypeObservers: <EventType>(type: AbstractType_<EventType>, transaction: Transaction, event: EventType) => void;
-/**
- * Abstract Yjs Type class
- */
 export declare const typeListSlice: (type: AbstractType_<any>, start: number, end: number) => any[];
 export declare const typeListToArray: (type: AbstractType_<any>) => any[];
 export declare const typeListToArraySnapshot: (type: AbstractType_<any>, snapshot: Snapshot) => any[];

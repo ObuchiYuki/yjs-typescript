@@ -1,147 +1,26 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createMapIterator = exports.typeMapGetSnapshot = exports.typeMapHas = exports.typeMapGetAll = exports.typeMapGet = exports.typeMapSet = exports.typeMapDelete = exports.typeListDelete = exports.typeListPushGenerics = exports.typeListInsertGenerics = exports.typeListInsertGenericsAfter = exports.typeListGet = exports.typeListForEachSnapshot = exports.typeListCreateIterator = exports.typeListMap = exports.typeListForEach = exports.typeListToArraySnapshot = exports.typeListToArray = exports.typeListSlice = exports.callTypeObservers = exports.getTypeChildren = exports.updateMarkerChanges = exports.findMarker = exports.ArraySearchMarker = void 0;
+exports.createMapIterator = exports.typeMapGetSnapshot = exports.typeMapHas = exports.typeMapGetAll = exports.typeMapGet = exports.typeMapSet = exports.typeMapDelete = exports.typeListDelete = exports.typeListPushGenerics = exports.typeListInsertGenerics = exports.typeListInsertGenericsAfter = exports.typeListGet = exports.typeListForEachSnapshot = exports.typeListCreateIterator = exports.typeListMap = exports.typeListForEach = exports.typeListToArraySnapshot = exports.typeListToArray = exports.typeListSlice = exports.callTypeObservers = exports.getTypeChildren = void 0;
 const internals_1 = require("../internals");
 const map = require("lib0/map");
 const iterator = require("lib0/iterator");
 const error = require("lib0/error");
-const math = require("lib0/math");
-const maxSearchMarker = 80;
-/**
- * A unique timestamp that identifies each marker.
- *
- * Time is relative,.. this is more like an ever-increasing clock.
- */
-let globalSearchMarkerTimestamp = 0;
-class ArraySearchMarker {
-    constructor(p, index) {
-        this.p = p;
-        this.index = index;
-        p.marker = true;
-        this.timestamp = globalSearchMarkerTimestamp++;
-    }
-}
-exports.ArraySearchMarker = ArraySearchMarker;
-const refreshMarkerTimestamp = (marker) => {
-    marker.timestamp = globalSearchMarkerTimestamp++;
-};
-/**
- * This is rather complex so this function is the only thing that should overwrite a marker
- */
-const overwriteMarker = (marker, p, index) => {
-    marker.p.marker = false;
-    marker.p = p;
-    p.marker = true;
-    marker.index = index;
-    marker.timestamp = globalSearchMarkerTimestamp++;
-};
-const markPosition = (searchMarker, p, index) => {
-    if (searchMarker.length >= maxSearchMarker) {
-        // override oldest marker (we don't want to create more objects)
-        const marker = searchMarker.reduce((a, b) => a.timestamp < b.timestamp ? a : b);
-        overwriteMarker(marker, p, index);
-        return marker;
-    }
-    else {
-        // create new marker
-        const pm = new ArraySearchMarker(p, index);
-        searchMarker.push(pm);
-        return pm;
-    }
-};
-/**
- * Search marker help us to find positions in the associative array faster.
- *
- * They speed up the process of finding a position without much bookkeeping.
- *
- * A maximum of `maxSearchMarker` objects are created.
- *
- * This function always returns a refreshed marker (updated timestamp)
- */
-const findMarker = (yarray, index) => {
-    if (yarray._start === null || index === 0 || yarray._searchMarker === null) {
-        return null;
-    }
-    const marker = yarray._searchMarker.length === 0 ? null : yarray._searchMarker.reduce((a, b) => math.abs(index - a.index) < math.abs(index - b.index) ? a : b);
-    let p = yarray._start;
-    let pindex = 0;
-    if (marker !== null) {
-        p = marker.p;
-        pindex = marker.index;
-        refreshMarkerTimestamp(marker); // we used it, we might need to use it again
-    }
-    // iterate to right if possible
-    while (p.right !== null && pindex < index) {
-        if (!p.deleted && p.countable) {
-            if (index < pindex + p.length) {
-                break;
-            }
-            pindex += p.length;
-        }
-        p = p.right;
-    }
-    // iterate to left if necessary (might be that pindex > index)
-    while (p.left !== null && pindex > index) {
-        p = p.left;
-        if (!p.deleted && p.countable) {
-            pindex -= p.length;
-        }
-    }
-    // we want to make sure that p can't be merged with left, because that would screw up everything
-    // in that cas just return what we have (it is most likely the best marker anyway)
-    // iterate to left until p can't be merged with left
-    while (p.left !== null && p.left.id.client === p.id.client && p.left.id.clock + p.left.length === p.id.clock) {
-        p = p.left;
-        if (!p.deleted && p.countable) {
-            pindex -= p.length;
-        }
-    }
-    if (marker !== null && math.abs(marker.index - pindex) < p.parent.length / maxSearchMarker) {
-        // adjust existing marker
-        overwriteMarker(marker, p, pindex);
-        return marker;
-    }
-    else {
-        // create new marker
-        return markPosition(yarray._searchMarker, p, pindex);
-    }
-};
-exports.findMarker = findMarker;
-/**
- * Update markers when a change happened.
- *
- * This should be called before doing a deletion!
- */
-const updateMarkerChanges = (searchMarker, index, len) => {
-    for (let i = searchMarker.length - 1; i >= 0; i--) {
-        const m = searchMarker[i];
-        if (len > 0) {
-            let p = m.p;
-            p.marker = false;
-            // Ideally we just want to do a simple position comparison, but this will only work if
-            // search markers don't point to deleted items for formats.
-            // Iterate marker to prev undeleted countable position so we know what to do when updating a position
-            while (p && (p.deleted || !p.countable)) {
-                p = p.left;
-                if (p && !p.deleted && p.countable) {
-                    // adjust position. the loop should break now
-                    m.index -= p.length;
-                }
-            }
-            if (p === null || p.marker === true) {
-                // remove search marker if updated position is null or if position is already marked
-                searchMarker.splice(i, 1);
-                continue;
-            }
-            m.p = p;
-            p.marker = true;
-        }
-        if (index < m.index || (len > 0 && index === m.index)) { // a simple index <= m.index check would actually suffice
-            m.index = math.max(index, m.index + len);
-        }
-    }
-};
-exports.updateMarkerChanges = updateMarkerChanges;
+__exportStar(require("./ArraySearchMarker"), exports); // temporally
+const ArraySearchMarker_1 = require("./ArraySearchMarker"); // temporally here
 /**
  * Accumulate all (list) children of a type and return them as an Array.
  */
@@ -173,74 +52,6 @@ const callTypeObservers = (type, transaction, event) => {
     (0, internals_1.callEventHandlerListeners)(changedType._eH, event, transaction);
 };
 exports.callTypeObservers = callTypeObservers;
-/**
- * Abstract Yjs Type class
- */
-// export class AbstractType_<EventType> {
-//     doc: Doc|null = null
-//     _item: Item|null = null
-//     _map: Map<string, Item> = new Map()
-//     _start: Item|null = null
-//     _length: number = 0
-//     /** Event handlers */
-//     _eH: EventHandler<EventType,Transaction> = createEventHandler()
-//     /** Deep event handlers */
-//     _dEH: EventHandler<Array<YEvent<any>>,Transaction> = createEventHandler()
-//     _searchMarker: null | Array<ArraySearchMarker> = null
-//     constructor () {}
-//     get parent(): AbstractType_<any>|null {
-//         return this._item ? (this._item.parent as AbstractType_<any>) : null
-//     }
-//     /**
-//      * Integrate this type into the Yjs instance.
-//      *
-//      * * Save this struct in the os
-//      * * This type is sent to other client
-//      * * Observer functions are fired
-//      */
-//     _integrate(y: Doc, item: Item|null) {
-//         this.doc = y
-//         this._item = item
-//     }
-//     _copy(): AbstractType_<EventType> { throw error.methodUnimplemented() }
-//     clone(): AbstractType_<EventType> { throw error.methodUnimplemented() }
-//     _write (_encoder: UpdateEncoderV1 | UpdateEncoderV2) { }
-//     /** The first non-deleted item */
-//     get _first() {
-//         let n = this._start
-//         while (n !== null && n.deleted) { n = n.right }
-//         return n
-//     }
-//     /**
-//      * Creates YEvent and calls all type observers.
-//      * Must be implemented by each type.
-//      *
-//      * @param {Transaction} transaction
-//      * @param {Set<null|string>} _parentSubs Keys changed on this type. `null` if list was modified.
-//      */
-//     _callObserver(transaction: Transaction, _parentSubs: Set<null|string>) {
-//         if (!transaction.local && this._searchMarker) {
-//             this._searchMarker.length = 0
-//         }
-//     }
-//     /** Observe all events that are created on this type. */
-//     observe(f: (type: EventType, transaction: Transaction) => void) {
-//         addEventHandlerListener(this._eH, f)
-//     }
-//     /** Observe all events that are created by this type and its children. */
-//     observeDeep(f: (events: Array<YEvent<any>>, transaction: Transaction) => void) {
-//         addEventHandlerListener(this._dEH, f)
-//     }
-//     /** Unregister an observer function. */
-//     unobserve(f: (type: EventType, transaction: Transaction) => void) {
-//         removeEventHandlerListener(this._eH, f)
-//     }
-//     /** Unregister an observer function. */
-//     unobserveDeep(f: (events: Array<YEvent<any>>, transaction: Transaction) => void) {
-//         removeEventHandlerListener(this._dEH, f)
-//     }
-//     toJSON(): any {}
-// }
 const typeListSlice = (type, start, end) => {
     if (start < 0) {
         start = type._length + start;
@@ -393,18 +204,18 @@ const typeListForEachSnapshot = (type, f, snapshot) => {
 };
 exports.typeListForEachSnapshot = typeListForEachSnapshot;
 const typeListGet = (type, index) => {
-    const marker = (0, exports.findMarker)(type, index);
-    let n = type._start;
-    if (marker !== null) {
-        n = marker.p;
+    const marker = ArraySearchMarker_1.ArraySearchMarker.find(type, index);
+    let item = type._start;
+    if (marker != null) {
+        item = marker.item;
         index -= marker.index;
     }
-    for (; n !== null; n = n.right) {
-        if (!n.deleted && n.countable) {
-            if (index < n.length) {
-                return n.content.getContent()[index];
+    for (; item !== null; item = item.right) {
+        if (!item.deleted && item.countable) {
+            if (index < item.length) {
+                return item.content.getContent()[index];
             }
-            index -= n.length;
+            index -= item.length;
         }
     }
 };
@@ -470,15 +281,15 @@ const typeListInsertGenerics = (transaction, parent, index, content) => {
     }
     if (index === 0) {
         if (parent._searchMarker) {
-            (0, exports.updateMarkerChanges)(parent._searchMarker, index, content.length);
+            ArraySearchMarker_1.ArraySearchMarker.updateChanges(parent._searchMarker, index, content.length);
         }
         return (0, exports.typeListInsertGenericsAfter)(transaction, parent, null, content);
     }
     const startIndex = index;
-    const marker = (0, exports.findMarker)(parent, index);
+    const marker = ArraySearchMarker_1.ArraySearchMarker.find(parent, index);
     let n = parent._start;
-    if (marker !== null) {
-        n = marker.p;
+    if (marker != null) {
+        n = marker.item;
         index -= marker.index;
         // we need to iterate one to the left so that the algorithm works
         if (index === 0) {
@@ -500,7 +311,7 @@ const typeListInsertGenerics = (transaction, parent, index, content) => {
         }
     }
     if (parent._searchMarker) {
-        (0, exports.updateMarkerChanges)(parent._searchMarker, startIndex, content.length);
+        ArraySearchMarker_1.ArraySearchMarker.updateChanges(parent._searchMarker, startIndex, content.length);
     }
     return (0, exports.typeListInsertGenericsAfter)(transaction, parent, n, content);
 };
@@ -511,14 +322,15 @@ exports.typeListInsertGenerics = typeListInsertGenerics;
 */
 const typeListPushGenerics = (transaction, parent, content) => {
     // Use the marker with the highest index and iterate to the right.
-    const marker = (parent._searchMarker || []).reduce((maxMarker, currMarker) => currMarker.index > maxMarker.index ? currMarker : maxMarker, { index: 0, p: parent._start });
-    let n = marker.p;
-    if (n) {
-        while (n.right) {
-            n = n.right;
-        }
+    const marker = (parent._searchMarker || [])
+        .reduce((maxMarker, currMarker) => {
+        return currMarker.index > maxMarker.index ? currMarker : maxMarker;
+    }, new ArraySearchMarker_1.ArraySearchMarker(parent._start, 0));
+    let item = marker.item;
+    while (item === null || item === void 0 ? void 0 : item.right) {
+        item = item.right;
     }
-    return (0, exports.typeListInsertGenericsAfter)(transaction, parent, n, content);
+    return (0, exports.typeListInsertGenericsAfter)(transaction, parent, item, content);
 };
 exports.typeListPushGenerics = typeListPushGenerics;
 const typeListDelete = (transaction, parent, index, length) => {
@@ -527,37 +339,37 @@ const typeListDelete = (transaction, parent, index, length) => {
     }
     const startIndex = index;
     const startLength = length;
-    const marker = (0, exports.findMarker)(parent, index);
-    let n = parent._start;
-    if (marker !== null) {
-        n = marker.p;
+    const marker = ArraySearchMarker_1.ArraySearchMarker.find(parent, index);
+    let item = parent._start;
+    if (marker != null) {
+        item = marker.item;
         index -= marker.index;
     }
     // compute the first item to be deleted
-    for (; n !== null && index > 0; n = n.right) {
-        if (!n.deleted && n.countable) {
-            if (index < n.length) {
-                (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(n.id.client, n.id.clock + index));
+    for (; item !== null && index > 0; item = item.right) {
+        if (!item.deleted && item.countable) {
+            if (index < item.length) {
+                (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(item.id.client, item.id.clock + index));
             }
-            index -= n.length;
+            index -= item.length;
         }
     }
     // delete all items until done
-    while (length > 0 && n !== null) {
-        if (!n.deleted) {
-            if (length < n.length) {
-                (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(n.id.client, n.id.clock + length));
+    while (length > 0 && item !== null) {
+        if (!item.deleted) {
+            if (length < item.length) {
+                (0, internals_1.getItemCleanStart)(transaction, (0, internals_1.createID)(item.id.client, item.id.clock + length));
             }
-            n.delete(transaction);
-            length -= n.length;
+            item.delete(transaction);
+            length -= item.length;
         }
-        n = n.right;
+        item = item.right;
     }
     if (length > 0) {
         throw lengthExceeded;
     }
     if (parent._searchMarker) {
-        (0, exports.updateMarkerChanges)(parent._searchMarker, startIndex, -startLength + length /* in case we remove the above exception */);
+        ArraySearchMarker_1.ArraySearchMarker.updateChanges(parent._searchMarker, startIndex, -startLength + length /* in case we remove the above exception */);
     }
 };
 exports.typeListDelete = typeListDelete;

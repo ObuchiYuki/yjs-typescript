@@ -16,12 +16,10 @@ import {
     splitSnapshotAffectedStructs,
     iterateDeletedStructs,
     iterateStructs,
-    findMarker,
     typeMapDelete,
     typeMapSet,
     typeMapGet,
     typeMapGetAll,
-    updateMarkerChanges,
     ContentType,
     ArraySearchMarker, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, ID, Doc, Item, Snapshot, Transaction // eslint-disable-line
 } from '../internals'
@@ -103,9 +101,9 @@ const findNextPosition = (transaction: Transaction, pos: ItemTextListPosition, c
 
 const findPosition = (transaction: Transaction, parent: AbstractType_<any>, index: number): ItemTextListPosition => {
     const currentAttributes = new Map()
-    const marker = findMarker(parent, index)
-    if (marker) {
-        const pos = new ItemTextListPosition(marker.p.left, marker.p, marker.index, currentAttributes)
+    const marker = ArraySearchMarker.find(parent, index)
+    if (marker && marker.item) {
+        const pos = new ItemTextListPosition(marker.item.left, marker.item, marker.index, currentAttributes)
         return findNextPosition(transaction, pos, index - marker.index)
     } else {
         const pos = new ItemTextListPosition(null, parent._start, 0, currentAttributes)
@@ -201,7 +199,7 @@ const insertText = (transaction: Transaction, parent: AbstractType_<any>, currPo
     const content = text.constructor === String ? new ContentString((text as string)) : (text instanceof AbstractType_ ? new ContentType(text) : new ContentEmbed(text as object))
     let { left, right, index } = currPos
     if (parent._searchMarker) {
-        updateMarkerChanges(parent._searchMarker, currPos.index, content.getLength())
+        ArraySearchMarker.updateChanges(parent._searchMarker, currPos.index, content.getLength())
     }
     right = new Item(createID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, content)
     right.integrate(transaction, 0)
@@ -418,7 +416,7 @@ const deleteText = (transaction: Transaction, currPos: ItemTextListPosition, len
     }
     const parent = ((currPos.left || currPos.right as Item).parent as AbstractType_<any>)
     if (parent._searchMarker) {
-        updateMarkerChanges(parent._searchMarker, currPos.index, -startLength + length)
+        ArraySearchMarker.updateChanges(parent._searchMarker, currPos.index, -startLength + length)
     }
     return currPos
 }

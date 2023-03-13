@@ -405,9 +405,9 @@ class Item extends Struct_1.Struct_ {
             const searchMarker = this.parent._searchMarker;
             if (searchMarker) {
                 searchMarker.forEach(marker => {
-                    if (marker.p === right) {
+                    if (marker.item === right) {
                         // right is going to be "forgotten" so we need to update the marker
-                        marker.p = this;
+                        marker.item = this;
                         // adjust marker index
                         if (!this.deleted && this.countable) {
                             marker.index -= this.length;

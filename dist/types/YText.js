@@ -79,9 +79,9 @@ const findNextPosition = (transaction, pos, count) => {
 };
 const findPosition = (transaction, parent, index) => {
     const currentAttributes = new Map();
-    const marker = (0, internals_1.findMarker)(parent, index);
-    if (marker) {
-        const pos = new ItemTextListPosition(marker.p.left, marker.p, marker.index, currentAttributes);
+    const marker = internals_1.ArraySearchMarker.find(parent, index);
+    if (marker && marker.item) {
+        const pos = new ItemTextListPosition(marker.item.left, marker.item, marker.index, currentAttributes);
         return findNextPosition(transaction, pos, index - marker.index);
     }
     else {
@@ -167,7 +167,7 @@ const insertText = (transaction, parent, currPos, text, attributes) => {
     const content = text.constructor === String ? new internals_1.ContentString(text) : (text instanceof AbstractType_1.AbstractType_ ? new internals_1.ContentType(text) : new internals_1.ContentEmbed(text));
     let { left, right, index } = currPos;
     if (parent._searchMarker) {
-        (0, internals_1.updateMarkerChanges)(parent._searchMarker, currPos.index, content.getLength());
+        internals_1.ArraySearchMarker.updateChanges(parent._searchMarker, currPos.index, content.getLength());
     }
     right = new internals_1.Item((0, internals_1.createID)(ownClientId, (0, internals_1.getState)(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, content);
     right.integrate(transaction, 0);
@@ -379,7 +379,7 @@ const deleteText = (transaction, currPos, length) => {
     }
     const parent = (currPos.left || currPos.right).parent;
     if (parent._searchMarker) {
-        (0, internals_1.updateMarkerChanges)(parent._searchMarker, currPos.index, -startLength + length);
+        internals_1.ArraySearchMarker.updateChanges(parent._searchMarker, currPos.index, -startLength + length);
     }
     return currPos;
 };
