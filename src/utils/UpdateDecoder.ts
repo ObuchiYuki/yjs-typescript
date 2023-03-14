@@ -1,4 +1,3 @@
-import * as buffer from 'lib0/buffer'
 import * as decoding from 'lib0/decoding'
 import { ID } from '../internals'
 
@@ -66,7 +65,7 @@ export class UpdateDecoderV1 extends DSDecoderV1 {
     }
 
     readBuf(): Uint8Array {
-        return buffer.copyUint8Array(decoding.readVarUint8Array(this.restDecoder))
+        return decoding.readVarUint8Array(this.restDecoder)
     }
 
     /** Legacy implementation uses JSON parse. We use any-decoding in v2. */

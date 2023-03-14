@@ -8,10 +8,7 @@ import {
     UpdateEncoderAny_, ID, UpdateEncoderV1, UpdateEncoderV2, Struct_
 } from '../internals'
 
-import * as map from 'lib0-typescript/dist/Utility/map'
-import { callAll } from 'lib0/function'
-
-// import * as map from 'lib0-typescript/dist/Utility/map'
+import * as lib0 from 'lib0-typescript'
 
 /**
  * A transaction is created for every change on the Yjs model. It is possible
@@ -86,7 +83,7 @@ export class Transaction {
     }
 
     encodeUpdateMessage(encoder: UpdateEncoderAny_): boolean {
-        if (this.deleteSet.clients.size === 0 && !map.any(this.afterState, (clock, client) => this.beforeState.get(client) !== clock)) {
+        if (this.deleteSet.clients.size === 0 && !lib0.any(this.afterState, (clock, client) => this.beforeState.get(client) !== clock)) {
             return false
         }
         this.deleteSet.sortAndMerge()
@@ -107,7 +104,7 @@ export class Transaction {
     addChangedType(type: AbstractType_<YEvent<any>>, parentSub: string | null) {
         const item = type._item
         if (item === null || (item.id.clock < (this.beforeState.get(item.id.client) || 0) && !item.deleted)) {
-            map.setIfUndefined(this.changed, type, () => new Set()).add(parentSub)
+            lib0.setIfUndefined(this.changed, type, () => new Set()).add(parentSub)
         }
     }
 
@@ -126,10 +123,8 @@ export class Transaction {
                  * An array of event callbacks.
                  *
                  * Each callback is called even if the other ones throw errors.
-                 *
-                 * @type {Array<function():void>}
                  */
-                const fs = []
+                const fs: Array<(() => void)> = []
                 // observe events on changed types
                 transaction.changed.forEach((subs, itemtype) =>
                     fs.push(() => {
@@ -165,10 +160,7 @@ export class Transaction {
                     fs.push(() => doc.emit('afterTransaction', [transaction, doc]))
                 })
 
-
-                
-                callAll(fs, [])
-
+                lib0.callAll(fs, [])
 
             } finally {
                 // Replace deleted items with ItemDeleted / GC.

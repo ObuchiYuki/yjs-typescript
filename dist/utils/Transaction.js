@@ -2,9 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Transaction = void 0;
 const internals_1 = require("../internals");
-const map = require("lib0-typescript/dist/Utility/map");
-const function_1 = require("lib0/function");
-// import * as map from 'lib0-typescript/dist/Utility/map'
+const lib0 = require("lib0-typescript");
 /**
  * A transaction is created for every change on the Yjs model. It is possible
  * to bundle changes on the Yjs model in a single transaction to
@@ -58,7 +56,7 @@ class Transaction {
         this.local = local;
     }
     encodeUpdateMessage(encoder) {
-        if (this.deleteSet.clients.size === 0 && !map.any(this.afterState, (clock, client) => this.beforeState.get(client) !== clock)) {
+        if (this.deleteSet.clients.size === 0 && !lib0.any(this.afterState, (clock, client) => this.beforeState.get(client) !== clock)) {
             return false;
         }
         this.deleteSet.sortAndMerge();
@@ -77,7 +75,7 @@ class Transaction {
     addChangedType(type, parentSub) {
         const item = type._item;
         if (item === null || (item.id.clock < (this.beforeState.get(item.id.client) || 0) && !item.deleted)) {
-            map.setIfUndefined(this.changed, type, () => new Set()).add(parentSub);
+            lib0.setIfUndefined(this.changed, type, () => new Set()).add(parentSub);
         }
     }
     static cleanup(transactions, i) {
@@ -95,8 +93,6 @@ class Transaction {
                  * An array of event callbacks.
                  *
                  * Each callback is called even if the other ones throw errors.
-                 *
-                 * @type {Array<function():void>}
                  */
                 const fs = [];
                 // observe events on changed types
@@ -127,7 +123,7 @@ class Transaction {
                     }));
                     fs.push(() => doc.emit('afterTransaction', [transaction, doc]));
                 });
-                (0, function_1.callAll)(fs, []);
+                lib0.callAll(fs, []);
             }
             finally {
                 // Replace deleted items with ItemDeleted / GC.

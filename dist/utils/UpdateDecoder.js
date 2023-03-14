@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateDecoderV2 = exports.DSDecoderV2 = exports.UpdateDecoderV1 = exports.DSDecoderV1 = void 0;
-const buffer = require("lib0/buffer");
 const decoding = require("lib0/decoding");
 const internals_1 = require("../internals");
 class DSDecoderV1 {
@@ -54,7 +53,7 @@ class UpdateDecoderV1 extends DSDecoderV1 {
         return decoding.readAny(this.restDecoder);
     }
     readBuf() {
-        return buffer.copyUint8Array(decoding.readVarUint8Array(this.restDecoder));
+        return decoding.readVarUint8Array(this.restDecoder);
     }
     /** Legacy implementation uses JSON parse. We use any-decoding in v2. */
     readJSON() {

@@ -1,10 +1,8 @@
 
-import * as error from 'lib0/error'
+import { UnexpectedCaseError } from 'lib0-typescript'
 import * as encoding from 'lib0/encoding'
 
-import {
-    ID // eslint-disable-line
-} from '../internals'
+import { ID } from '../internals'
 
 export class DSEncoderV1 {
     restEncoder: encoding.Encoder
@@ -139,7 +137,7 @@ export class DSEncoderV2 {
      */
     writeDsLen(len: number) {
         if (len === 0) {
-            error.unexpectedCase()
+            throw new UnexpectedCaseError()
         }
         encoding.writeVarUint(this.restEncoder, len - 1)
         this.dsCurrVal += len
