@@ -89,7 +89,7 @@ class YXmlElement extends internals_1.YXmlFragment {
     removeAttribute(attributeName) {
         var _a;
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapDelete(transaction, attributeName);
             });
         }
@@ -108,7 +108,7 @@ class YXmlElement extends internals_1.YXmlFragment {
     setAttribute(attributeName, attributeValue) {
         var _a;
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapSet(transaction, attributeName, attributeValue);
             });
         }

@@ -1,6 +1,8 @@
 
 import {
-    UpdateEncoderAny_, ID, Transaction // eslint-disable-line
+    UpdateEncoderAny_, ID, Transaction, // eslint-disable-line
+    Item,
+    AbstractType_
 } from '../internals'
 
 export abstract class Struct_ {
@@ -24,4 +26,18 @@ export abstract class Struct_ {
     abstract write(encoder: UpdateEncoderAny_, offset: number, encodingRef: number): void
 
     abstract integrate(transaction: Transaction, offset: number): void
+
+    // try to
+    static tryMergeWithLeft(structs: Array<Struct_>, pos: number) {
+        const left = structs[pos - 1]
+        const right = structs[pos]
+        if (left.deleted === right.deleted && left.constructor === right.constructor) {
+            if (left.mergeWith(right)) {
+                structs.splice(pos, 1)
+                if (right instanceof Item && right.parentSub !== null && (right.parent as AbstractType_<any>)._map.get(right.parentSub) === right) {
+                    (right.parent as AbstractType_<any>)._map.set(right.parentSub, left as Item)
+                }
+            }
+        }
+    }
 }

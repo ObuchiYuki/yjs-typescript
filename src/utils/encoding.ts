@@ -16,7 +16,6 @@
  */
 
 import {
-    transact,
     readItemContent,
     UpdateDecoderV1,
     UpdateDecoderV2,
@@ -375,7 +374,7 @@ export const writeStructsFromTransaction = (encoder: UpdateEncoderV1 | UpdateEnc
  * @function
  */
 export const readUpdateV2 = (decoder: decoding.Decoder, ydoc: Doc, transactionOrigin: any, structDecoder: UpdateDecoderV1 | UpdateDecoderV2 = new UpdateDecoderV2(decoder)) =>
-    transact(ydoc, transaction => {
+    ydoc.transact(transaction => {
         // force that transaction.local is set to non-local
         transaction.local = false
         let retry = false

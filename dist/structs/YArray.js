@@ -80,7 +80,7 @@ class YArray extends AbstractType_1.AbstractType_ {
      */
     insert(index, content) {
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.listInsertGenerics(transaction, index, content);
             });
         }
@@ -97,7 +97,7 @@ class YArray extends AbstractType_1.AbstractType_ {
      */
     push(content) {
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.listPushGenerics(transaction, content);
             });
         }
@@ -121,7 +121,7 @@ class YArray extends AbstractType_1.AbstractType_ {
      */
     delete(index, length = 1) {
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.listDelete(transaction, index, length);
             });
         }

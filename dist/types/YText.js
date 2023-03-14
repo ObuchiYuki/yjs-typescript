@@ -316,8 +316,9 @@ const cleanupContextlessFormattingGap = (transaction, item) => {
  * @return {number} How many formatting attributes have been cleaned up.
  */
 const cleanupYTextFormatting = (type) => {
+    var _a;
     let res = 0;
-    (0, internals_1.transact)(type.doc, transaction => {
+    (_a = type.doc) === null || _a === void 0 ? void 0 : _a.transact(transaction => {
         let start = type._start;
         let end = type._start;
         let startAttributes = map.create();
@@ -402,10 +403,11 @@ class YTextEvent extends internals_1.YEvent {
      * A {@link https://quilljs.com/docs/delta/|Quill Delta}) that represents the changes on the document.
      */
     get delta() {
+        var _a;
         if (this._delta != null)
             return this._delta;
         const deltas = [];
-        (0, internals_1.transact)(this.target.doc, transaction => {
+        (_a = this.target.doc) === null || _a === void 0 ? void 0 : _a.transact(transaction => {
             const currentAttributes = new Map(); // saves all current attributes for insert
             const oldAttributes = new Map();
             let item = this.target._start;
@@ -650,7 +652,7 @@ class YText extends AbstractType_1.AbstractType_ {
                     }
                 });
             }
-            (0, internals_1.transact)(doc, (t) => {
+            doc.transact(t => {
                 if (foundFormattingItem) {
                     // If a formatting item was inserted, we simply clean the whole type.
                     // We need to compute currentAttributes for the current position anyway.
@@ -701,7 +703,7 @@ class YText extends AbstractType_1.AbstractType_ {
     applyDelta(delta, { sanitize = true } = {}) {
         var _a;
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 const currPos = new ItemTextListPosition(null, this._start, 0, new Map());
                 for (let i = 0; i < delta.length; i++) {
                     const op = delta[i];
@@ -758,7 +760,7 @@ class YText extends AbstractType_1.AbstractType_ {
         }
         // snapshots are merged again after the transaction, so we need to keep the
         // transalive until we are done
-        (0, internals_1.transact)(doc, transaction => {
+        doc.transact(transaction => {
             if (snapshot) {
                 snapshot.splitAffectedStructs(transaction);
             }
@@ -834,9 +836,8 @@ class YText extends AbstractType_1.AbstractType_ {
         if (text.length <= 0) {
             return;
         }
-        const y = this.doc;
-        if (y !== null) {
-            (0, internals_1.transact)(y, transaction => {
+        if (this.doc !== null) {
+            this.doc.transact(transaction => {
                 const pos = ItemTextListPosition.find(transaction, this, index);
                 if (!attributes) {
                     attributes = {};
@@ -861,9 +862,8 @@ class YText extends AbstractType_1.AbstractType_ {
      */
     insertEmbed(index, embed, attributes = {}) {
         var _a;
-        const y = this.doc;
-        if (y !== null) {
-            (0, internals_1.transact)(y, transaction => {
+        if (this.doc !== null) {
+            this.doc.transact(transaction => {
                 const pos = ItemTextListPosition.find(transaction, this, index);
                 insertText(transaction, this, pos, embed, attributes);
             });
@@ -885,9 +885,8 @@ class YText extends AbstractType_1.AbstractType_ {
         if (length === 0) {
             return;
         }
-        const y = this.doc;
-        if (y !== null) {
-            (0, internals_1.transact)(y, transaction => {
+        if (this.doc !== null) {
+            this.doc.transact(transaction => {
                 deleteText(transaction, ItemTextListPosition.find(transaction, this, index), length);
             });
         }
@@ -910,9 +909,8 @@ class YText extends AbstractType_1.AbstractType_ {
         if (length === 0) {
             return;
         }
-        const y = this.doc;
-        if (y !== null) {
-            (0, internals_1.transact)(y, transaction => {
+        if (this.doc !== null) {
+            this.doc.transact(transaction => {
                 const pos = ItemTextListPosition.find(transaction, this, index);
                 if (pos.right === null) {
                     return;
@@ -936,7 +934,7 @@ class YText extends AbstractType_1.AbstractType_ {
     removeAttribute(attributeName) {
         var _a;
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapDelete(transaction, attributeName);
             });
         }
@@ -957,7 +955,7 @@ class YText extends AbstractType_1.AbstractType_ {
     setAttribute(attributeName, attributeValue) {
         var _a;
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapSet(transaction, attributeName, attributeValue);
             });
         }

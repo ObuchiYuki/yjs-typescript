@@ -322,7 +322,7 @@ class Item extends Struct_1.Struct_ {
             transaction.doc.store.addStruct(this);
             this.content.integrate(transaction, this);
             // add parent to transaction.changed
-            (0, internals_1.addChangedTypeToTransaction)(transaction, this.parent, this.parentSub);
+            transaction.addChangedType(this.parent, this.parentSub);
             if ((this.parent._item !== null && this.parent._item.deleted) || (this.parentSub !== null && this.right !== null)) {
                 // delete if parent is deleted or if this is not the current attribute value of parent
                 this.delete(transaction);
@@ -404,7 +404,7 @@ class Item extends Struct_1.Struct_ {
             }
             this.markDeleted();
             transaction.deleteSet.add(this.id.client, this.id.clock, this.length);
-            (0, internals_1.addChangedTypeToTransaction)(transaction, parent, this.parentSub);
+            transaction.addChangedType(parent, this.parentSub);
             this.content.delete(transaction);
         }
     }

@@ -337,10 +337,10 @@ export const testUndoUntilChangePerformed = (tc: t.TestCase) => {
   const undoManager = new Y.UndoManager([yArray], { trackedOrigins: new Set([doc.clientID]) })
   const undoManager2 = new Y.UndoManager([doc2.get('array')], { trackedOrigins: new Set([doc2.clientID]) })
 
-  Y.transact(doc, () => yMap2.set('key', 'value modified'), doc.clientID)
+  doc.transact(() => yMap2.set('key', 'value modified'), doc.clientID)
   undoManager.stopCapturing()
-  Y.transact(doc, () => yMap.set('hello', 'world modified'), doc.clientID)
-  Y.transact(doc2, () => yArray2.delete(0), doc2.clientID)
+  doc.transact(() => yMap.set('hello', 'world modified'), doc.clientID)
+  doc2.transact(() => yArray2.delete(0), doc2.clientID)
   undoManager2.undo()
   undoManager.undo()
   t.compareStrings(yMap2.get('key')!, 'value')

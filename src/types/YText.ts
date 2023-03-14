@@ -3,7 +3,6 @@ import { AbstractType_ } from "./AbstractType_"
 import {
     YEvent,
     YTextRefID,
-    transact,
     ContentEmbed,
     GC,
     ContentFormat,
@@ -344,7 +343,7 @@ const cleanupContextlessFormattingGap = (transaction: Transaction, item: Item | 
  */
 export const cleanupYTextFormatting = (type: YText): number => {
     let res = 0
-    transact((type.doc as Doc), transaction => {
+    type.doc?.transact(transaction => {
         let start = type._start as Item
         let end = type._start
         let startAttributes = map.create()
@@ -473,7 +472,7 @@ export class YTextEvent extends YEvent<YText> {
 
         const deltas: YEventDelta[] = []
 
-        transact(this.target.doc as Doc, transaction => {
+        this.target.doc?.transact(transaction => {
             const currentAttributes = new Map<string, TextAttributeValue>() // saves all current attributes for insert
             const oldAttributes = new Map<string, TextAttributeValue>()
             let item = this.target._start
@@ -686,7 +685,8 @@ export class YText extends AbstractType_<YTextEvent> {
                     }
                 })
             }
-            transact(doc, (t) => {
+
+            doc.transact(t => {
                 if (foundFormattingItem) {
                     // If a formatting item was inserted, we simply clean the whole type.
                     // We need to compute currentAttributes for the current position anyway.
@@ -738,7 +738,7 @@ export class YText extends AbstractType_<YTextEvent> {
      */
     applyDelta(delta: any, { sanitize = true }: { sanitize?: boolean } = {}) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 const currPos = new ItemTextListPosition(null, this._start, 0, new Map())
                 for (let i = 0; i < delta.length; i++) {
                     const op = delta[i]
@@ -793,7 +793,7 @@ export class YText extends AbstractType_<YTextEvent> {
         }
         // snapshots are merged again after the transaction, so we need to keep the
         // transalive until we are done
-        transact(doc, transaction => {
+        doc.transact(transaction => {
             if (snapshot) {
                 snapshot.splitAffectedStructs(transaction)
             }
@@ -867,9 +867,8 @@ export class YText extends AbstractType_<YTextEvent> {
         if (text.length <= 0) {
             return
         }
-        const y = this.doc
-        if (y !== null) {
-            transact(y, transaction => {
+        if (this.doc !== null) {
+            this.doc.transact(transaction => {
                 const pos = ItemTextListPosition.find(transaction, this, index)
                 if (!attributes) {
                     attributes = {}
@@ -893,9 +892,8 @@ export class YText extends AbstractType_<YTextEvent> {
      * @public
      */
     insertEmbed(index: number, embed: object | AbstractType_<any>, attributes: TextAttributes = {}) {
-        const y = this.doc
-        if (y !== null) {
-            transact(y, transaction => {
+        if (this.doc !== null) {
+            this.doc.transact(transaction => {
                 const pos = ItemTextListPosition.find(transaction, this, index)
                 insertText(transaction, this, pos, embed, attributes)
             })
@@ -916,9 +914,8 @@ export class YText extends AbstractType_<YTextEvent> {
         if (length === 0) {
             return
         }
-        const y = this.doc
-        if (y !== null) {
-            transact(y, transaction => {
+        if (this.doc !== null) {
+            this.doc.transact(transaction => {
                 deleteText(transaction, ItemTextListPosition.find(transaction, this, index), length)
             })
         } else {
@@ -940,9 +937,8 @@ export class YText extends AbstractType_<YTextEvent> {
         if (length === 0) {
             return
         }
-        const y = this.doc
-        if (y !== null) {
-            transact(y, transaction => {
+        if (this.doc !== null) {
+            this.doc.transact(transaction => {
                 const pos = ItemTextListPosition.find(transaction, this, index)
                 if (pos.right === null) {
                     return
@@ -965,7 +961,7 @@ export class YText extends AbstractType_<YTextEvent> {
      */
     removeAttribute(attributeName: string) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapDelete(transaction, attributeName)
             })
         } else {
@@ -985,7 +981,7 @@ export class YText extends AbstractType_<YTextEvent> {
      */
     setAttribute(attributeName: string, attributeValue: any) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapSet(transaction, attributeName, attributeValue)
             })
         } else {

@@ -99,6 +99,44 @@ class DeleteSet {
             }
         });
     }
+    tryGCDeleteSet(store, gcFilter) {
+        for (const [client, deleteItems] of this.clients.entries()) {
+            const structs = store.clients.get(client);
+            for (let di = deleteItems.length - 1; di >= 0; di--) {
+                const deleteItem = deleteItems[di];
+                const endDeleteItemClock = deleteItem.clock + deleteItem.len;
+                for (let si = internals_1.StructStore.findIndexSS(structs, deleteItem.clock), struct = structs[si]; si < structs.length && struct.id.clock < endDeleteItemClock; struct = structs[++si]) {
+                    const struct = structs[si];
+                    if (deleteItem.clock + deleteItem.len <= struct.id.clock) {
+                        break;
+                    }
+                    if (struct instanceof internals_1.Item && struct.deleted && !struct.keep && gcFilter(struct)) {
+                        struct.gc(store, false);
+                    }
+                }
+            }
+        }
+    }
+    // try
+    tryMerge(store) {
+        // try to merge deleted / gc'd items
+        // merge from right to left for better efficiecy and so we don't miss any merge targets
+        this.clients.forEach((deleteItems, client) => {
+            const structs = store.clients.get(client);
+            for (let di = deleteItems.length - 1; di >= 0; di--) {
+                const deleteItem = deleteItems[di];
+                // start with merging the item next to the last deleted item
+                const mostRightIndexToCheck = math.min(structs.length - 1, 1 + internals_1.StructStore.findIndexSS(structs, deleteItem.clock + deleteItem.len - 1));
+                for (let si = mostRightIndexToCheck, struct = structs[si]; si > 0 && struct.id.clock >= deleteItem.clock; struct = structs[--si]) {
+                    internals_1.Struct_.tryMergeWithLeft(structs, si);
+                }
+            }
+        });
+    }
+    tryGC(store, gcFilter) {
+        this.tryGCDeleteSet(store, gcFilter);
+        this.tryMerge(store);
+    }
     static mergeAll(dss) {
         const merged = new DeleteSet();
         for (let dssI = 0; dssI < dss.length; dssI++) {

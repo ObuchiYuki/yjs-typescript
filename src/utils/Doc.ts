@@ -9,7 +9,6 @@ import {
     YText,
     YMap,
     YXmlFragment,
-    transact,
     ContentDoc, Item, Transaction, YEvent, // eslint-disable-line
     Contentable_,
     generateNewClientID
@@ -138,9 +137,9 @@ export class Doc extends Observable<string> {
     load() {
         const item = this._item
         if (item !== null && !this.shouldLoad) {
-            transact((item.parent as any).doc, transaction => {
+            (item.parent as AbstractType_<any>).doc?.transact(transaction => {
                 transaction.subdocsLoaded.add(this)
-            }, null, true)
+            }, null)
         }
         this.shouldLoad = true
     }
@@ -158,7 +157,9 @@ export class Doc extends Observable<string> {
      * @param {function(Transaction):void} f The function that should be executed as a transaction
      * @param {any} [origin] Origin of who started the transaction. Will be stored on transaction.origin
      */
-    transact(f: (arg0: Transaction) => void, origin: any = null) { transact(this, f, origin) }
+    transact(f: (transaction: Transaction) => void, origin: any = null, local: boolean = true) { 
+        Transaction.transact(this, f, origin, local)
+    }
 
     /**
      * Define a shared data type.
@@ -243,12 +244,12 @@ export class Doc extends Observable<string> {
             this._item = null
             const content = item.content as ContentDoc
             content.doc = new Doc({ guid: this.guid, ...content.opts, shouldLoad: false })
-            content.doc._item = item
-            transact((item as any).parent.doc, transaction => {
+            content.doc._item = item;
+            (item.parent as AbstractType_<any>).doc?.transact(transaction => {
                 const doc = content.doc
                 if (!item.deleted) { transaction.subdocsAdded.add(doc) }
                 transaction.subdocsRemoved.add(this)
-            }, null, true)
+            }, null)
         }
         this.emit('destroyed', [true])
         this.emit('destroy', [this])

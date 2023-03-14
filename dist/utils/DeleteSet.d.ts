@@ -20,6 +20,9 @@ export declare class DeleteSet {
     sortAndMerge(): void;
     add(client: number, clock: number, length: number): void;
     encode(encoder: DSEncoderV1 | DSEncoderV2): void;
+    tryGCDeleteSet(store: StructStore, gcFilter: (arg0: Item) => boolean): void;
+    tryMerge(store: StructStore): void;
+    tryGC(store: StructStore, gcFilter: (arg0: Item) => boolean): void;
     static mergeAll(dss: DeleteSet[]): DeleteSet;
     static decode(decoder: DSDecoderV1 | DSDecoderV2): DeleteSet;
     static createFromStructStore(ss: StructStore): DeleteSet;

@@ -355,7 +355,7 @@ exports.writeStructsFromTransaction = writeStructsFromTransaction;
  *
  * @function
  */
-const readUpdateV2 = (decoder, ydoc, transactionOrigin, structDecoder = new internals_1.UpdateDecoderV2(decoder)) => (0, internals_1.transact)(ydoc, transaction => {
+const readUpdateV2 = (decoder, ydoc, transactionOrigin, structDecoder = new internals_1.UpdateDecoderV2(decoder)) => ydoc.transact(transaction => {
     // force that transaction.local is set to non-local
     transaction.local = false;
     let retry = false;

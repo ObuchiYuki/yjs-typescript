@@ -47,6 +47,7 @@ export declare class UndoManager extends Observable<'stack-item-added' | 'stack-
     captureTransaction: (transaction: Transaction) => boolean;
     undoStack: StackItem[];
     redoStack: StackItem[];
+    /** Whether the client is currently undoing (calling UndoManager.undo) */
     undoing: boolean;
     redoing: boolean;
     doc: Doc;
@@ -54,11 +55,9 @@ export declare class UndoManager extends Observable<'stack-item-added' | 'stack-
     ignoreRemoteMapChanges: boolean;
     captureTimeout: number;
     afterTransactionHandler: (transaction: Transaction) => void;
-    /**
-     * @param {AbstractType_<any>|Array<AbstractType_<any>>} typeScope Accepts either a single type, or an array of types
-     * @param {UndoManagerOptions} options
-     */
     constructor(typeScope: AbstractType_<any> | Array<AbstractType_<any>>, { captureTimeout, captureTransaction, deleteFilter, trackedOrigins, ignoreRemoteMapChanges, doc }?: UndoManagerOptions);
+    clearStackItem(tr: Transaction, stackItem: StackItem): void;
+    popStackItem(stack: StackItem[], eventType: string): StackItem | null;
     addToScope(ytypes: Array<AbstractType_<any>> | AbstractType_<any>): void;
     addTrackedOrigin(origin: any): void;
     removeTrackedOrigin(origin: any): void;

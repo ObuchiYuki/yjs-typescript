@@ -1,5 +1,5 @@
-import { DeleteSet, Item, StructStore, AbstractType_, __AbstractStruct, YEvent, Doc, // eslint-disable-line
-UpdateEncoderAny_, ID } from '../internals';
+import { DeleteSet, AbstractType_, YEvent, Doc, // eslint-disable-line
+UpdateEncoderAny_, ID, Struct_ } from '../internals';
 /**
  * A transaction is created for every change on the Yjs model. It is possible
  * to bundle changes on the Yjs model in a single transaction to
@@ -43,7 +43,7 @@ export declare class Transaction {
      * Stores the events for the types that observe also child elements.
      * It is mainly used by `observeDeep`.
      */
-    changedParentTypes: Map<AbstractType_<YEvent<any>>, Array<YEvent<any>>>;
+    changedParentTypes: Map<AbstractType_<YEvent<any>>, YEvent<any>[]>;
     /** Stores meta information on the transaction */
     meta: Map<any, any>;
     /** Whether this change originates from this doc. */
@@ -51,45 +51,17 @@ export declare class Transaction {
     subdocsAdded: Set<Doc>;
     subdocsRemoved: Set<Doc>;
     subdocsLoaded: Set<Doc>;
-    _mergeStructs: __AbstractStruct[];
+    _mergeStructs: Struct_[];
     origin: any;
     constructor(doc: Doc, origin: any, local: boolean);
+    encodeUpdateMessage(encoder: UpdateEncoderAny_): boolean;
+    nextID(): ID;
+    /**
+     * If `type.parent` was added in current transaction, `type` technically
+     * did not change, it was just added and we should not fire events for `type`.
+     */
+    addChangedType(type: AbstractType_<YEvent<any>>, parentSub: string | null): void;
+    static cleanup(transactions: Array<Transaction>, i: number): void;
+    /** Implements the functionality of `y.transact(()=>{..})` */
+    static transact(doc: Doc, body: (transaction: Transaction) => void, origin?: any, local?: boolean): void;
 }
-/**
- * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
- * @param {Transaction} transaction
- * @return {boolean} Whether data was written.
- */
-export declare const writeUpdateMessageFromTransaction: (encoder: UpdateEncoderAny_, transaction: Transaction) => boolean;
-/**
- * @param {Transaction} transaction
- *
- * @private
- * @function
- */
-export declare const nextID: (transaction: Transaction) => ID;
-/**
- * If `type.parent` was added in current transaction, `type` technically
- * did not change, it was just added and we should not fire events for `type`.
- *
- * @param {Transaction} transaction
- * @param {AbstractType_<YEvent<any>>} type
- * @param {string|null} parentSub
- */
-export declare const addChangedTypeToTransaction: (transaction: Transaction, type: AbstractType_<YEvent<any>>, parentSub: string | null) => void;
-/**
- * @param {DeleteSet} ds
- * @param {StructStore} store
- * @param {function(Item):boolean} gcFilter
- */
-export declare const tryGc: (ds: DeleteSet, store: StructStore, gcFilter: (arg0: Item) => boolean) => void;
-/**
- * Implements the functionality of `y.transact(()=>{..})`
- *
- * @param {Doc} doc
- * @param {function(Transaction):void} f
- * @param {any} [origin=true]
- *
- * @function
- */
-export declare const transact: (doc: Doc, f: (arg0: Transaction) => void, origin?: any, local?: boolean) => void;

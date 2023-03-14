@@ -14,4 +14,5 @@ export declare abstract class Struct_ {
     mergeWith(right: Struct_): boolean;
     abstract write(encoder: UpdateEncoderAny_, offset: number, encodingRef: number): void;
     abstract integrate(transaction: Transaction, offset: number): void;
+    static tryMergeWithLeft(structs: Array<Struct_>, pos: number): void;
 }

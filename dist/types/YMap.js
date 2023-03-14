@@ -117,7 +117,7 @@ class YMap extends AbstractType_1.AbstractType_ {
     /** Remove a specified element from this YMap. */
     delete(key) {
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapDelete(transaction, key);
             });
         }
@@ -128,7 +128,7 @@ class YMap extends AbstractType_1.AbstractType_ {
     /** Adds or updates an element with a specified key and value. */
     set(key, value) {
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapSet(transaction, key, value);
             });
         }
@@ -148,7 +148,7 @@ class YMap extends AbstractType_1.AbstractType_ {
     /** Removes all elements from this YMap. */
     clear() {
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.forEach(function (_value, key, map) {
                     map.mapDelete(transaction, key);
                 });

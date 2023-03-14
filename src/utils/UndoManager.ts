@@ -1,5 +1,4 @@
 import {
-    transact,
     isParentOf,
     Transaction, Doc, Item, GC, DeleteSet, AbstractType_, YEvent,
     StructStore, ID
@@ -36,82 +35,6 @@ class StackItem {
         this.deletions = deletions
         this.meta = new Map()
     }
-}
-
-const clearUndoManagerStackItem = (tr: Transaction, um: UndoManager, stackItem: StackItem) => {
-    stackItem.deletions.iterate(tr, item => {
-        if (item instanceof Item && um.scope.some(type => isParentOf(type, item))) {
-            Item.keepRecursive(item, false)
-        }
-    })
-}
-
-const popStackItem = (undoManager: UndoManager, stack: Array<StackItem>, eventType: string): StackItem | null => {
-    /** Whether a change happened */
-    let result: StackItem | null = null
-    /** Keep a reference to the transaction so we can fire the event with the changedParentTypes */
-    let _tr: any = null
-    const doc = undoManager.doc
-    const scope = undoManager.scope
-    transact(doc, transaction => {
-        while (stack.length > 0 && result === null) {
-            const store = doc.store
-            const stackItem = stack.pop() as StackItem
-            const itemsToRedo = new Set<Item>()
-            const itemsToDelete: Item[] = []
-
-            let performedChange = false
-            stackItem.insertions.iterate(transaction, struct => {
-                if (struct instanceof Item) {
-                    if (struct.redone !== null) {
-                        let { item, diff } = followRedone(store, struct.id)
-                        if (diff > 0) {
-                            item = StructStore.getItemCleanStart(transaction, new ID(item.id.client, item.id.clock + diff))
-                        }
-                        struct = item
-                    }
-                    if (!struct.deleted && scope.some(type => isParentOf(type, struct as Item))) {
-                        itemsToDelete.push(struct)
-                    }
-                }
-            })
-            stackItem.deletions.iterate(transaction, struct => {
-                if (
-                    struct instanceof Item &&
-                    scope.some(type => isParentOf(type, struct)) &&
-                    // Never redo structs in stackItem.insertions because they were created and deleted in the same capture interval.
-                    !stackItem.insertions.isDeleted(struct.id)
-                ) {
-                    itemsToRedo.add(struct)
-                }
-            })
-            itemsToRedo.forEach(struct => {
-                performedChange = struct.redo(transaction, itemsToRedo, stackItem.insertions, undoManager.ignoreRemoteMapChanges) !== null || performedChange
-            })
-            // We want to delete in reverse order so that children are deleted before
-            // parents, so we have more information available when items are filtered.
-            for (let i = itemsToDelete.length - 1; i >= 0; i--) {
-                const item = itemsToDelete[i]
-                if (undoManager.deleteFilter(item)) {
-                    item.delete(transaction)
-                    performedChange = true
-                }
-            }
-            result = performedChange ? stackItem : null
-        }
-        transaction.changed.forEach((subProps, type) => {
-            // destroy search marker if necessary
-            if (subProps.has(null) && type._searchMarker) {
-                type._searchMarker.length = 0
-            }
-        })
-        _tr = transaction
-    }, undoManager)
-    if (result != null) {
-        const changedParentTypes = _tr.changedParentTypes
-        undoManager.emit('stack-item-popped', [{ stackItem: result, type: eventType, changedParentTypes }, undoManager])
-    }
-    return result
 }
 
 /**
@@ -153,6 +76,8 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
     captureTransaction: (transaction: Transaction) => boolean    
     undoStack: StackItem[]
     redoStack: StackItem[]
+
+    /** Whether the client is currently undoing (calling UndoManager.undo) */
     undoing: boolean
     redoing: boolean
     doc: Doc
@@ -161,10 +86,6 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
     captureTimeout: number
     afterTransactionHandler: (transaction: Transaction) => void
 
-    /**
-     * @param {AbstractType_<any>|Array<AbstractType_<any>>} typeScope Accepts either a single type, or an array of types
-     * @param {UndoManagerOptions} options
-     */
     constructor (typeScope: AbstractType_<any> | Array<AbstractType_<any>>, {
         captureTimeout = 500,
         captureTransaction = tr => true,
@@ -182,20 +103,12 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
         this.captureTransaction = captureTransaction
         this.undoStack = []
         this.redoStack = []
-        /**
-         * Whether the client is currently undoing (calling UndoManager.undo)
-         *
-         * @type {boolean}
-         */
         this.undoing = false
         this.redoing = false
         this.doc = doc
         this.lastChange = 0
         this.ignoreRemoteMapChanges = ignoreRemoteMapChanges
         this.captureTimeout = captureTimeout
-        /**
-         * @param {Transaction} transaction
-         */
         this.afterTransactionHandler = (transaction: Transaction) => {
             // Only track certain transactions
             if (
@@ -256,6 +169,85 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
         })
     }
 
+
+    clearStackItem(tr: Transaction, stackItem: StackItem) {
+        stackItem.deletions.iterate(tr, item => {
+            if (item instanceof Item && this.scope.some(type => isParentOf(type, item))) {
+                Item.keepRecursive(item, false)
+            }
+        })
+    }
+
+
+    popStackItem(stack: StackItem[], eventType: string): StackItem | null {
+        /** Whether a change happened */
+        let result: StackItem | null = null
+        /** Keep a reference to the transaction so we can fire the event with the changedParentTypes */
+        let _tr: any = null
+        const doc = this.doc
+        const scope = this.scope
+        doc.transact(transaction => {
+            while (stack.length > 0 && result === null) {
+                const store = doc.store
+                const stackItem = stack.pop() as StackItem
+                const itemsToRedo = new Set<Item>()
+                const itemsToDelete: Item[] = []
+
+                let performedChange = false
+                stackItem.insertions.iterate(transaction, struct => {
+                    if (struct instanceof Item) {
+                        if (struct.redone !== null) {
+                            let { item, diff } = followRedone(store, struct.id)
+                            if (diff > 0) {
+                                item = StructStore.getItemCleanStart(transaction, new ID(item.id.client, item.id.clock + diff))
+                            }
+                            struct = item
+                        }
+                        if (!struct.deleted && scope.some(type => isParentOf(type, struct as Item))) {
+                            itemsToDelete.push(struct)
+                        }
+                    }
+                })
+                stackItem.deletions.iterate(transaction, struct => {
+                    if (
+                        struct instanceof Item &&
+                        scope.some(type => isParentOf(type, struct)) &&
+                        // Never redo structs in stackItem.insertions because they were created and deleted in the same capture interval.
+                        !stackItem.insertions.isDeleted(struct.id)
+                    ) {
+                        itemsToRedo.add(struct)
+                    }
+                })
+                itemsToRedo.forEach(struct => {
+                    performedChange = struct.redo(transaction, itemsToRedo, stackItem.insertions, this.ignoreRemoteMapChanges) !== null || performedChange
+                })
+                // We want to delete in reverse order so that children are deleted before
+                // parents, so we have more information available when items are filtered.
+                for (let i = itemsToDelete.length - 1; i >= 0; i--) {
+                    const item = itemsToDelete[i]
+                    if (this.deleteFilter(item)) {
+                        item.delete(transaction)
+                        performedChange = true
+                    }
+                }
+                result = performedChange ? stackItem : null
+            }
+            transaction.changed.forEach((subProps, type) => {
+                // destroy search marker if necessary
+                if (subProps.has(null) && type._searchMarker) {
+                    type._searchMarker.length = 0
+                }
+            })
+            _tr = transaction
+        }, this)
+        if (result != null) {
+            const changedParentTypes = _tr.changedParentTypes
+            this.emit('stack-item-popped', [{ stackItem: result, type: eventType, changedParentTypes }, this])
+        }
+        return result
+    }
+
+
     addToScope(ytypes: Array<AbstractType_<any>> | AbstractType_<any>) {
         ytypes = array.isArray(ytypes) ? ytypes : [ytypes]
         ytypes.forEach(ytype => {
@@ -277,11 +269,11 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
         if ((clearUndoStack && this.canUndo()) || (clearRedoStack && this.canRedo())) {
             this.doc.transact(tr => {
                 if (clearUndoStack) {
-                    this.undoStack.forEach(item => clearUndoManagerStackItem(tr, this, item))
+                    this.undoStack.forEach(item => this.clearStackItem(tr, item))
                     this.undoStack = []
                 }
                 if (clearRedoStack) {
-                    this.redoStack.forEach(item => clearUndoManagerStackItem(tr, this, item))
+                    this.redoStack.forEach(item => this.clearStackItem(tr, item))
                     this.redoStack = []
                 }
                 this.emit('stack-cleared', [{ undoStackCleared: clearUndoStack, redoStackCleared: clearRedoStack }])
@@ -322,7 +314,7 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
         this.undoing = true
         let res
         try {
-            res = popStackItem(this, this.undoStack, 'undo')
+            res = this.popStackItem(this.undoStack, 'undo')
         } finally {
             this.undoing = false
         }
@@ -338,7 +330,7 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
         this.redoing = true
         let res
         try {
-            res = popStackItem(this, this.redoStack, 'redo')
+            res = this.popStackItem(this.redoStack, 'redo')
         } finally {
             this.redoing = false
         }

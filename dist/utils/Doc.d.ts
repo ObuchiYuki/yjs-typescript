@@ -81,7 +81,7 @@ export declare class Doc extends Observable<string> {
      * @param {function(Transaction):void} f The function that should be executed as a transaction
      * @param {any} [origin] Origin of who started the transaction. Will be stored on transaction.origin
      */
-    transact(f: (arg0: Transaction) => void, origin?: any): void;
+    transact(f: (transaction: Transaction) => void, origin?: any, local?: boolean): void;
     /**
      * Define a shared data type.
      *

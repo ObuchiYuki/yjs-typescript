@@ -6,7 +6,6 @@
 import {
     YEvent,
     YMapRefID,
-    transact,
     Doc, Transaction, Item, // eslint-disable-line,
     createMapIterator, UpdateEncoderAny_, UpdateDecoderAny_
 } from '../internals'
@@ -142,7 +141,7 @@ export class YMap<MapType extends Contentable_> extends AbstractType_<YMapEvent<
     /** Remove a specified element from this YMap. */
     delete(key: string) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapDelete(transaction, key)
             })
         } else {
@@ -153,7 +152,7 @@ export class YMap<MapType extends Contentable_> extends AbstractType_<YMapEvent<
     /** Adds or updates an element with a specified key and value. */
     set(key: string, value: MapType) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapSet(transaction, key, value as any)
             })
         } else {
@@ -175,7 +174,7 @@ export class YMap<MapType extends Contentable_> extends AbstractType_<YMapEvent<
     /** Removes all elements from this YMap. */
     clear() {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.forEach(function (_value, key, map) {
                     map.mapDelete(transaction, key)
                 })

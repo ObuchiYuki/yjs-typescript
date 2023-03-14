@@ -1,7 +1,6 @@
 
 import {
     YXmlFragment,
-    transact,
     YXmlElementRefID,
     YXmlText, ContentType, AbstractType_, UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, Doc, Item // eslint-disable-line
 } from '../internals'
@@ -102,7 +101,7 @@ export class YXmlElement extends YXmlFragment {
      */
     removeAttribute (attributeName: string) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapDelete(transaction, attributeName)
             })
         } else {
@@ -120,7 +119,7 @@ export class YXmlElement extends YXmlFragment {
      */
     setAttribute (attributeName: string, attributeValue: string) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.mapSet(transaction, attributeName, attributeValue)
             })
         } else {

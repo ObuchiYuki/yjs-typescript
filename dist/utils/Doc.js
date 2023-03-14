@@ -70,11 +70,12 @@ class Doc extends observable_1.Observable {
      * It is safe to call `load()` multiple times.
      */
     load() {
+        var _a;
         const item = this._item;
         if (item !== null && !this.shouldLoad) {
-            (0, internals_1.transact)(item.parent.doc, transaction => {
+            (_a = item.parent.doc) === null || _a === void 0 ? void 0 : _a.transact(transaction => {
                 transaction.subdocsLoaded.add(this);
-            }, null, true);
+            }, null);
         }
         this.shouldLoad = true;
     }
@@ -89,7 +90,9 @@ class Doc extends observable_1.Observable {
      * @param {function(Transaction):void} f The function that should be executed as a transaction
      * @param {any} [origin] Origin of who started the transaction. Will be stored on transaction.origin
      */
-    transact(f, origin = null) { (0, internals_1.transact)(this, f, origin); }
+    transact(f, origin = null, local = true) {
+        internals_1.Transaction.transact(this, f, origin, local);
+    }
     /**
      * Define a shared data type.
      *
@@ -162,6 +165,7 @@ class Doc extends observable_1.Observable {
     }
     /** Emit `destroy` event and unregister all event handlers. */
     destroy() {
+        var _a;
         array.from(this.subdocs).forEach(subdoc => subdoc.destroy());
         const item = this._item;
         if (item !== null) {
@@ -169,13 +173,13 @@ class Doc extends observable_1.Observable {
             const content = item.content;
             content.doc = new Doc(Object.assign(Object.assign({ guid: this.guid }, content.opts), { shouldLoad: false }));
             content.doc._item = item;
-            (0, internals_1.transact)(item.parent.doc, transaction => {
+            (_a = item.parent.doc) === null || _a === void 0 ? void 0 : _a.transact(transaction => {
                 const doc = content.doc;
                 if (!item.deleted) {
                     transaction.subdocsAdded.add(doc);
                 }
                 transaction.subdocsRemoved.add(this);
-            }, null, true);
+            }, null);
         }
         this.emit('destroyed', [true]);
         this.emit('destroy', [this]);

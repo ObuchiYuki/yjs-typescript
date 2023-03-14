@@ -5,7 +5,6 @@ import {
     findRootTypeKey,
     compareIDs,
     readContentDeleted, readContentBinary, readContentJSON, readContentAny, readContentString, readContentEmbed, readContentDoc, readContentFormat, readContentType,
-    addChangedTypeToTransaction,
     DeleteSet, ContentType, ContentDeleted, StructStore, ID, AbstractType_, Transaction,
 
     UpdateDecoderAny_, UpdateEncoderAny_, __AbstractStruct, ContentDecoder_, Content_, Snapshot,
@@ -389,7 +388,7 @@ export class Item extends Struct_ {
             transaction.doc.store.addStruct(this)
             this.content.integrate(transaction, this)
             // add parent to transaction.changed
-            addChangedTypeToTransaction(transaction, (this.parent as AbstractType_<any>), this.parentSub)
+            transaction.addChangedType((this.parent as AbstractType_<any>), this.parentSub)
             if (((this.parent as AbstractType_<any>)._item !== null && (this.parent as AbstractType_<any>)._item!.deleted) || (this.parentSub !== null && this.right !== null)) {
                 // delete if parent is deleted or if this is not the current attribute value of parent
                 this.delete(transaction)
@@ -473,7 +472,7 @@ export class Item extends Struct_ {
             }
             this.markDeleted()
             transaction.deleteSet.add(this.id.client, this.id.clock, this.length)
-            addChangedTypeToTransaction(transaction, parent, this.parentSub)
+            transaction.addChangedType(parent, this.parentSub)
             this.content.delete(transaction)
         }
     }

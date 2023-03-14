@@ -4,7 +4,6 @@ import {
     YXmlEvent,
     YXmlElement,
     YXmlFragmentRefID,
-    transact,
     Doc, ContentType, Transaction, Item, YXmlText, YXmlHook, UpdateEncoderAny_, UpdateDecoderAny_, // eslint-disable-line
 
 } from '../internals'
@@ -273,7 +272,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      */
     insert(index: number, content: (YXmlElement | YXmlText)[]) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.listInsertGenerics(transaction, index, content)
             })
         } else {
@@ -294,7 +293,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      */
     insertAfter(ref: null | Item | YXmlElement | YXmlText, content: Array<YXmlElement | YXmlText>) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 const refItem = (ref && ref instanceof AbstractType_) ? ref._item : ref
                 this.listInsertGenericsAfter(transaction, refItem, content)
             })
@@ -316,7 +315,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      */
     delete(index: number, length: number = 1) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.listDelete(transaction, index, length)
             })
         } else {

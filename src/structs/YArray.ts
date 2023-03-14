@@ -1,7 +1,7 @@
 import { AbstractType_ } from "../types/AbstractType_"
 
 import {
-    YEvent, YArrayRefID, transact,
+    YEvent, YArrayRefID,
     Doc, Transaction, Item, // eslint-disable-line
     ArraySearchMarker_,
     UpdateEncoderAny_,
@@ -95,7 +95,7 @@ export class YArray<T extends Contentable_> extends AbstractType_<YArrayEvent<T>
      */
     insert(index: number, content: Array<T>) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.listInsertGenerics(transaction, index, content as any)
             })
         } else {
@@ -112,7 +112,7 @@ export class YArray<T extends Contentable_> extends AbstractType_<YArrayEvent<T>
      */
     push(content: Array<T>) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.listPushGenerics(transaction, content as any)
             })
         } else {
@@ -137,7 +137,7 @@ export class YArray<T extends Contentable_> extends AbstractType_<YArrayEvent<T>
      */
     delete(index: number, length: number = 1) {
         if (this.doc !== null) {
-            transact(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.listDelete(transaction, index, length)
             })
         } else {

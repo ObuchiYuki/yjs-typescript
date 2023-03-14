@@ -51,8 +51,6 @@ export {
   isParentOf,
   equalSnapshots,
   PermanentUserData, // @TODO experimental
-  tryGc,
-  transact,
   AbstractConnector,
   logType,
   mergeUpdates,

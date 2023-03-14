@@ -233,7 +233,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      */
     insert(index, content) {
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.listInsertGenerics(transaction, index, content);
             });
         }
@@ -254,7 +254,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      */
     insertAfter(ref, content) {
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 const refItem = (ref && ref instanceof AbstractType_1.AbstractType_) ? ref._item : ref;
                 this.listInsertGenericsAfter(transaction, refItem, content);
             });
@@ -276,7 +276,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      */
     delete(index, length = 1) {
         if (this.doc !== null) {
-            (0, internals_1.transact)(this.doc, transaction => {
+            this.doc.transact(transaction => {
                 this.listDelete(transaction, index, length);
             });
         }

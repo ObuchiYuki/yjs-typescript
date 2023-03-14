@@ -2,7 +2,7 @@
 /** eslint-env browser */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PermanentUserData = exports.equalSnapshots = exports.isParentOf = exports.decodeUpdateV2 = exports.decodeUpdate = exports.logUpdateV2 = exports.logUpdate = exports.decodeStateVector = exports.UndoManager = exports.encodeStateVector = exports.encodeStateAsUpdateV2 = exports.encodeStateAsUpdate = exports.readUpdateV2 = exports.readUpdate = exports.applyUpdateV2 = exports.applyUpdate = exports.findRootTypeKey = exports.cleanupYTextFormatting = exports.Snapshot = exports.compareIDs = exports.ID = exports.RelativePosition = exports.AbsolutePosition = exports.compareRelativePositions = exports.AbstractType_ = exports.ContentType = exports.ContentString = exports.ContentAny = exports.ContentJSON = exports.ContentFormat = exports.ContentEmbed = exports.ContentDeleted = exports.ContentBinary = exports.GC = exports.Struct_ = exports.Item = exports.YEvent = exports.YTextEvent = exports.YArrayEvent = exports.YMapEvent = exports.YXmlEvent = exports.XmlFragment = exports.XmlElement = exports.XmlHook = exports.XmlText = exports.Text = exports.Map = exports.Array = exports.Transaction = exports.Doc = void 0;
-exports.DeleteSet = exports.UpdateEncoderV1 = exports.convertUpdateFormatV2ToV1 = exports.convertUpdateFormatV1ToV2 = exports.diffUpdateV2 = exports.diffUpdate = exports.encodeStateVectorFromUpdateV2 = exports.encodeStateVectorFromUpdate = exports.parseUpdateMetaV2 = exports.parseUpdateMeta = exports.mergeUpdatesV2 = exports.mergeUpdates = exports.logType = exports.AbstractConnector = exports.transact = exports.tryGc = void 0;
+exports.DeleteSet = exports.UpdateEncoderV1 = exports.convertUpdateFormatV2ToV1 = exports.convertUpdateFormatV1ToV2 = exports.diffUpdateV2 = exports.diffUpdate = exports.encodeStateVectorFromUpdateV2 = exports.encodeStateVectorFromUpdate = exports.parseUpdateMetaV2 = exports.parseUpdateMeta = exports.mergeUpdatesV2 = exports.mergeUpdates = exports.logType = exports.AbstractConnector = void 0;
 var internals_1 = require("./internals");
 Object.defineProperty(exports, "Doc", { enumerable: true, get: function () { return internals_1.Doc; } });
 Object.defineProperty(exports, "Transaction", { enumerable: true, get: function () { return internals_1.Transaction; } });
@@ -54,8 +54,6 @@ Object.defineProperty(exports, "decodeUpdateV2", { enumerable: true, get: functi
 Object.defineProperty(exports, "isParentOf", { enumerable: true, get: function () { return internals_1.isParentOf; } });
 Object.defineProperty(exports, "equalSnapshots", { enumerable: true, get: function () { return internals_1.equalSnapshots; } });
 Object.defineProperty(exports, "PermanentUserData", { enumerable: true, get: function () { return internals_1.PermanentUserData; } });
-Object.defineProperty(exports, "tryGc", { enumerable: true, get: function () { return internals_1.tryGc; } });
-Object.defineProperty(exports, "transact", { enumerable: true, get: function () { return internals_1.transact; } });
 Object.defineProperty(exports, "AbstractConnector", { enumerable: true, get: function () { return internals_1.AbstractConnector; } });
 Object.defineProperty(exports, "logType", { enumerable: true, get: function () { return internals_1.logType; } });
 Object.defineProperty(exports, "mergeUpdates", { enumerable: true, get: function () { return internals_1.mergeUpdates; } });

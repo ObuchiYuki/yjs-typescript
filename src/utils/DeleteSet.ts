@@ -1,7 +1,8 @@
 
 import {
     UpdateEncoderV2,
-    DSDecoderV1, DSEncoderV1, DSDecoderV2, DSEncoderV2, Item, GC, StructStore, Transaction, ID // eslint-disable-line
+    DSDecoderV1, DSEncoderV1, DSDecoderV2, DSEncoderV2, Item, GC, StructStore, Transaction, ID, // eslint-disable-line
+    Struct_
 } from '../internals'
 
 import * as array from 'lib0/array'
@@ -100,6 +101,56 @@ export class DeleteSet {
                 }
             })
     }
+
+    tryGCDeleteSet(store: StructStore, gcFilter: (arg0: Item) => boolean) {
+        for (const [client, deleteItems] of this.clients.entries()) {
+            const structs = store.clients.get(client) as (GC|Item)[]
+            for (let di = deleteItems.length - 1; di >= 0; di--) {
+                const deleteItem = deleteItems[di]
+                const endDeleteItemClock = deleteItem.clock + deleteItem.len
+                for (
+                    let si = StructStore.findIndexSS(structs, deleteItem.clock), struct = structs[si];
+                    si < structs.length && struct.id.clock < endDeleteItemClock;
+                    struct = structs[++si]
+                ) {
+                    const struct = structs[si]
+                    if (deleteItem.clock + deleteItem.len <= struct.id.clock) {
+                        break
+                    }
+                    if (struct instanceof Item && struct.deleted && !struct.keep && gcFilter(struct)) {
+                        struct.gc(store, false)
+                    }
+                }
+            }
+        }
+    }
+
+    // try
+    tryMerge(store: StructStore) {
+        // try to merge deleted / gc'd items
+        // merge from right to left for better efficiecy and so we don't miss any merge targets
+        this.clients.forEach((deleteItems, client) => {
+            const structs = store.clients.get(client) as Array<GC|Item>
+            for (let di = deleteItems.length - 1; di >= 0; di--) {
+                const deleteItem = deleteItems[di]
+                // start with merging the item next to the last deleted item
+                const mostRightIndexToCheck = math.min(structs.length - 1, 1 + StructStore.findIndexSS(structs, deleteItem.clock + deleteItem.len - 1))
+                for (
+                    let si = mostRightIndexToCheck, struct = structs[si];
+                    si > 0 && struct.id.clock >= deleteItem.clock;
+                    struct = structs[--si]
+                ) {
+                    Struct_.tryMergeWithLeft(structs, si)
+                }
+            }
+        })
+    }
+
+    tryGC(store: StructStore, gcFilter: (arg0: Item) => boolean) {
+        this.tryGCDeleteSet(store, gcFilter)
+        this.tryMerge(store)
+    }
+    
     
 
     static mergeAll(dss: DeleteSet[]): DeleteSet {
