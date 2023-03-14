@@ -15,7 +15,7 @@ export * from './utils/StructStore';
 export * from './utils/Transaction';
 export * from './utils/UndoManager';
 export * from './utils/updates';
-export * from './utils/YEvent';
+export * from './types/YEvent';
 export * from './structs/YArray';
 export * from './types/YMap';
 export * from './types/YText';

@@ -2,8 +2,8 @@ import * as map from "lib0/map"
 
 import {
     Doc, Transaction, EventHandler, YEvent, Item, 
-    UpdateEncoderAny_, ArraySearchMarker_, Snapshot, isVisible, 
-    getState, ContentAny, ContentBinary, ContentDoc, ContentType, getItemCleanStart, Content_, ID
+    UpdateEncoderAny_, ArraySearchMarker_, Snapshot, 
+    ContentAny, ContentBinary, ContentDoc, ContentType, Content_, ID, StructStore
 } from '../internals'
 
 export type Contentable_ = object | Contentable_[] | boolean | number | null | string | Uint8Array
@@ -120,7 +120,7 @@ export abstract class AbstractType_<EventType> {
         const cs = []
         let n = this._start
         while (n !== null) {
-            if (n.countable && isVisible(n, snapshot)) {
+            if (n.countable && n.isVisible(snapshot)) {
                 const c = n.content.getContent()
                 for (let i = 0; i < c.length; i++) {
                     cs.push(c[i])
@@ -186,7 +186,7 @@ export abstract class AbstractType_<EventType> {
         let index = 0
         let item = this._start
         while (item !== null) {
-            if (item.countable && isVisible(item, snapshot)) {
+            if (item.countable && item.isVisible(snapshot)) {
                 const c = item.content.getContent()
                 for (let i = 0; i < c.length; i++) {
                     body(c[i], index++, this)
@@ -227,7 +227,7 @@ export abstract class AbstractType_<EventType> {
 
         const packJsonContent = () => {
             if (jsonContent.length <= 0) return
-            const id = new ID(ownClientId, getState(store, ownClientId))
+            const id = new ID(ownClientId, store.getState(ownClientId))
             const content = new ContentAny(jsonContent)
             left = new Item(id, left, left && left.lastID, right, right && right.id, this, null, content)
             left.integrate(transaction, 0)
@@ -252,17 +252,17 @@ export abstract class AbstractType_<EventType> {
                         content.constructor === Uint8Array || 
                         content.constructor === ArrayBuffer
                     ) {
-                        const id = new ID(ownClientId, getState(store, ownClientId))
+                        const id = new ID(ownClientId, store.getState(ownClientId))
                         const icontent = new ContentBinary(new Uint8Array(content as Uint8Array))
                         left = new Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent)
                         left.integrate(transaction, 0)
                     } else if (content.constructor === Doc) {
-                        const id = new ID(ownClientId, getState(store, ownClientId))
+                        const id = new ID(ownClientId, store.getState(ownClientId))
                         const icontent = new ContentDoc(content as Doc)
                         left = new Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent)
                         left.integrate(transaction, 0)
                     } else if (content instanceof AbstractType_) {
-                        const id = new ID(ownClientId, getState(store, ownClientId))
+                        const id = new ID(ownClientId, store.getState(ownClientId))
                         const icontent = new ContentType(content)
                         left = new Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent)
                         left.integrate(transaction, 0)
@@ -303,7 +303,7 @@ export abstract class AbstractType_<EventType> {
                 if (index <= n.length) {
                     if (index < n.length) {
                         // insert in-between
-                        getItemCleanStart(transaction, new ID(n.id.client, n.id.clock + index))
+                        StructStore.getItemCleanStart(transaction, new ID(n.id.client, n.id.clock + index))
                     }
                     break
                 }
@@ -351,7 +351,7 @@ export abstract class AbstractType_<EventType> {
         for (; item !== null && index > 0; item = item.right) {
             if (!item.deleted && item.countable) {
                 if (index < item.length) {
-                    getItemCleanStart(transaction, new ID(item.id.client, item.id.clock + index))
+                    StructStore.getItemCleanStart(transaction, new ID(item.id.client, item.id.clock + index))
                 }
                 index -= item.length
             }
@@ -360,7 +360,7 @@ export abstract class AbstractType_<EventType> {
         while (length > 0 && item !== null) {
             if (!item.deleted) {
                 if (length < item.length) {
-                    getItemCleanStart(transaction, new ID(item.id.client, item.id.clock + length))
+                    StructStore.getItemCleanStart(transaction, new ID(item.id.client, item.id.clock + length))
                 }
                 item.delete(transaction)
                 length -= item.length
@@ -413,7 +413,7 @@ export abstract class AbstractType_<EventType> {
                 }
             }
         }
-        const id = new ID(ownClientId, getState(doc.store, ownClientId))
+        const id = new ID(ownClientId, doc.store.getState(ownClientId))
         new Item(id, left, left && left.lastID, null, null, this, key, content)
             .integrate(transaction, 0)
     }
@@ -447,7 +447,7 @@ export abstract class AbstractType_<EventType> {
         while (v !== null && (!snapshot.sv.has(v.id.client) || v.id.clock >= (snapshot.sv.get(v.id.client) || 0))) {
             v = v.left
         }
-        return v !== null && isVisible(v, snapshot) ? v.content.getContent()[v.length - 1] : undefined
+        return v !== null && v.isVisible(snapshot) ? v.content.getContent()[v.length - 1] : undefined
     }
 
     // ================================================================================================================ //

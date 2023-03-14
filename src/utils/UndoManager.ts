@@ -1,9 +1,8 @@
 import {
     transact,
     isParentOf,
-    getItemCleanStart,
     Transaction, Doc, Item, GC, DeleteSet, AbstractType_, YEvent,
-    StructStore, ID, getItem
+    StructStore, ID
 } from '../internals'
 
 import * as time from 'lib0/time'
@@ -16,7 +15,7 @@ export const followRedone = (store: StructStore, id: ID): { item: Item, diff: nu
     let item: Item | null = null
     do {
         if (diff > 0) { nextID = new ID(nextID.client, nextID.clock + diff) }
-        item = getItem(store, nextID)
+        item = store.getItem(nextID)
         diff = nextID.clock - item.id.clock
         nextID = item.redone
     } while (nextID !== null && item instanceof Item)
@@ -67,7 +66,7 @@ const popStackItem = (undoManager: UndoManager, stack: Array<StackItem>, eventTy
                     if (struct.redone !== null) {
                         let { item, diff } = followRedone(store, struct.id)
                         if (diff > 0) {
-                            item = getItemCleanStart(transaction, new ID(item.id.client, item.id.clock + diff))
+                            item = StructStore.getItemCleanStart(transaction, new ID(item.id.client, item.id.clock + diff))
                         }
                         struct = item
                     }

@@ -31,7 +31,7 @@ __exportStar(require("./utils/StructStore"), exports);
 __exportStar(require("./utils/Transaction"), exports);
 __exportStar(require("./utils/UndoManager"), exports);
 __exportStar(require("./utils/updates"), exports);
-__exportStar(require("./utils/YEvent"), exports);
+__exportStar(require("./types/YEvent"), exports);
 // export * from './types/AbstractType'
 __exportStar(require("./structs/YArray"), exports);
 __exportStar(require("./types/YMap"), exports);

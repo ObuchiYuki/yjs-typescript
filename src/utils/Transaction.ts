@@ -1,10 +1,7 @@
 
 import {
-    getState,
     writeStructsFromTransaction,
     DeleteSet,
-    getStateVector,
-    findIndexSS,
     Item,
     generateNewClientID,
     GC, StructStore, AbstractType_, __AbstractStruct, YEvent, Doc, // eslint-disable-line
@@ -84,7 +81,7 @@ export class Transaction {
 
     constructor(doc: Doc, origin: any, local: boolean) {
         this.doc = doc
-        this.beforeState = getStateVector(doc.store)
+        this.beforeState = doc.store.getStateVector()
         this.origin = origin
         this.local = local
     }
@@ -113,7 +110,7 @@ export const writeUpdateMessageFromTransaction = (encoder: UpdateEncoderAny_, tr
  */
 export const nextID = (transaction: Transaction) => {
     const y = transaction.doc
-    return new ID(y.clientID, getState(y.store, y.clientID))
+    return new ID(y.clientID, y.store.getState(y.clientID))
 }
 
 /**
@@ -160,7 +157,7 @@ const tryGcDeleteSet = (ds: DeleteSet, store: StructStore, gcFilter: (arg0: Item
             const deleteItem = deleteItems[di]
             const endDeleteItemClock = deleteItem.clock + deleteItem.len
             for (
-                let si = findIndexSS(structs, deleteItem.clock), struct = structs[si];
+                let si = StructStore.findIndexSS(structs, deleteItem.clock), struct = structs[si];
                 si < structs.length && struct.id.clock < endDeleteItemClock;
                 struct = structs[++si]
             ) {
@@ -188,7 +185,7 @@ const tryMergeDeleteSet = (ds: DeleteSet, store: StructStore) => {
         for (let di = deleteItems.length - 1; di >= 0; di--) {
             const deleteItem = deleteItems[di]
             // start with merging the item next to the last deleted item
-            const mostRightIndexToCheck = math.min(structs.length - 1, 1 + findIndexSS(structs, deleteItem.clock + deleteItem.len - 1))
+            const mostRightIndexToCheck = math.min(structs.length - 1, 1 + StructStore.findIndexSS(structs, deleteItem.clock + deleteItem.len - 1))
             for (
                 let si = mostRightIndexToCheck, struct = structs[si];
                 si > 0 && struct.id.clock >= deleteItem.clock;
@@ -223,7 +220,7 @@ const cleanupTransactions = (transactionCleanups: Array<Transaction>, i: number)
         const mergeStructs = transaction._mergeStructs
         try {
             ds.sortAndMerge()
-            transaction.afterState = getStateVector(transaction.doc.store)
+            transaction.afterState = transaction.doc.store.getStateVector()
             doc.emit('beforeObserverCalls', [transaction, doc])
             /**
              * An array of event callbacks.
@@ -282,7 +279,7 @@ const cleanupTransactions = (transactionCleanups: Array<Transaction>, i: number)
                 if (beforeClock !== clock) {
                     const structs = store.clients.get(client) as Array<GC|Item>
                     // we iterate from right to left so we can safely remove entries
-                    const firstChangePos = math.max(findIndexSS(structs, beforeClock), 1)
+                    const firstChangePos = math.max(StructStore.findIndexSS(structs, beforeClock), 1)
                     for (let i = structs.length - 1; i >= firstChangePos; i--) {
                         tryToMergeWithLeft(structs, i)
                     }
@@ -294,7 +291,7 @@ const cleanupTransactions = (transactionCleanups: Array<Transaction>, i: number)
             for (let i = 0; i < mergeStructs.length; i++) {
                 const { client, clock } = mergeStructs[i].id
                 const structs = store.clients.get(client) as Array<GC|Item>
-                const replacedStructPos = findIndexSS(structs, clock)
+                const replacedStructPos = StructStore.findIndexSS(structs, clock)
                 if (replacedStructPos + 1 < structs.length) {
                     tryToMergeWithLeft(structs, replacedStructPos + 1)
                 }

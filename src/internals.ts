@@ -16,7 +16,7 @@ export * from './utils/StructStore'
 export * from './utils/Transaction'
 export * from './utils/UndoManager'
 export * from './utils/updates'
-export * from './utils/YEvent'
+export * from './types/YEvent'
 
 // export * from './types/AbstractType'
 export * from './structs/YArray'

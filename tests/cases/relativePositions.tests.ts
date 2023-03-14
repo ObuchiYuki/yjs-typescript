@@ -10,10 +10,10 @@ const checkRelativePositions = (ytext: Y.Text) => {
     for (let i = 0; i < ytext.length; i++) {
         // for all types of associations..
         for (let assoc = -1; assoc < 2; assoc++) {
-            const rpos = Y.createRelativePositionFromTypeIndex(ytext, i, assoc)
-            const encodedRpos = Y.encodeRelativePosition(rpos)
-            const decodedRpos = Y.decodeRelativePosition(encodedRpos)
-            const absPos = Y.createAbsolutePositionFromRelativePosition(
+            const rpos = Y.RelativePosition.fromTypeIndex(ytext, i, assoc)
+            const encodedRpos = rpos.encode()
+            const decodedRpos = Y.RelativePosition.decode(encodedRpos)
+            const absPos = Y.AbsolutePosition.fromRelativePosition(
                 decodedRpos, ytext.doc as Y.Doc
             ) as Y.AbsolutePosition
             t.assert(absPos.index === i)
@@ -96,11 +96,11 @@ export const testRelativePositionAssociationDifference = (tc: t.TestCase) => {
     const ytext = ydoc.getText()
     ytext.insert(0, '2')
     ytext.insert(0, '1')
-    const rposRight = Y.createRelativePositionFromTypeIndex(ytext, 1, 0)
-    const rposLeft = Y.createRelativePositionFromTypeIndex(ytext, 1, -1)
+    const rposRight = Y.RelativePosition.fromTypeIndex(ytext, 1, 0)
+    const rposLeft = Y.RelativePosition.fromTypeIndex(ytext, 1, -1)
     ytext.insert(1, 'x')
-    const posRight = Y.createAbsolutePositionFromRelativePosition(rposRight, ydoc)
-    const posLeft = Y.createAbsolutePositionFromRelativePosition(rposLeft, ydoc)
+    const posRight = Y.AbsolutePosition.fromRelativePosition(rposRight, ydoc)
+    const posLeft = Y.AbsolutePosition.fromRelativePosition(rposLeft, ydoc)
     t.assert(posRight != null && posRight.index === 2)
     t.assert(posLeft != null && posLeft.index === 1)
 }

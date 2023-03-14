@@ -30,7 +30,7 @@ export const testOriginInTransaction = (_tc: t.TestCase) => {
     doc.on('afterTransaction', (tr: Y.Transaction) => {
         origins.push(tr.origin)
         if (origins.length <= 1) {
-            ytext.toDelta(Y.snapshot(doc)) // adding a snapshot forces toDelta to create a cleanup transaction
+            ytext.toDelta(Y.Snapshot.snapshot(doc)) // adding a snapshot forces toDelta to create a cleanup transaction
             doc.transact(() => {
                 ytext.insert(0, 'a')
             }, 'nested')

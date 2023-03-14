@@ -1,16 +1,14 @@
 import { Struct_ } from "./Struct_"
 
 import {
-    GC, getState,
-    replaceStruct, addStruct,
+    GC,
     findRootTypeKey,
     compareIDs,
-    getItem, getItemCleanEnd, getItemCleanStart,
     readContentDeleted, readContentBinary, readContentJSON, readContentAny, readContentString, readContentEmbed, readContentDoc, readContentFormat, readContentType,
     addChangedTypeToTransaction,
     DeleteSet, ContentType, ContentDeleted, StructStore, ID, AbstractType_, Transaction,
 
-    UpdateDecoderAny_, UpdateEncoderAny_, __AbstractStruct, ContentDecoder_, Content_,
+    UpdateDecoderAny_, UpdateEncoderAny_, __AbstractStruct, ContentDecoder_, Content_, Snapshot,
 } from '../internals'
 
 import * as error from 'lib0/error'
@@ -105,6 +103,12 @@ export class Item extends Struct_ {
         this.info = this.content.isCountable() ? binary.BIT2 : 0
     }
 
+    isVisible(snapshot?: Snapshot) {
+        return snapshot === undefined
+        ? !this.deleted
+        : snapshot.sv.has(this.id.client) && (snapshot.sv.get(this.id.client) || 0) > this.id.clock && !snapshot.ds.isDeleted(this.id)
+    }
+
     markDeleted() { this.info |= binary.BIT3 }
 
     /** Split leftItem into two items; this -> leftItem */
@@ -154,7 +158,7 @@ export class Item extends Struct_ {
         const ownClientID = doc.clientID
         const redone = this.redone
         if (redone !== null) {
-            return getItemCleanStart(transaction, redone)
+            return StructStore.getItemCleanStart(transaction, redone)
         }
         let parentItem = (this.parent as AbstractType_<any>)._item
         /**
@@ -172,7 +176,7 @@ export class Item extends Struct_ {
                 return null
             }
             while (parentItem.redone !== null) {
-                parentItem = getItemCleanStart(transaction, parentItem.redone)
+                parentItem = StructStore.getItemCleanStart(transaction, parentItem.redone)
             }
         }
         const parentType = parentItem === null ? (this.parent as AbstractType_<any>) : (parentItem.content as ContentType).type
@@ -187,7 +191,7 @@ export class Item extends Struct_ {
                 let leftTrace: Item|null = left
                 // trace redone until parent matches
                 while (leftTrace !== null && (leftTrace.parent as AbstractType_<any>)._item !== parentItem) {
-                    leftTrace = leftTrace.redone === null ? null : getItemCleanStart(transaction, leftTrace.redone)
+                    leftTrace = leftTrace.redone === null ? null : StructStore.getItemCleanStart(transaction, leftTrace.redone)
                 }
                 if (leftTrace !== null && (leftTrace.parent as AbstractType_<any>)._item === parentItem) {
                     left = leftTrace
@@ -200,7 +204,7 @@ export class Item extends Struct_ {
                 let rightTrace: Item|null = right
                 // trace redone until parent matches
                 while (rightTrace !== null && (rightTrace.parent as AbstractType_<any>)._item !== parentItem) {
-                    rightTrace = rightTrace.redone === null ? null : getItemCleanStart(transaction, rightTrace.redone)
+                    rightTrace = rightTrace.redone === null ? null : StructStore.getItemCleanStart(transaction, rightTrace.redone)
                 }
                 if (rightTrace !== null && (rightTrace.parent as AbstractType_<any>)._item === parentItem) {
                     right = rightTrace
@@ -220,7 +224,7 @@ export class Item extends Struct_ {
                 // follow redone
                 // trace redone until parent matches
                 while (left !== null && left.redone !== null) {
-                    left = getItemCleanStart(transaction, left.redone)
+                    left = StructStore.getItemCleanStart(transaction, left.redone)
                 }
                 if (left && left.right !== null) {
                     // It is not possible to redo this item because it conflicts with a
@@ -231,7 +235,7 @@ export class Item extends Struct_ {
                 left = parentType._map.get(this.parentSub) || null
             }
         }
-        const nextClock = getState(store, ownClientID)
+        const nextClock = store.getState(ownClientID)
         const nextId = new ID(ownClientID, nextClock)
         const redoneItem = new Item(
             nextId,
@@ -249,23 +253,23 @@ export class Item extends Struct_ {
     
     /** Return the creator clientID of the missing op or define missing items and return null. */
     getMissing(transaction: Transaction, store: StructStore): null | number {
-        if (this.origin && this.origin.client !== this.id.client && this.origin.clock >= getState(store, this.origin.client)) {
+        if (this.origin && this.origin.client !== this.id.client && this.origin.clock >= store.getState(this.origin.client)) {
             return this.origin.client
         }
-        if (this.rightOrigin && this.rightOrigin.client !== this.id.client && this.rightOrigin.clock >= getState(store, this.rightOrigin.client)) {
+        if (this.rightOrigin && this.rightOrigin.client !== this.id.client && this.rightOrigin.clock >= store.getState(this.rightOrigin.client)) {
             return this.rightOrigin.client
         }
-        if (this.parent && this.parent.constructor === ID && this.id.client !== this.parent.client && this.parent.clock >= getState(store, this.parent.client)) {
+        if (this.parent && this.parent.constructor === ID && this.id.client !== this.parent.client && this.parent.clock >= store.getState(this.parent.client)) {
             return this.parent.client
         }
 
         // We have all missing ids, now find the items
         if (this.origin) {
-            this.left = getItemCleanEnd(transaction, store, this.origin)
+            this.left = store.getItemCleanEnd(transaction, this.origin)
             this.origin = this.left.lastID
         }
         if (this.rightOrigin) {
-            this.right = getItemCleanStart(transaction, this.rightOrigin)
+            this.right = StructStore.getItemCleanStart(transaction, this.rightOrigin)
             this.rightOrigin = this.right.id
         }
         if ((this.left && this.left.constructor === GC) || (this.right && this.right.constructor === GC)) {
@@ -282,7 +286,7 @@ export class Item extends Struct_ {
                 this.parentSub = this.right.parentSub
             }
         } else if (this.parent.constructor === ID) {
-            const parentItem = getItem(store, this.parent)
+            const parentItem = store.getItem(this.parent)
             if (parentItem.constructor === GC) {
                 this.parent = null
             } else {
@@ -295,7 +299,7 @@ export class Item extends Struct_ {
     integrate(transaction: Transaction, offset: number) {
         if (offset > 0) {
             this.id.clock += offset
-            this.left = getItemCleanEnd(transaction, transaction.doc.store, new ID(this.id.client, this.id.clock - 1))
+            this.left = transaction.doc.store.getItemCleanEnd(transaction, new ID(this.id.client, this.id.clock - 1))
             this.origin = this.left.lastID
             this.content = this.content.splice(offset)
             this.length -= offset
@@ -336,10 +340,10 @@ export class Item extends Struct_ {
                             // Since this is to the left of o, we can break here
                             break
                         } // else, o might be integrated before an item that this conflicts with. If so, we will find it in the next iterations
-                    } else if (item.origin !== null && itemsBeforeOrigin.has(getItem(transaction.doc.store, item.origin))) { 
+                    } else if (item.origin !== null && itemsBeforeOrigin.has(transaction.doc.store.getItem(item.origin))) { 
                         // use getItem instead of getItemCleanEnd because we don't want / need to split items.
                         // case 2
-                        if (!conflictingItems.has(getItem(transaction.doc.store, item.origin))) {
+                        if (!conflictingItems.has(transaction.doc.store.getItem(item.origin))) {
                             left = item
                             conflictingItems.clear()
                         }
@@ -382,7 +386,7 @@ export class Item extends Struct_ {
             if (this.parentSub === null && this.countable && !this.deleted) {
                 (this.parent as AbstractType_<any>)._length += this.length
             }
-            addStruct(transaction.doc.store, this)
+            transaction.doc.store.addStruct(this)
             this.content.integrate(transaction, this)
             // add parent to transaction.changed
             addChangedTypeToTransaction(transaction, (this.parent as AbstractType_<any>), this.parentSub)
@@ -480,7 +484,7 @@ export class Item extends Struct_ {
         }
         this.content.gc(store)
         if (parentGCd) {
-            replaceStruct(store, this, new GC(this.id, this.length))
+            store.replaceStruct(this, new GC(this.id, this.length))
         } else {
             this.content = new ContentDeleted(this.length)
         }

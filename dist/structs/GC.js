@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GC = exports.structGCRefNumber = void 0;
 const Struct_1 = require("./Struct_");
-const internals_1 = require("../internals");
 exports.structGCRefNumber = 0;
 class GC extends Struct_1.Struct_ {
     get deleted() { return true; }
@@ -19,7 +18,7 @@ class GC extends Struct_1.Struct_ {
             this.id.clock += offset;
             this.length -= offset;
         }
-        (0, internals_1.addStruct)(transaction.doc.store, this);
+        transaction.doc.store.addStruct(this);
     }
     write(encoder, offset) {
         encoder.writeInfo(exports.structGCRefNumber);

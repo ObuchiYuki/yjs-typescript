@@ -16,9 +16,6 @@
  */
 
 import {
-    findIndexSS,
-    getState,
-    getStateVector,
     transact,
     readItemContent,
     UpdateDecoderV1,
@@ -55,7 +52,7 @@ import * as array from 'lib0/array'
 const writeStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, structs: Array<GC | Item>, client: number, clock: number) => {
     // write first id
     clock = math.max(clock, structs[0].id.clock) // make sure the first id exists
-    const startNewStructs = findIndexSS(structs, clock)
+    const startNewStructs = StructStore.findIndexSS(structs, clock)
     // write # encoded structs
     encoding.writeVarUint(encoder.restEncoder, structs.length - startNewStructs)
     encoder.writeClient(client)
@@ -81,11 +78,11 @@ export const writeClientsStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, 
     const sm = new Map()
     _sm.forEach((clock, client) => {
         // only write if new structs are available
-        if (getState(store, client) > clock) {
+        if (store.getState(client) > clock) {
             sm.set(client, clock)
         }
     })
-    getStateVector(store).forEach((clock, client) => {
+    store.getStateVector().forEach((clock, client) => {
         if (!_sm.has(client)) {
             sm.set(client, 0)
         }
@@ -299,7 +296,7 @@ const integrateStructs = (transaction: Transaction, store: StructStore, clientsS
     // iterate over all struct readers until we are done
     while (true) {
         if (stackHead.constructor !== Skip) {
-            const localClock = map.setIfUndefined(state, stackHead.id.client, () => getState(store, stackHead.id.client))
+            const localClock = map.setIfUndefined(state, stackHead.id.client, () => store.getState(stackHead.id.client))
             const offset = localClock - stackHead.id.clock
             if (offset < 0) {
                 // update from the same client is missing
@@ -312,13 +309,12 @@ const integrateStructs = (transaction: Transaction, store: StructStore, clientsS
                 if (missing !== null) {
                     stack.push(stackHead)
                     // get the struct reader that has the missing struct
-                    /**
-                     * @type {{ refs: Array<GC|Item>, i: number }}
-                     */
-                    const structRefs: { refs: Array<GC | Item>; i: number } = clientsStructRefs.get(/** @type {number} */ (missing)) || { refs: [], i: 0 }
+                    
+                    const structRefs: { refs: Array<GC | Item>, i: number } = clientsStructRefs.get(missing) || { refs: [], i: 0 }
+
                     if (structRefs.refs.length === structRefs.i) {
                         // This update message causally depends on another update message that doesn't exist yet
-                        updateMissingSv(/** @type {number} */ (missing), getState(store, missing))
+                        updateMissingSv( (missing), store.getState(missing))
                         addStackToRestSS()
                     } else {
                         stackHead = structRefs.refs[structRefs.i++]
@@ -396,7 +392,7 @@ export const readUpdateV2 = (decoder: decoding.Decoder, ydoc: Doc, transactionOr
         if (pending) {
             // check if we can apply something
             for (const [client, clock] of pending.missing) {
-                if (clock < getState(store, client)) {
+                if (clock < store.getState(client)) {
                     retry = true
                     break
                 }
@@ -614,7 +610,7 @@ export const writeStateVector = (encoder: DSEncoderV1 | DSEncoderV2, sv: Map<num
  *
  * @function
  */
-export const writeDocumentStateVector = (encoder: DSEncoderV1 | DSEncoderV2, doc: Doc) => writeStateVector(encoder, getStateVector(doc.store))
+export const writeDocumentStateVector = (encoder: DSEncoderV1 | DSEncoderV2, doc: Doc) => writeStateVector(encoder, doc.store.getStateVector())
 
 /**
  * Encode State as Uint8Array.

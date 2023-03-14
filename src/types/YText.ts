@@ -2,20 +2,15 @@ import { AbstractType_ } from "./AbstractType_"
 
 import {
     YEvent,
-    getItemCleanStart,
-    getState,
-    isVisible,
     YTextRefID,
     transact,
     ContentEmbed,
     GC,
     ContentFormat,
     ContentString,
-    splitSnapshotAffectedStructs,
-    iterateStructs,
     ContentType,
     ID, Doc, Item, Snapshot, Transaction,
-    ArraySearchMarker_, equalAttributes_, UpdateDecoderAny_, UpdateEncoderAny_, YEventDelta
+    ArraySearchMarker_, equalAttributes_, UpdateDecoderAny_, UpdateEncoderAny_, YEventDelta, StructStore
 } from '../internals'
 
 import * as map from 'lib0/map'
@@ -66,7 +61,7 @@ export class ItemTextListPosition {
                 if (!this.right.deleted) {
                     if (count < this.right.length) {
                         // split right
-                        getItemCleanStart(transaction, new ID(this.right.id.client, this.right.id.clock + count))
+                        StructStore.getItemCleanStart(transaction, new ID(this.right.id.client, this.right.id.clock + count))
                     }
                     this.index += this.right.length
                     count -= this.right.length
@@ -117,7 +112,7 @@ const insertNegatedAttributes = (transaction: Transaction, parent: AbstractType_
     negatedAttributes.forEach((val, key) => {
         const left = currPos.left
         const right = currPos.right
-        const nextFormat = new Item(new ID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new ContentFormat(key, val))
+        const nextFormat = new Item(new ID(ownClientId, doc.store.getState(ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new ContentFormat(key, val))
         nextFormat.integrate(transaction, 0)
         currPos.right = nextFormat
         currPos.forward()
@@ -159,7 +154,7 @@ const insertAttributes = (transaction: Transaction, parent: AbstractType_<any>, 
             // save negated attribute (set null if currentVal undefined)
             negatedAttributes.set(key, currentVal)
             const { left, right } = currPos
-            currPos.right = new Item(new ID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new ContentFormat(key, val))
+            currPos.right = new Item(new ID(ownClientId, doc.store.getState(ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new ContentFormat(key, val))
             currPos.right.integrate(transaction, 0)
             currPos.forward()
         }
@@ -183,7 +178,7 @@ const insertText = (transaction: Transaction, parent: AbstractType_<any>, currPo
     if (parent._searchMarker) {
         ArraySearchMarker_.updateChanges(parent._searchMarker, currPos.index, content.getLength())
     }
-    right = new Item(new ID(ownClientId, getState(doc.store, ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, content)
+    right = new Item(new ID(ownClientId, doc.store.getState(ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, content)
     right.integrate(transaction, 0)
     currPos.right = right
     currPos.index = index
@@ -233,7 +228,7 @@ const formatText = (transaction: Transaction, parent: AbstractType_<any>, currPo
                 }
                 default:
                     if (length < currPos.right.length) {
-                        getItemCleanStart(transaction, new ID(currPos.right.id.client, currPos.right.id.clock + length))
+                        StructStore.getItemCleanStart(transaction, new ID(currPos.right.id.client, currPos.right.id.clock + length))
                     }
                     length -= currPos.right.length
                     break
@@ -249,7 +244,7 @@ const formatText = (transaction: Transaction, parent: AbstractType_<any>, currPo
         for (; length > 0; length--) {
             newlines += '\n'
         }
-        currPos.right = new Item(new ID(ownClientId, getState(doc.store, ownClientId)), currPos.left, currPos.left && currPos.left.lastID, currPos.right, currPos.right && currPos.right.id, parent, null, new ContentString(newlines))
+        currPos.right = new Item(new ID(ownClientId, doc.store.getState(ownClientId)), currPos.left, currPos.left && currPos.left.lastID, currPos.right, currPos.right && currPos.right.id, parent, null, new ContentString(newlines))
         currPos.right.integrate(transaction, 0)
         currPos.forward()
     }
@@ -384,7 +379,7 @@ const deleteText = (transaction: Transaction, currPos: ItemTextListPosition, len
                 case ContentEmbed:
                 case ContentString:
                     if (length < currPos.right.length) {
-                        getItemCleanStart(transaction, new ID(currPos.right.id.client, currPos.right.id.clock + length))
+                        StructStore.getItemCleanStart(transaction, new ID(currPos.right.id.client, currPos.right.id.clock + length))
                     }
                     length -= currPos.right.length
                     currPos.right.delete(transaction)
@@ -672,7 +667,7 @@ export class YText extends AbstractType_<YTextEvent> {
                 if (afterClock === clock) {
                     continue
                 }
-                iterateStructs(transaction,(doc.store.clients.get(client) as (Item|GC)[]), clock, afterClock, item => {
+                StructStore.iterateStructs(transaction,(doc.store.clients.get(client) as (Item|GC)[]), clock, afterClock, item => {
                     if (!item.deleted && (item as Item).content.constructor === ContentFormat) {
                         foundFormattingItem = true
                     }
@@ -800,22 +795,22 @@ export class YText extends AbstractType_<YTextEvent> {
         // transalive until we are done
         transact(doc, transaction => {
             if (snapshot) {
-                splitSnapshotAffectedStructs(transaction, snapshot)
+                snapshot.splitAffectedStructs(transaction)
             }
             if (prevSnapshot) {
-                splitSnapshotAffectedStructs(transaction, prevSnapshot)
+                prevSnapshot.splitAffectedStructs(transaction)
             }
             while (n !== null) {
-                if (isVisible(n, snapshot) || (prevSnapshot !== undefined && isVisible(n, prevSnapshot))) {
+                if (n.isVisible(snapshot) || (prevSnapshot !== undefined && n.isVisible(prevSnapshot))) {
                     switch (n.content.constructor) {
                         case ContentString: {
                             const cur = currentAttributes.get('ychange')
-                            if (snapshot !== undefined && !isVisible(n, snapshot)) {
+                            if (snapshot !== undefined && !n.isVisible(snapshot)) {
                                 if (cur === undefined || cur.user !== n.id.client || cur.type !== 'removed') {
                                     packStr()
                                     currentAttributes.set('ychange', computeYChange ? computeYChange('removed', n.id) : { type: 'removed' })
                                 }
-                            } else if (prevSnapshot !== undefined && !isVisible(n, prevSnapshot)) {
+                            } else if (prevSnapshot !== undefined && !n.isVisible(prevSnapshot)) {
                                 if (cur === undefined || cur.user !== n.id.client || cur.type !== 'added') {
                                     packStr()
                                     currentAttributes.set('ychange', computeYChange ? computeYChange('added', n.id) : { type: 'added' })
@@ -844,7 +839,7 @@ export class YText extends AbstractType_<YTextEvent> {
                             break
                         }
                         case ContentFormat:
-                            if (isVisible(n, snapshot)) {
+                            if (n.isVisible(snapshot)) {
                                 packStr()
                                 updateCurrentAttributes(currentAttributes, n.content as ContentFormat)
                             }

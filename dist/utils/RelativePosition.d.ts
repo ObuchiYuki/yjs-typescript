@@ -1,6 +1,4 @@
 import { ID, Doc, AbstractType_ } from '../internals';
-import * as encoding from 'lib0/encoding';
-import * as decoding from 'lib0/decoding';
 /**
  * A relative position is based on the Yjs model and is not affected by document changes.
  * E.g. If you place a relative position before a certain character, it will always point to this character.
@@ -30,96 +28,30 @@ export declare class RelativePosition {
     tname: string | null;
     item: ID | null;
     assoc: number;
-    /**
-     * @param {ID|null} type
-     * @param {string|null} tname
-     * @param {ID|null} item
-     * @param {number} assoc
-     */
     constructor(type: ID | null, tname: string | null, item: ID | null, assoc?: number);
+    toJSON(): {
+        [s: string]: any;
+    };
+    encode(): Uint8Array;
+    static decode(uint8Array: Uint8Array): RelativePosition;
+    static fromJSON(json: {
+        [s: string]: any;
+    }): RelativePosition;
+    static fromType(type: AbstractType_<any>, item: ID | null, assoc: number): RelativePosition;
+    /**
+     * Create a relativePosition based on a absolute position.
+     *
+     * @param {AbstractType_<any>} type The base type (e.g. YText or YArray).
+     * @param {number} index The absolute position.
+     * @param {number} [assoc]
+     */
+    static fromTypeIndex(type: AbstractType_<any>, index: number, assoc?: number): RelativePosition;
 }
-/**
- * @param {RelativePosition} rpos
- * @return {any}
- */
-export declare const relativePositionToJSON: (rpos: RelativePosition) => any;
-/**
- * @param {any} json
- * @return {RelativePosition}
- *
- * @function
- */
-export declare const createRelativePositionFromJSON: (json: any) => RelativePosition;
 export declare class AbsolutePosition {
     type: AbstractType_<any>;
     index: number;
     assoc: number;
     constructor(type: AbstractType_<any>, index: number, assoc?: number);
+    static fromRelativePosition(rpos: RelativePosition, doc: Doc): AbsolutePosition | null;
 }
-/**
- * @param {AbstractType_<any>} type
- * @param {number} index
- * @param {number} [assoc]
- *
- * @function
- */
-export declare const createAbsolutePosition: (type: AbstractType_<any>, index: number, assoc?: number) => AbsolutePosition;
-/**
- * @param {AbstractType_<any>} type
- * @param {ID|null} item
- * @param {number} [assoc]
- *
- * @function
- */
-export declare const createRelativePosition: (type: AbstractType_<any>, item: ID | null, assoc: number) => RelativePosition;
-/**
- * Create a relativePosition based on a absolute position.
- *
- * @param {AbstractType_<any>} type The base type (e.g. YText or YArray).
- * @param {number} index The absolute position.
- * @param {number} [assoc]
- * @return {RelativePosition}
- *
- * @function
- */
-export declare const createRelativePositionFromTypeIndex: (type: AbstractType_<any>, index: number, assoc?: number) => RelativePosition;
-/**
- * @param {encoding.Encoder} encoder
- * @param {RelativePosition} rpos
- *
- * @function
- */
-export declare const writeRelativePosition: (encoder: encoding.Encoder, rpos: RelativePosition) => encoding.Encoder;
-/**
- * @param {RelativePosition} rpos
- * @return {Uint8Array}
- */
-export declare const encodeRelativePosition: (rpos: RelativePosition) => Uint8Array;
-/**
- * @param {decoding.Decoder} decoder
- * @return {RelativePosition}
- *
- * @function
- */
-export declare const readRelativePosition: (decoder: decoding.Decoder) => RelativePosition;
-/**
- * @param {Uint8Array} uint8Array
- * @return {RelativePosition}
- */
-export declare const decodeRelativePosition: (uint8Array: Uint8Array) => RelativePosition;
-/**
- * @param {RelativePosition} rpos
- * @param {Doc} doc
- * @return {AbsolutePosition|null}
- *
- * @function
- */
-export declare const createAbsolutePositionFromRelativePosition: (rpos: RelativePosition, doc: Doc) => AbsolutePosition | null;
-/**
- * @param {RelativePosition|null} a
- * @param {RelativePosition|null} b
- * @return {boolean}
- *
- * @function
- */
 export declare const compareRelativePositions: (a: RelativePosition | null, b: RelativePosition | null) => boolean;

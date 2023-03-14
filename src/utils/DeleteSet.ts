@@ -1,8 +1,5 @@
 
 import {
-    findIndexSS,
-    getState,
-    iterateStructs,
     UpdateEncoderV2,
     DSDecoderV1, DSEncoderV1, DSDecoderV2, DSEncoderV2, Item, GC, StructStore, Transaction, ID // eslint-disable-line
 } from '../internals'
@@ -52,7 +49,7 @@ export class DeleteSet {
             const structs = transaction.doc.store.clients.get(clientid)!
             for (let i = 0; i < deletes.length; i++) {
                 const del = deletes[i]
-                iterateStructs(transaction, structs, del.clock, del.len, body)
+                StructStore.iterateStructs(transaction, structs, del.clock, del.len, body)
             }
         })
     }
@@ -171,7 +168,7 @@ export class DeleteSet {
             const client = decoding.readVarUint(decoder.restDecoder)
             const numberOfDeletes = decoding.readVarUint(decoder.restDecoder)
             const structs = store.clients.get(client) || []
-            const state = getState(store, client)
+            const state = store.getState(client)
             for (let i = 0; i < numberOfDeletes; i++) {
                 const clock = decoder.readDsClock()
                 const clockEnd = clock + decoder.readDsLen()
@@ -179,7 +176,7 @@ export class DeleteSet {
                     if (state < clockEnd) {
                         unappliedDS.add(client, state, clockEnd - state)
                     }
-                    let index = findIndexSS(structs, clock)
+                    let index = StructStore.findIndexSS(structs, clock)
                     /**
                      * We can ignore the case of GC and Delete structs, because we are going to skip them
                      * @type {Item}

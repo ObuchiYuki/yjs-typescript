@@ -1,7 +1,6 @@
 import { Struct_ } from "./Struct_"
 
 import {
-    addStruct,
     StructStore, Transaction, UpdateEncoderAny_, ID,
 } from '../internals'
 
@@ -23,7 +22,7 @@ export class GC extends Struct_ {
             this.id.clock += offset
             this.length -= offset
         }
-        addStruct(transaction.doc.store, this)
+        transaction.doc.store.addStruct(this)
     }
 
     write(encoder: UpdateEncoderAny_, offset: number) {

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.compareRelativePositions = exports.createAbsolutePositionFromRelativePosition = exports.decodeRelativePosition = exports.readRelativePosition = exports.encodeRelativePosition = exports.writeRelativePosition = exports.createRelativePositionFromTypeIndex = exports.createRelativePosition = exports.createAbsolutePosition = exports.AbsolutePosition = exports.createRelativePositionFromJSON = exports.relativePositionToJSON = exports.RelativePosition = void 0;
+exports.compareRelativePositions = exports.AbsolutePosition = exports.RelativePosition = void 0;
 const internals_1 = require("../internals");
 const encoding = require("lib0/encoding");
 const decoding = require("lib0/decoding");
@@ -30,12 +30,6 @@ const error = require("lib0/error");
  *
  */
 class RelativePosition {
-    /**
-     * @param {ID|null} type
-     * @param {string|null} tname
-     * @param {ID|null} item
-     * @param {number} assoc
-     */
     constructor(type, tname, item, assoc = 0) {
         this.type = type;
         this.tname = tname;
@@ -51,259 +45,186 @@ class RelativePosition {
          */
         this.assoc = assoc;
     }
+    toJSON() {
+        const json = {};
+        if (this.type) {
+            json.type = this.type;
+        }
+        if (this.tname) {
+            json.tname = this.tname;
+        }
+        if (this.item) {
+            json.item = this.item;
+        }
+        if (this.assoc != null) {
+            json.assoc = this.assoc;
+        }
+        return json;
+    }
+    encode() {
+        const encoder = encoding.createEncoder();
+        const { type, tname, item, assoc } = this;
+        if (item !== null) {
+            encoding.writeVarUint(encoder, 0);
+            item.encode(encoder);
+        }
+        else if (tname !== null) {
+            // case 2: found position at the end of the list and type is stored in y.share
+            encoding.writeUint8(encoder, 1);
+            encoding.writeVarString(encoder, tname);
+        }
+        else if (type !== null) {
+            // case 3: found position at the end of the list and type is attached to an item
+            encoding.writeUint8(encoder, 2);
+            type.encode(encoder);
+        }
+        else {
+            throw error.unexpectedCase();
+        }
+        encoding.writeVarInt(encoder, assoc);
+        return encoding.toUint8Array(encoder);
+    }
+    static decode(uint8Array) {
+        const decoder = decoding.createDecoder(uint8Array);
+        let type = null;
+        let tname = null;
+        let itemID = null;
+        switch (decoding.readVarUint(decoder)) {
+            case 0:
+                // case 1: found position somewhere in the linked list
+                itemID = internals_1.ID.decode(decoder);
+                break;
+            case 1:
+                // case 2: found position at the end of the list and type is stored in y.share
+                tname = decoding.readVarString(decoder);
+                break;
+            case 2: {
+                // case 3: found position at the end of the list and type is attached to an item
+                type = internals_1.ID.decode(decoder);
+            }
+        }
+        const assoc = decoding.hasContent(decoder) ? decoding.readVarInt(decoder) : 0;
+        return new RelativePosition(type, tname, itemID, assoc);
+    }
+    static fromJSON(json) {
+        return new RelativePosition(json.type == null ? null : new internals_1.ID(json.type.client, json.type.clock), json.tname || null, json.item == null ? null : new internals_1.ID(json.item.client, json.item.clock), json.assoc == null ? 0 : json.assoc);
+    }
+    static fromType(type, item, assoc) {
+        let typeid = null;
+        let tname = null;
+        if (type._item === null) {
+            tname = (0, internals_1.findRootTypeKey)(type);
+        }
+        else {
+            typeid = new internals_1.ID(type._item.id.client, type._item.id.clock);
+        }
+        return new RelativePosition(typeid, tname, item, assoc);
+    }
+    /**
+     * Create a relativePosition based on a absolute position.
+     *
+     * @param {AbstractType_<any>} type The base type (e.g. YText or YArray).
+     * @param {number} index The absolute position.
+     * @param {number} [assoc]
+     */
+    static fromTypeIndex(type, index, assoc = 0) {
+        let t = type._start;
+        if (assoc < 0) {
+            // associated to the left character or the beginning of a type, increment index if possible.
+            if (index === 0) {
+                return RelativePosition.fromType(type, null, assoc);
+            }
+            index--;
+        }
+        while (t !== null) {
+            if (!t.deleted && t.countable) {
+                if (t.length > index) {
+                    // case 1: found position somewhere in the linked list
+                    return RelativePosition.fromType(type, new internals_1.ID(t.id.client, t.id.clock + index), assoc);
+                }
+                index -= t.length;
+            }
+            if (t.right === null && assoc < 0) {
+                // left-associated position, return last available id
+                return RelativePosition.fromType(type, t.lastID, assoc);
+            }
+            t = t.right;
+        }
+        return RelativePosition.fromType(type, null, assoc);
+    }
 }
 exports.RelativePosition = RelativePosition;
-/**
- * @param {RelativePosition} rpos
- * @return {any}
- */
-const relativePositionToJSON = (rpos) => {
-    const json = {};
-    if (rpos.type) {
-        json.type = rpos.type;
-    }
-    if (rpos.tname) {
-        json.tname = rpos.tname;
-    }
-    if (rpos.item) {
-        json.item = rpos.item;
-    }
-    if (rpos.assoc != null) {
-        json.assoc = rpos.assoc;
-    }
-    return json;
-};
-exports.relativePositionToJSON = relativePositionToJSON;
-/**
- * @param {any} json
- * @return {RelativePosition}
- *
- * @function
- */
-const createRelativePositionFromJSON = (json) => {
-    return new RelativePosition(json.type == null ? null : new internals_1.ID(json.type.client, json.type.clock), json.tname || null, json.item == null ? null : new internals_1.ID(json.item.client, json.item.clock), json.assoc == null ? 0 : json.assoc);
-};
-exports.createRelativePositionFromJSON = createRelativePositionFromJSON;
 class AbsolutePosition {
     constructor(type, index, assoc = 0) {
         this.type = type;
         this.index = index;
         this.assoc = assoc;
     }
-}
-exports.AbsolutePosition = AbsolutePosition;
-/**
- * @param {AbstractType_<any>} type
- * @param {number} index
- * @param {number} [assoc]
- *
- * @function
- */
-const createAbsolutePosition = (type, index, assoc = 0) => {
-    return new AbsolutePosition(type, index, assoc);
-};
-exports.createAbsolutePosition = createAbsolutePosition;
-/**
- * @param {AbstractType_<any>} type
- * @param {ID|null} item
- * @param {number} [assoc]
- *
- * @function
- */
-const createRelativePosition = (type, item, assoc) => {
-    let typeid = null;
-    let tname = null;
-    if (type._item === null) {
-        tname = (0, internals_1.findRootTypeKey)(type);
-    }
-    else {
-        typeid = new internals_1.ID(type._item.id.client, type._item.id.clock);
-    }
-    return new RelativePosition(typeid, tname, item, assoc);
-};
-exports.createRelativePosition = createRelativePosition;
-/**
- * Create a relativePosition based on a absolute position.
- *
- * @param {AbstractType_<any>} type The base type (e.g. YText or YArray).
- * @param {number} index The absolute position.
- * @param {number} [assoc]
- * @return {RelativePosition}
- *
- * @function
- */
-const createRelativePositionFromTypeIndex = (type, index, assoc = 0) => {
-    let t = type._start;
-    if (assoc < 0) {
-        // associated to the left character or the beginning of a type, increment index if possible.
-        if (index === 0) {
-            return (0, exports.createRelativePosition)(type, null, assoc);
-        }
-        index--;
-    }
-    while (t !== null) {
-        if (!t.deleted && t.countable) {
-            if (t.length > index) {
-                // case 1: found position somewhere in the linked list
-                return (0, exports.createRelativePosition)(type, new internals_1.ID(t.id.client, t.id.clock + index), assoc);
-            }
-            index -= t.length;
-        }
-        if (t.right === null && assoc < 0) {
-            // left-associated position, return last available id
-            return (0, exports.createRelativePosition)(type, t.lastID, assoc);
-        }
-        t = t.right;
-    }
-    return (0, exports.createRelativePosition)(type, null, assoc);
-};
-exports.createRelativePositionFromTypeIndex = createRelativePositionFromTypeIndex;
-/**
- * @param {encoding.Encoder} encoder
- * @param {RelativePosition} rpos
- *
- * @function
- */
-const writeRelativePosition = (encoder, rpos) => {
-    const { type, tname, item, assoc } = rpos;
-    if (item !== null) {
-        encoding.writeVarUint(encoder, 0);
-        item.encode(encoder);
-    }
-    else if (tname !== null) {
-        // case 2: found position at the end of the list and type is stored in y.share
-        encoding.writeUint8(encoder, 1);
-        encoding.writeVarString(encoder, tname);
-    }
-    else if (type !== null) {
-        // case 3: found position at the end of the list and type is attached to an item
-        encoding.writeUint8(encoder, 2);
-        type.encode(encoder);
-    }
-    else {
-        throw error.unexpectedCase();
-    }
-    encoding.writeVarInt(encoder, assoc);
-    return encoder;
-};
-exports.writeRelativePosition = writeRelativePosition;
-/**
- * @param {RelativePosition} rpos
- * @return {Uint8Array}
- */
-const encodeRelativePosition = (rpos) => {
-    const encoder = encoding.createEncoder();
-    (0, exports.writeRelativePosition)(encoder, rpos);
-    return encoding.toUint8Array(encoder);
-};
-exports.encodeRelativePosition = encodeRelativePosition;
-/**
- * @param {decoding.Decoder} decoder
- * @return {RelativePosition}
- *
- * @function
- */
-const readRelativePosition = (decoder) => {
-    let type = null;
-    let tname = null;
-    let itemID = null;
-    switch (decoding.readVarUint(decoder)) {
-        case 0:
-            // case 1: found position somewhere in the linked list
-            itemID = internals_1.ID.decode(decoder);
-            break;
-        case 1:
-            // case 2: found position at the end of the list and type is stored in y.share
-            tname = decoding.readVarString(decoder);
-            break;
-        case 2: {
-            // case 3: found position at the end of the list and type is attached to an item
-            type = internals_1.ID.decode(decoder);
-        }
-    }
-    const assoc = decoding.hasContent(decoder) ? decoding.readVarInt(decoder) : 0;
-    return new RelativePosition(type, tname, itemID, assoc);
-};
-exports.readRelativePosition = readRelativePosition;
-/**
- * @param {Uint8Array} uint8Array
- * @return {RelativePosition}
- */
-const decodeRelativePosition = (uint8Array) => (0, exports.readRelativePosition)(decoding.createDecoder(uint8Array));
-exports.decodeRelativePosition = decodeRelativePosition;
-/**
- * @param {RelativePosition} rpos
- * @param {Doc} doc
- * @return {AbsolutePosition|null}
- *
- * @function
- */
-const createAbsolutePositionFromRelativePosition = (rpos, doc) => {
-    const store = doc.store;
-    const rightID = rpos.item;
-    const typeID = rpos.type;
-    const tname = rpos.tname;
-    const assoc = rpos.assoc;
-    let type = null;
-    let index = 0;
-    if (rightID !== null) {
-        if ((0, internals_1.getState)(store, rightID.client) <= rightID.clock) {
-            return null;
-        }
-        const res = (0, internals_1.followRedone)(store, rightID);
-        const right = res.item;
-        if (!(right instanceof internals_1.Item)) {
-            return null;
-        }
-        type = right.parent;
-        if (type._item === null || !type._item.deleted) {
-            index = (right.deleted || !right.countable) ? 0 : (res.diff + (assoc >= 0 ? 0 : 1)); // adjust position based on left association if necessary
-            let n = right.left;
-            while (n !== null) {
-                if (!n.deleted && n.countable) {
-                    index += n.length;
-                }
-                n = n.left;
-            }
-        }
-    }
-    else {
-        if (tname !== null) {
-            type = doc.get(tname);
-        }
-        else if (typeID !== null) {
-            if ((0, internals_1.getState)(store, typeID.client) <= typeID.clock) {
-                // type does not exist yet
+    static fromRelativePosition(rpos, doc) {
+        const store = doc.store;
+        const rightID = rpos.item;
+        const typeID = rpos.type;
+        const tname = rpos.tname;
+        const assoc = rpos.assoc;
+        let type = null;
+        let index = 0;
+        if (rightID !== null) {
+            if (store.getState(rightID.client) <= rightID.clock) {
                 return null;
             }
-            const { item } = (0, internals_1.followRedone)(store, typeID);
-            if (item instanceof internals_1.Item && item.content instanceof internals_1.ContentType) {
-                type = item.content.type;
+            const res = (0, internals_1.followRedone)(store, rightID);
+            const right = res.item;
+            if (!(right instanceof internals_1.Item)) {
+                return null;
+            }
+            type = right.parent;
+            if (type._item === null || !type._item.deleted) {
+                index = (right.deleted || !right.countable) ? 0 : (res.diff + (assoc >= 0 ? 0 : 1)); // adjust position based on left association if necessary
+                let n = right.left;
+                while (n !== null) {
+                    if (!n.deleted && n.countable) {
+                        index += n.length;
+                    }
+                    n = n.left;
+                }
+            }
+        }
+        else {
+            if (tname !== null) {
+                type = doc.get(tname);
+            }
+            else if (typeID !== null) {
+                if (store.getState(typeID.client) <= typeID.clock) {
+                    // type does not exist yet
+                    return null;
+                }
+                const { item } = (0, internals_1.followRedone)(store, typeID);
+                if (item instanceof internals_1.Item && item.content instanceof internals_1.ContentType) {
+                    type = item.content.type;
+                }
+                else {
+                    // struct is garbage collected
+                    return null;
+                }
             }
             else {
-                // struct is garbage collected
-                return null;
+                throw error.unexpectedCase();
+            }
+            if (assoc >= 0) {
+                index = type._length;
+            }
+            else {
+                index = 0;
             }
         }
-        else {
-            throw error.unexpectedCase();
-        }
-        if (assoc >= 0) {
-            index = type._length;
-        }
-        else {
-            index = 0;
-        }
+        return new AbsolutePosition(type, index, rpos.assoc);
     }
-    return (0, exports.createAbsolutePosition)(type, index, rpos.assoc);
+}
+exports.AbsolutePosition = AbsolutePosition;
+const compareRelativePositions = (a, b) => {
+    return a === b || (a !== null && b !== null &&
+        a.tname === b.tname &&
+        (0, internals_1.compareIDs)(a.item, b.item) && (0, internals_1.compareIDs)(a.type, b.type) &&
+        a.assoc === b.assoc);
 };
-exports.createAbsolutePositionFromRelativePosition = createAbsolutePositionFromRelativePosition;
-/**
- * @param {RelativePosition|null} a
- * @param {RelativePosition|null} b
- * @return {boolean}
- *
- * @function
- */
-const compareRelativePositions = (a, b) => a === b || (a !== null && b !== null && a.tname === b.tname && (0, internals_1.compareIDs)(a.item, b.item) && (0, internals_1.compareIDs)(a.type, b.type) && a.assoc === b.assoc);
 exports.compareRelativePositions = compareRelativePositions;

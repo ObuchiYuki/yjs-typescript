@@ -50,7 +50,7 @@ class DeleteSet {
             const structs = transaction.doc.store.clients.get(clientid);
             for (let i = 0; i < deletes.length; i++) {
                 const del = deletes[i];
-                (0, internals_1.iterateStructs)(transaction, structs, del.clock, del.len, body);
+                internals_1.StructStore.iterateStructs(transaction, structs, del.clock, del.len, body);
             }
         });
     }
@@ -162,7 +162,7 @@ class DeleteSet {
             const client = decoding.readVarUint(decoder.restDecoder);
             const numberOfDeletes = decoding.readVarUint(decoder.restDecoder);
             const structs = store.clients.get(client) || [];
-            const state = (0, internals_1.getState)(store, client);
+            const state = store.getState(client);
             for (let i = 0; i < numberOfDeletes; i++) {
                 const clock = decoder.readDsClock();
                 const clockEnd = clock + decoder.readDsLen();
@@ -170,7 +170,7 @@ class DeleteSet {
                     if (state < clockEnd) {
                         unappliedDS.add(client, state, clockEnd - state);
                     }
-                    let index = (0, internals_1.findIndexSS)(structs, clock);
+                    let index = internals_1.StructStore.findIndexSS(structs, clock);
                     /**
                      * We can ignore the case of GC and Delete structs, because we are going to skip them
                      * @type {Item}

@@ -1,5 +1,5 @@
 import { Struct_ } from "./Struct_";
-import { DeleteSet, StructStore, ID, AbstractType_, Transaction, UpdateDecoderAny_, UpdateEncoderAny_, ContentDecoder_, Content_ } from '../internals';
+import { DeleteSet, StructStore, ID, AbstractType_, Transaction, UpdateDecoderAny_, UpdateEncoderAny_, ContentDecoder_, Content_, Snapshot } from '../internals';
 /** Abstract class that represents any content. */
 export declare class Item extends Struct_ {
     /** The item that was originally to the left of this item. */
@@ -47,6 +47,7 @@ export declare class Item extends Struct_ {
     static keepRecursive(item: Item | null, keep: boolean): void;
     /** parent is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.*/
     constructor(id: ID, left: Item | null, origin: ID | null, right: Item | null, rightOrigin: ID | null, parent: AbstractType_<any> | ID | null, parentSub: string | null, content: Content_);
+    isVisible(snapshot?: Snapshot): boolean;
     markDeleted(): void;
     /** Split leftItem into two items; this -> leftItem */
     split(transaction: Transaction, diff: number): Item;

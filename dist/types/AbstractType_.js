@@ -59,7 +59,7 @@ class AbstractType_ {
                     if (index <= n.length) {
                         if (index < n.length) {
                             // insert in-between
-                            (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(n.id.client, n.id.clock + index));
+                            internals_1.StructStore.getItemCleanStart(transaction, new internals_1.ID(n.id.client, n.id.clock + index));
                         }
                         break;
                     }
@@ -143,7 +143,7 @@ class AbstractType_ {
         const cs = [];
         let n = this._start;
         while (n !== null) {
-            if (n.countable && (0, internals_1.isVisible)(n, snapshot)) {
+            if (n.countable && n.isVisible(snapshot)) {
                 const c = n.content.getContent();
                 for (let i = 0; i < c.length; i++) {
                     cs.push(c[i]);
@@ -211,7 +211,7 @@ class AbstractType_ {
         let index = 0;
         let item = this._start;
         while (item !== null) {
-            if (item.countable && (0, internals_1.isVisible)(item, snapshot)) {
+            if (item.countable && item.isVisible(snapshot)) {
                 const c = item.content.getContent();
                 for (let i = 0; i < c.length; i++) {
                     body(c[i], index++, this);
@@ -247,7 +247,7 @@ class AbstractType_ {
         const packJsonContent = () => {
             if (jsonContent.length <= 0)
                 return;
-            const id = new internals_1.ID(ownClientId, (0, internals_1.getState)(store, ownClientId));
+            const id = new internals_1.ID(ownClientId, store.getState(ownClientId));
             const content = new internals_1.ContentAny(jsonContent);
             left = new internals_1.Item(id, left, left && left.lastID, right, right && right.id, this, null, content);
             left.integrate(transaction, 0);
@@ -269,19 +269,19 @@ class AbstractType_ {
                     packJsonContent();
                     if (content.constructor === Uint8Array ||
                         content.constructor === ArrayBuffer) {
-                        const id = new internals_1.ID(ownClientId, (0, internals_1.getState)(store, ownClientId));
+                        const id = new internals_1.ID(ownClientId, store.getState(ownClientId));
                         const icontent = new internals_1.ContentBinary(new Uint8Array(content));
                         left = new internals_1.Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent);
                         left.integrate(transaction, 0);
                     }
                     else if (content.constructor === internals_1.Doc) {
-                        const id = new internals_1.ID(ownClientId, (0, internals_1.getState)(store, ownClientId));
+                        const id = new internals_1.ID(ownClientId, store.getState(ownClientId));
                         const icontent = new internals_1.ContentDoc(content);
                         left = new internals_1.Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent);
                         left.integrate(transaction, 0);
                     }
                     else if (content instanceof AbstractType_) {
-                        const id = new internals_1.ID(ownClientId, (0, internals_1.getState)(store, ownClientId));
+                        const id = new internals_1.ID(ownClientId, store.getState(ownClientId));
                         const icontent = new internals_1.ContentType(content);
                         left = new internals_1.Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent);
                         left.integrate(transaction, 0);
@@ -329,7 +329,7 @@ class AbstractType_ {
         for (; item !== null && index > 0; item = item.right) {
             if (!item.deleted && item.countable) {
                 if (index < item.length) {
-                    (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(item.id.client, item.id.clock + index));
+                    internals_1.StructStore.getItemCleanStart(transaction, new internals_1.ID(item.id.client, item.id.clock + index));
                 }
                 index -= item.length;
             }
@@ -338,7 +338,7 @@ class AbstractType_ {
         while (length > 0 && item !== null) {
             if (!item.deleted) {
                 if (length < item.length) {
-                    (0, internals_1.getItemCleanStart)(transaction, new internals_1.ID(item.id.client, item.id.clock + length));
+                    internals_1.StructStore.getItemCleanStart(transaction, new internals_1.ID(item.id.client, item.id.clock + length));
                 }
                 item.delete(transaction);
                 length -= item.length;
@@ -392,7 +392,7 @@ class AbstractType_ {
                     }
             }
         }
-        const id = new internals_1.ID(ownClientId, (0, internals_1.getState)(doc.store, ownClientId));
+        const id = new internals_1.ID(ownClientId, doc.store.getState(ownClientId));
         new internals_1.Item(id, left, left && left.lastID, null, null, this, key, content)
             .integrate(transaction, 0);
     }
@@ -422,7 +422,7 @@ class AbstractType_ {
         while (v !== null && (!snapshot.sv.has(v.id.client) || v.id.clock >= (snapshot.sv.get(v.id.client) || 0))) {
             v = v.left;
         }
-        return v !== null && (0, internals_1.isVisible)(v, snapshot) ? v.content.getContent()[v.length - 1] : undefined;
+        return v !== null && v.isVisible(snapshot) ? v.content.getContent()[v.length - 1] : undefined;
     }
     // ================================================================================================================ //
     // MARK: - Private Methods (Temporally public) -

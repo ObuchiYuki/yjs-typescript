@@ -53,6 +53,11 @@ class Item extends Struct_1.Struct_ {
         this.content = content;
         this.info = this.content.isCountable() ? binary.BIT2 : 0;
     }
+    isVisible(snapshot) {
+        return snapshot === undefined
+            ? !this.deleted
+            : snapshot.sv.has(this.id.client) && (snapshot.sv.get(this.id.client) || 0) > this.id.clock && !snapshot.ds.isDeleted(this.id);
+    }
     markDeleted() { this.info |= binary.BIT3; }
     /** Split leftItem into two items; this -> leftItem */
     split(transaction, diff) {
@@ -90,7 +95,7 @@ class Item extends Struct_1.Struct_ {
         const ownClientID = doc.clientID;
         const redone = this.redone;
         if (redone !== null) {
-            return (0, internals_1.getItemCleanStart)(transaction, redone);
+            return internals_1.StructStore.getItemCleanStart(transaction, redone);
         }
         let parentItem = this.parent._item;
         /**
@@ -108,7 +113,7 @@ class Item extends Struct_1.Struct_ {
                 return null;
             }
             while (parentItem.redone !== null) {
-                parentItem = (0, internals_1.getItemCleanStart)(transaction, parentItem.redone);
+                parentItem = internals_1.StructStore.getItemCleanStart(transaction, parentItem.redone);
             }
         }
         const parentType = parentItem === null ? this.parent : parentItem.content.type;
@@ -121,7 +126,7 @@ class Item extends Struct_1.Struct_ {
                 let leftTrace = left;
                 // trace redone until parent matches
                 while (leftTrace !== null && leftTrace.parent._item !== parentItem) {
-                    leftTrace = leftTrace.redone === null ? null : (0, internals_1.getItemCleanStart)(transaction, leftTrace.redone);
+                    leftTrace = leftTrace.redone === null ? null : internals_1.StructStore.getItemCleanStart(transaction, leftTrace.redone);
                 }
                 if (leftTrace !== null && leftTrace.parent._item === parentItem) {
                     left = leftTrace;
@@ -133,7 +138,7 @@ class Item extends Struct_1.Struct_ {
                 let rightTrace = right;
                 // trace redone until parent matches
                 while (rightTrace !== null && rightTrace.parent._item !== parentItem) {
-                    rightTrace = rightTrace.redone === null ? null : (0, internals_1.getItemCleanStart)(transaction, rightTrace.redone);
+                    rightTrace = rightTrace.redone === null ? null : internals_1.StructStore.getItemCleanStart(transaction, rightTrace.redone);
                 }
                 if (rightTrace !== null && rightTrace.parent._item === parentItem) {
                     right = rightTrace;
@@ -154,7 +159,7 @@ class Item extends Struct_1.Struct_ {
                 // follow redone
                 // trace redone until parent matches
                 while (left !== null && left.redone !== null) {
-                    left = (0, internals_1.getItemCleanStart)(transaction, left.redone);
+                    left = internals_1.StructStore.getItemCleanStart(transaction, left.redone);
                 }
                 if (left && left.right !== null) {
                     // It is not possible to redo this item because it conflicts with a
@@ -166,7 +171,7 @@ class Item extends Struct_1.Struct_ {
                 left = parentType._map.get(this.parentSub) || null;
             }
         }
-        const nextClock = (0, internals_1.getState)(store, ownClientID);
+        const nextClock = store.getState(ownClientID);
         const nextId = new internals_1.ID(ownClientID, nextClock);
         const redoneItem = new Item(nextId, left, left && left.lastID, right, right && right.id, parentType, this.parentSub, this.content.copy());
         this.redone = nextId;
@@ -176,22 +181,22 @@ class Item extends Struct_1.Struct_ {
     }
     /** Return the creator clientID of the missing op or define missing items and return null. */
     getMissing(transaction, store) {
-        if (this.origin && this.origin.client !== this.id.client && this.origin.clock >= (0, internals_1.getState)(store, this.origin.client)) {
+        if (this.origin && this.origin.client !== this.id.client && this.origin.clock >= store.getState(this.origin.client)) {
             return this.origin.client;
         }
-        if (this.rightOrigin && this.rightOrigin.client !== this.id.client && this.rightOrigin.clock >= (0, internals_1.getState)(store, this.rightOrigin.client)) {
+        if (this.rightOrigin && this.rightOrigin.client !== this.id.client && this.rightOrigin.clock >= store.getState(this.rightOrigin.client)) {
             return this.rightOrigin.client;
         }
-        if (this.parent && this.parent.constructor === internals_1.ID && this.id.client !== this.parent.client && this.parent.clock >= (0, internals_1.getState)(store, this.parent.client)) {
+        if (this.parent && this.parent.constructor === internals_1.ID && this.id.client !== this.parent.client && this.parent.clock >= store.getState(this.parent.client)) {
             return this.parent.client;
         }
         // We have all missing ids, now find the items
         if (this.origin) {
-            this.left = (0, internals_1.getItemCleanEnd)(transaction, store, this.origin);
+            this.left = store.getItemCleanEnd(transaction, this.origin);
             this.origin = this.left.lastID;
         }
         if (this.rightOrigin) {
-            this.right = (0, internals_1.getItemCleanStart)(transaction, this.rightOrigin);
+            this.right = internals_1.StructStore.getItemCleanStart(transaction, this.rightOrigin);
             this.rightOrigin = this.right.id;
         }
         if ((this.left && this.left.constructor === internals_1.GC) || (this.right && this.right.constructor === internals_1.GC)) {
@@ -209,7 +214,7 @@ class Item extends Struct_1.Struct_ {
             }
         }
         else if (this.parent.constructor === internals_1.ID) {
-            const parentItem = (0, internals_1.getItem)(store, this.parent);
+            const parentItem = store.getItem(this.parent);
             if (parentItem.constructor === internals_1.GC) {
                 this.parent = null;
             }
@@ -222,7 +227,7 @@ class Item extends Struct_1.Struct_ {
     integrate(transaction, offset) {
         if (offset > 0) {
             this.id.clock += offset;
-            this.left = (0, internals_1.getItemCleanEnd)(transaction, transaction.doc.store, new internals_1.ID(this.id.client, this.id.clock - 1));
+            this.left = transaction.doc.store.getItemCleanEnd(transaction, new internals_1.ID(this.id.client, this.id.clock - 1));
             this.origin = this.left.lastID;
             this.content = this.content.splice(offset);
             this.length -= offset;
@@ -264,10 +269,10 @@ class Item extends Struct_1.Struct_ {
                             break;
                         } // else, o might be integrated before an item that this conflicts with. If so, we will find it in the next iterations
                     }
-                    else if (item.origin !== null && itemsBeforeOrigin.has((0, internals_1.getItem)(transaction.doc.store, item.origin))) {
+                    else if (item.origin !== null && itemsBeforeOrigin.has(transaction.doc.store.getItem(item.origin))) {
                         // use getItem instead of getItemCleanEnd because we don't want / need to split items.
                         // case 2
-                        if (!conflictingItems.has((0, internals_1.getItem)(transaction.doc.store, item.origin))) {
+                        if (!conflictingItems.has(transaction.doc.store.getItem(item.origin))) {
                             left = item;
                             conflictingItems.clear();
                         }
@@ -314,7 +319,7 @@ class Item extends Struct_1.Struct_ {
             if (this.parentSub === null && this.countable && !this.deleted) {
                 this.parent._length += this.length;
             }
-            (0, internals_1.addStruct)(transaction.doc.store, this);
+            transaction.doc.store.addStruct(this);
             this.content.integrate(transaction, this);
             // add parent to transaction.changed
             (0, internals_1.addChangedTypeToTransaction)(transaction, this.parent, this.parentSub);
@@ -409,7 +414,7 @@ class Item extends Struct_1.Struct_ {
         }
         this.content.gc(store);
         if (parentGCd) {
-            (0, internals_1.replaceStruct)(store, this, new internals_1.GC(this.id, this.length));
+            store.replaceStruct(this, new internals_1.GC(this.id, this.length));
         }
         else {
             this.content = new internals_1.ContentDeleted(this.length);
