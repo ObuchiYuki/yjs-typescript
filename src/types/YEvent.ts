@@ -4,9 +4,6 @@ import {
     Struct_
 } from '../internals'
 
-import * as set from 'lib0/set'
-import * as array from 'lib0/array'
-
 export type YEventDelta = { 
     insert?: string | Array<any> | object | AbstractType_<any>,
     retain?: number,
@@ -94,12 +91,12 @@ export class YEvent<T extends AbstractType_<any>> {
                     if (this.deletes(item)) {
                         if (prev !== null && this.deletes(prev)) {
                             action = 'delete'
-                            oldValue = array.last(prev.content.getContent())
+                            oldValue = prev.content.getContent().at(-1)
                         } else { return }
                     } else {
                         if (prev !== null && this.deletes(prev)) {
                             action = 'update'
-                            oldValue = array.last(prev.content.getContent())
+                            oldValue = prev.content.getContent().at(-1)
                         } else {
                             action = 'add'
                             oldValue = undefined
@@ -108,7 +105,7 @@ export class YEvent<T extends AbstractType_<any>> {
                 } else {
                     if (this.deletes(item)) {
                         action = 'delete'
-                        oldValue = array.last(item.content.getContent())
+                        oldValue = item.content.getContent().at(-1)
                     } else { return }
                 }
 

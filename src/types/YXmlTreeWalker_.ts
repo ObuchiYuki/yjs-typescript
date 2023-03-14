@@ -6,9 +6,6 @@ import {
 
 } from '../internals'
 
-import * as error from 'lib0/error'
-import * as array from 'lib0/array'
-
 /**
  * Represents a subset of the nodes of a YXmlElement / YXmlFragment and a
  * position within them.
@@ -62,7 +59,6 @@ export class YXmlTreeWalker {
         }
         this._firstCall = false
         if (n === null) {
-            // @ts-ignore
             return { value: undefined, done: true }
         }
         this._currentNode = n

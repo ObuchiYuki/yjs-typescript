@@ -46,7 +46,6 @@ class YXmlText extends internals_1.YText {
         return dom;
     }
     toString() {
-        // @ts-ignore
         return this.toDelta().map(delta => {
             const nestedNodes = [];
             for (const nodeName in delta.attributes) {

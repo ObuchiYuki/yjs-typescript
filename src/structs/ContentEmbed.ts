@@ -4,7 +4,7 @@ import {
     Content_, ContentDecoder_
 } from '../internals'
 
-import * as error from 'lib0/error'
+import * as lib0 from "lib0-typescript"
 
 export class ContentEmbed implements Content_ {
     constructor(public embed: object) {}
@@ -17,7 +17,7 @@ export class ContentEmbed implements Content_ {
 
     copy(): ContentEmbed { return new ContentEmbed(this.embed) }
 
-    splice(offset: number): ContentEmbed { throw error.methodUnimplemented() }
+    splice(offset: number): ContentEmbed { throw new lib0.UnimplementedMethodError() }
 
     mergeWith(right: ContentEmbed): boolean { return false }
 

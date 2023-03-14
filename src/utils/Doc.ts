@@ -14,11 +14,9 @@ import {
     generateNewClientID
 } from '../internals'
 
-import { Observable } from 'lib0/observable'
+
 import * as random from 'lib0/random'
-import * as map from 'lib0/map'
-import * as array from 'lib0/array'
-import * as promise from 'lib0/promise'
+import * as lib0 from 'lib0-typescript'
 
 export type DocOpts = {
     gc?: boolean,
@@ -30,11 +28,33 @@ export type DocOpts = {
     shouldLoad?: boolean
 }
 
+export type DocMessageType = {
+    "load": [],
+    "sync": [boolean, Doc],
+    "destroy": [Doc]
+    "destroyed": [boolean],
+
+    "update": [Uint8Array, any, Doc, Transaction],
+    "updateV2": [Uint8Array, any, Doc, Transaction],
+
+    "beforeObserverCalls": [Transaction, Doc],
+
+    "beforeTransaction": [Transaction, Doc],
+    "afterTransaction": [Transaction, Doc],
+    
+    "afterTransactionCleanup": [Transaction, Doc],
+    
+    "beforeAllTransactions": [Doc],
+    "afterAllTransactions": [Doc, Transaction[]],
+    
+    "subdocs": [{ loaded: Set<Doc>; added: Set<Doc>; removed: Set<Doc>; }, Doc, Transaction]
+}
+
 /**
  * A Yjs instance handles the state of shared data.
  * @extends Observable<string>
  */
-export class Doc extends Observable<string> {
+export class Doc extends lib0.Observable<DocMessageType> {
     gcFilter: (arg0: Item) => boolean
     gc: boolean
     clientID: number
@@ -100,7 +120,7 @@ export class Doc extends Observable<string> {
         this.meta = meta
         this.isLoaded = false
         this.isSynced = false
-        this.whenLoaded = promise.create(resolve => {
+        this.whenLoaded = new Promise(resolve => {
             this.on('load', () => {
                 this.isLoaded = true
                 resolve(this)
@@ -186,7 +206,7 @@ export class Doc extends Observable<string> {
      * @return {AbstractType_<any>} The created type. Constructed with TypeConstructor
      */
     get<T extends AbstractType_<any>>(name: string, TypeConstructor: any = AbstractType_): T {
-        const type = map.setIfUndefined(this.share, name, () => {
+        const type = lib0.setIfUndefined(this.share, name, () => {
             const t = new TypeConstructor()
             t._integrate(this, null)
             return t
@@ -238,7 +258,7 @@ export class Doc extends Observable<string> {
 
     /** Emit `destroy` event and unregister all event handlers. */
     destroy() {
-        array.from(this.subdocs).forEach(subdoc => subdoc.destroy())
+        Array.from(this.subdocs).forEach(subdoc => subdoc.destroy())
         const item = this._item
         if (item !== null) {
             this._item = null

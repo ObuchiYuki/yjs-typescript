@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AbstractType_ = void 0;
-const map = require("lib0/map");
 const internals_1 = require("../internals");
+const lib0 = require("lib0-typescript");
 class AbstractType_ {
     get parent() {
         return this._item ? this._item.parent : null;
@@ -82,13 +82,29 @@ class AbstractType_ {
         }
         return arr;
     }
+    /**
+     * Check if `parent` is a parent of `child`.
+     *
+     * @param {AbstractType_<any>} parent
+     * @param {Item|null} child
+     * @return {Boolean} Whether `parent` is a parent of `child`.
+     */
+    isParentOf(child) {
+        while (child !== null) {
+            if (child.parent === this) {
+                return true;
+            }
+            child = child.parent._item;
+        }
+        return false;
+    }
     /** Call event listeners with an event. This will also add an event to all parents (for `.observeDeep` handlers). */
     callObservers(transaction, event) {
         let type = this;
         const changedType = type;
         const changedParentTypes = transaction.changedParentTypes;
         while (true) {
-            map.setIfUndefined(changedParentTypes, type, () => [])
+            lib0.setIfUndefined(changedParentTypes, type, () => [])
                 .push(event);
             if (type._item === null) {
                 break;
@@ -467,5 +483,19 @@ class AbstractType_ {
         this._dEH.removeListener(f);
     }
     toJSON() { }
+    /**
+     * Convenient helper to log type information.
+     * Do not use in productive systems as the output can be immense!
+     */
+    logType() {
+        const res = [];
+        let item = this._start;
+        while (item) {
+            res.push(item);
+            item = item.right;
+        }
+        console.log('Children: ', res);
+        console.log('Children content: ', res.filter(m => !m.deleted).map(m => m.content));
+    }
 }
 exports.AbstractType_ = AbstractType_;

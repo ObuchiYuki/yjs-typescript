@@ -2,11 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeleteSet = exports.DeleteItem = void 0;
 const internals_1 = require("../internals");
-const array = require("lib0/array");
-const math = require("lib0/math");
-const map = require("lib0/map");
 const encoding = require("lib0/encoding");
 const decoding = require("lib0/decoding");
+const lib0 = require("lib0-typescript");
 class DeleteItem {
     constructor(clock, len) {
         this.clock = clock;
@@ -16,7 +14,7 @@ class DeleteItem {
         let left = 0;
         let right = dis.length - 1;
         while (left <= right) {
-            const midindex = math.floor((left + right) / 2);
+            const midindex = Math.floor((left + right) / 2);
             const mid = dis[midindex];
             const midclock = mid.clock;
             if (midclock <= clock) {
@@ -66,7 +64,7 @@ class DeleteSet {
                 const left = dels[j - 1];
                 const right = dels[i];
                 if (left.clock + left.len >= right.clock) {
-                    left.len = math.max(left.len, right.clock + right.len - left.clock);
+                    left.len = Math.max(left.len, right.clock + right.len - left.clock);
                 }
                 else {
                     if (j < i) {
@@ -79,13 +77,13 @@ class DeleteSet {
         });
     }
     add(client, clock, length) {
-        map.setIfUndefined(this.clients, client, () => [])
+        lib0.setIfUndefined(this.clients, client, () => [])
             .push(new DeleteItem(clock, length));
     }
     encode(encoder) {
         encoding.writeVarUint(encoder.restEncoder, this.clients.size);
         // Ensure that the delete set is written in a deterministic order
-        array.from(this.clients.entries())
+        Array.from(this.clients.entries())
             .sort((a, b) => b[0] - a[0])
             .forEach(([client, dsitems]) => {
             encoder.resetDsCurVal();
@@ -126,7 +124,7 @@ class DeleteSet {
             for (let di = deleteItems.length - 1; di >= 0; di--) {
                 const deleteItem = deleteItems[di];
                 // start with merging the item next to the last deleted item
-                const mostRightIndexToCheck = math.min(structs.length - 1, 1 + internals_1.StructStore.findIndexSS(structs, deleteItem.clock + deleteItem.len - 1));
+                const mostRightIndexToCheck = Math.min(structs.length - 1, 1 + internals_1.StructStore.findIndexSS(structs, deleteItem.clock + deleteItem.len - 1));
                 for (let si = mostRightIndexToCheck, struct = structs[si]; si > 0 && struct.id.clock >= deleteItem.clock; struct = structs[--si]) {
                     internals_1.Struct_.tryMergeWithLeft(structs, si);
                 }
@@ -142,9 +140,9 @@ class DeleteSet {
         for (let dssI = 0; dssI < dss.length; dssI++) {
             dss[dssI].clients.forEach((delsLeft, client) => {
                 if (!merged.clients.has(client)) {
-                    const dels = delsLeft.slice();
+                    let dels = delsLeft.slice();
                     for (let i = dssI + 1; i < dss.length; i++) {
-                        array.appendTo(dels, dss[i].clients.get(client) || []);
+                        dels = dels.concat(dss[i].clients.get(client) || []);
                     }
                     merged.clients.set(client, dels);
                 }
@@ -161,7 +159,7 @@ class DeleteSet {
             const client = decoding.readVarUint(decoder.restDecoder);
             const numberOfDeletes = decoding.readVarUint(decoder.restDecoder);
             if (numberOfDeletes > 0) {
-                const dsField = map.setIfUndefined(ds.clients, client, () => []);
+                const dsField = lib0.setIfUndefined(ds.clients, client, () => []);
                 for (let i = 0; i < numberOfDeletes; i++) {
                     dsField.push(new DeleteItem(decoder.readDsClock(), decoder.readDsLen()));
                 }

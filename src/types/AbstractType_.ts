@@ -1,10 +1,10 @@
-import * as map from "lib0/map"
-
 import {
     Doc, Transaction, EventHandler, YEvent, Item, 
     UpdateEncoderAny_, ArraySearchMarker_, Snapshot, 
     ContentAny, ContentBinary, ContentDoc, ContentType, Content_, ID, StructStore
 } from '../internals'
+
+import * as lib0 from "lib0-typescript"
 
 export type Contentable_ = object | Contentable_[] | boolean | number | null | string | Uint8Array
 
@@ -57,6 +57,20 @@ export abstract class AbstractType_<EventType> {
         return arr
     }
 
+    /**
+     * Check if `parent` is a parent of `child`.
+     *
+     * @param {AbstractType_<any>} parent
+     * @param {Item|null} child
+     * @return {Boolean} Whether `parent` is a parent of `child`.
+     */
+    isParentOf(child: Item | null): boolean{
+        while (child !== null) {
+            if (child.parent === this) { return true }
+            child = (child.parent as AbstractType_<any>)._item
+        }
+        return false
+    }
 
     /** Call event listeners with an event. This will also add an event to all parents (for `.observeDeep` handlers). */
     callObservers<EventType extends YEvent<any>>(this: AbstractType_<any>, transaction: Transaction, event: EventType) {
@@ -64,7 +78,7 @@ export abstract class AbstractType_<EventType> {
         const changedType = type
         const changedParentTypes = transaction.changedParentTypes
         while (true) {
-            map.setIfUndefined(changedParentTypes, type, () => [] as YEvent<any>[])
+            lib0.setIfUndefined(changedParentTypes, type, () => [] as YEvent<any>[])
                 .push(event)
             if (type._item === null) { break }
             type = (type._item.parent as AbstractType_<any>)
@@ -500,4 +514,19 @@ export abstract class AbstractType_<EventType> {
     }
 
     toJSON(): any {}
+
+    /**
+     * Convenient helper to log type information.
+     * Do not use in productive systems as the output can be immense!
+     */
+    logType() {
+        const res = []
+        let item = this._start
+        while (item) {
+            res.push(item)
+            item = item.right
+        }
+        console.log('Children: ', res)
+        console.log('Children content: ', res.filter(m => !m.deleted).map(m => m.content))
+    }
 }

@@ -8,11 +8,10 @@ import {
     UpdateEncoderAny_, ID, UpdateEncoderV1, UpdateEncoderV2, Struct_
 } from '../internals'
 
-import * as map from 'lib0/map'
-import * as math from 'lib0/math'
-import * as set from 'lib0/set'
-import * as logging from 'lib0/logging'
+import * as map from 'lib0-typescript/dist/Utility/map'
 import { callAll } from 'lib0/function'
+
+// import * as map from 'lib0-typescript/dist/Utility/map'
 
 /**
  * A transaction is created for every change on the Yjs model. It is possible
@@ -108,7 +107,7 @@ export class Transaction {
     addChangedType(type: AbstractType_<YEvent<any>>, parentSub: string | null) {
         const item = type._item
         if (item === null || (item.id.clock < (this.beforeState.get(item.id.client) || 0) && !item.deleted)) {
-            map.setIfUndefined(this.changed, type, set.create).add(parentSub)
+            map.setIfUndefined(this.changed, type, () => new Set()).add(parentSub)
         }
     }
 
@@ -165,7 +164,12 @@ export class Transaction {
                     )
                     fs.push(() => doc.emit('afterTransaction', [transaction, doc]))
                 })
+
+
+                
                 callAll(fs, [])
+
+
             } finally {
                 // Replace deleted items with ItemDeleted / GC.
                 // This is where content is actually remove from the Yjs Doc.
@@ -180,7 +184,7 @@ export class Transaction {
                     if (beforeClock !== clock) {
                         const structs = store.clients.get(client) as Array<GC|Item>
                         // we iterate from right to left so we can safely remove entries
-                        const firstChangePos = math.max(StructStore.findIndexSS(structs, beforeClock), 1)
+                        const firstChangePos = Math.max(StructStore.findIndexSS(structs, beforeClock), 1)
                         for (let i = structs.length - 1; i >= firstChangePos; i--) {
                             Struct_.tryMergeWithLeft(structs, i)
                         }
@@ -201,19 +205,19 @@ export class Transaction {
                     }
                 }
                 if (!transaction.local && transaction.afterState.get(doc.clientID) !== transaction.beforeState.get(doc.clientID)) {
-                    logging.print(logging.ORANGE, logging.BOLD, '[yjs] ', logging.UNBOLD, logging.RED, 'Changed the client-id because another client seems to be using it.')
+                    console.warn('[yjs] Changed the client-id because another client seems to be using it.')
                     doc.clientID = generateNewClientID()
                 }
                 // @todo Merge all the transactions into one and provide send the data as a single update message
                 doc.emit('afterTransactionCleanup', [transaction, doc])
-                if (doc._observers.has('update')) {
+                if (doc.isObserving('update')) {
                     const encoder = new UpdateEncoderV1()
                     const hasContent = transaction.encodeUpdateMessage(encoder)
                     if (hasContent) {
                         doc.emit('update', [encoder.toUint8Array(), transaction.origin, doc, transaction])
                     }
                 }
-                if (doc._observers.has('updateV2')) {
+                if (doc.isObserving('updateV2')) {
                     const encoder = new UpdateEncoderV2()
                     const hasContent = transaction.encodeUpdateMessage(encoder)
                     if (hasContent) {

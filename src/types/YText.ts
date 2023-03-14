@@ -12,21 +12,19 @@ import {
     ArraySearchMarker_, equalAttributes_, UpdateDecoderAny_, UpdateEncoderAny_, YEventDelta, StructStore
 } from '../internals'
 
-import * as map from 'lib0/map'
-import * as error from 'lib0/error'
-
+import * as lib0 from "lib0-typescript"
 
 export class ItemTextListPosition {
     constructor(
         public left: Item | null,
         public right: Item | null,
         public index: number,
-        public currentAttributes: Map<string, any>
+        public currentAttributes: Map<string, YTextAttributeValue>
     ) {}
 
     /** Only call this if you know that this.right is defined */
     forward() {
-        if (this.right === null) { error.unexpectedCase() }
+        if (this.right === null) { throw new lib0.UnexpectedCaseError() }
         if (this.right.content.constructor === ContentFormat) {
             if (!this.right.deleted) {
                 updateCurrentAttributes(this.currentAttributes, this.right.content as ContentFormat)
@@ -265,7 +263,7 @@ const formatText = (transaction: Transaction, parent: AbstractType_<any>, currPo
  */
 const cleanupFormattingGap = (transaction: Transaction, start: Item, curr: Item | null, startAttributes: Map<string, any>, currAttributes: Map<string, any>): number => {
     let end: Item | null = start
-    const endFormats: Map<string, ContentFormat> = map.create()
+    const endFormats = new Map<string, ContentFormat>()
     while (end && (!end.countable || end.deleted)) {
         if (!end.deleted && end.content.constructor === ContentFormat) {
             const cf = end.content as ContentFormat
@@ -346,8 +344,8 @@ export const cleanupYTextFormatting = (type: YText): number => {
     type.doc?.transact(transaction => {
         let start = type._start as Item
         let end = type._start
-        let startAttributes = map.create()
-        const currentAttributes = map.copy(startAttributes)
+        let startAttributes = new Map<string, YTextAttributeValue>()
+        const currentAttributes = new Map<string, YTextAttributeValue>()
         while (end) {
             if (end.deleted === false) {
                 switch (end.content.constructor) {
@@ -356,7 +354,7 @@ export const cleanupYTextFormatting = (type: YText): number => {
                         break
                     default:
                         res += cleanupFormattingGap(transaction, start, end, startAttributes, currentAttributes)
-                        startAttributes = map.copy(currentAttributes)
+                        startAttributes = new Map(currentAttributes)
                         start = end
                         break
                 }
@@ -369,7 +367,7 @@ export const cleanupYTextFormatting = (type: YText): number => {
 
 const deleteText = (transaction: Transaction, currPos: ItemTextListPosition, length: number): ItemTextListPosition => {
     const startLength = length
-    const startAttrs = map.copy(currPos.currentAttributes)
+    const startAttrs = new Map(currPos.currentAttributes)
     const start = currPos.right
     while (length > 0 && currPos.right !== null) {
         if (currPos.right.deleted === false) {
@@ -422,8 +420,8 @@ const deleteText = (transaction: Transaction, currPos: ItemTextListPosition, len
     *     }
     */
 
-export type TextAttributeValue = boolean|number|string|object|null|undefined
-export type TextAttributes = { [s: string]: TextAttributeValue }
+export type YTextAttributeValue = boolean|number|string|object|null|undefined
+export type YTextAttributes = { [s: string]: YTextAttributeValue }
 export type YTextAction = "delete"|"insert"|"retain"
 
 /** Event that describes the changes on a YText type. */
@@ -473,12 +471,12 @@ export class YTextEvent extends YEvent<YText> {
         const deltas: YEventDelta[] = []
 
         this.target.doc?.transact(transaction => {
-            const currentAttributes = new Map<string, TextAttributeValue>() // saves all current attributes for insert
-            const oldAttributes = new Map<string, TextAttributeValue>()
+            const currentAttributes = new Map<string, YTextAttributeValue>() // saves all current attributes for insert
+            const oldAttributes = new Map<string, YTextAttributeValue>()
             let item = this.target._start
             let action: YTextAction | null = null
             
-            const attributes: TextAttributes = {} // counts added or removed new attributes for retain
+            const attributes: YTextAttributes = {} // counts added or removed new attributes for retain
             
             let insert: string = ''
             let retain = 0
@@ -765,8 +763,8 @@ export class YText extends AbstractType_<YTextEvent> {
     }
 
     /** Returns the Delta representation of this YText type. */
-    toDelta(snapshot?: Snapshot, prevSnapshot?: Snapshot, computeYChange?: (action: 'removed' | 'added', id: ID) => any): any {
-        const ops: any[] = []
+    toDelta(snapshot?: Snapshot, prevSnapshot?: Snapshot, computeYChange?: (action: 'removed' | 'added', id: ID) => any): YEventDelta[] {
+        const ops: YEventDelta[] = []
         const currentAttributes = new Map()
         const doc = this.doc as Doc
         let str = ''
@@ -780,17 +778,13 @@ export class YText extends AbstractType_<YTextEvent> {
                     addAttributes = true
                     attributes[key] = value
                 })
-                /**
-                 * @type {Object<string,any>}
-                 */
-                const op: { [Key: string]: any } = { insert: str }
-                if (addAttributes) {
-                    op.attributes = attributes
-                }
+                const op: YEventDelta = { insert: str }
+                if (addAttributes) { op.attributes = attributes }
                 ops.push(op)
                 str = ''
             }
         }
+        
         // snapshots are merged again after the transaction, so we need to keep the
         // transalive until we are done
         doc.transact(transaction => {
@@ -803,47 +797,47 @@ export class YText extends AbstractType_<YTextEvent> {
             while (n !== null) {
                 if (n.isVisible(snapshot) || (prevSnapshot !== undefined && n.isVisible(prevSnapshot))) {
                     switch (n.content.constructor) {
-                        case ContentString: {
-                            const cur = currentAttributes.get('ychange')
-                            if (snapshot !== undefined && !n.isVisible(snapshot)) {
-                                if (cur === undefined || cur.user !== n.id.client || cur.type !== 'removed') {
-                                    packStr()
-                                    currentAttributes.set('ychange', computeYChange ? computeYChange('removed', n.id) : { type: 'removed' })
-                                }
-                            } else if (prevSnapshot !== undefined && !n.isVisible(prevSnapshot)) {
-                                if (cur === undefined || cur.user !== n.id.client || cur.type !== 'added') {
-                                    packStr()
-                                    currentAttributes.set('ychange', computeYChange ? computeYChange('added', n.id) : { type: 'added' })
-                                }
-                            } else if (cur !== undefined) {
+                    case ContentString: {
+                        const cur = currentAttributes.get('ychange')
+                        if (snapshot !== undefined && !n.isVisible(snapshot)) {
+                            if (cur === undefined || cur.user !== n.id.client || cur.type !== 'removed') {
                                 packStr()
-                                currentAttributes.delete('ychange')
+                                currentAttributes.set('ychange', computeYChange ? computeYChange('removed', n.id) : { type: 'removed' })
                             }
-                            str += (n.content as ContentString).str
-                            break
-                        }
-                        case ContentType:
-                        case ContentEmbed: {
+                        } else if (prevSnapshot !== undefined && !n.isVisible(prevSnapshot)) {
+                            if (cur === undefined || cur.user !== n.id.client || cur.type !== 'added') {
+                                packStr()
+                                currentAttributes.set('ychange', computeYChange ? computeYChange('added', n.id) : { type: 'added' })
+                            }
+                        } else if (cur !== undefined) {
                             packStr()
-                            const op: { [Key: string]: any } = {
-                                insert: n.content.getContent()[0]
-                            }
-                            if (currentAttributes.size > 0) {
-                                const attrs: { [Key: string]: any } = ({})
-                                op.attributes = attrs
-                                currentAttributes.forEach((value, key) => {
-                                    attrs[key] = value
-                                })
-                            }
-                            ops.push(op)
-                            break
+                            currentAttributes.delete('ychange')
                         }
-                        case ContentFormat:
-                            if (n.isVisible(snapshot)) {
-                                packStr()
-                                updateCurrentAttributes(currentAttributes, n.content as ContentFormat)
-                            }
-                            break
+                        str += (n.content as ContentString).str
+                        break
+                    }
+                    case ContentType:
+                    case ContentEmbed: {
+                        packStr()
+                        const op: { [Key: string]: any } = {
+                            insert: n.content.getContent()[0]
+                        }
+                        if (currentAttributes.size > 0) {
+                            const attrs: { [Key: string]: any } = ({})
+                            op.attributes = attrs
+                            currentAttributes.forEach((value, key) => {
+                                attrs[key] = value
+                            })
+                        }
+                        ops.push(op)
+                        break
+                    }
+                    case ContentFormat:
+                        if (n.isVisible(snapshot)) {
+                            packStr()
+                            updateCurrentAttributes(currentAttributes, n.content as ContentFormat)
+                        }
+                        break
                     }
                 }
                 n = n.right
@@ -858,12 +852,12 @@ export class YText extends AbstractType_<YTextEvent> {
      *
      * @param {number} index The index at which to start inserting.
      * @param {String} text The text to insert at the specified position.
-     * @param {TextAttributes} [attributes] Optionally define some formatting
+     * @param {YTextAttributes} [attributes] Optionally define some formatting
      *                                                                        information to apply on the inserted
      *                                                                        Text.
      * @public
      */
-    insert(index: number, text: string, attributes?: TextAttributes) {
+    insert(index: number, text: string, attributes?: YTextAttributes) {
         if (text.length <= 0) {
             return
         }
@@ -886,12 +880,12 @@ export class YText extends AbstractType_<YTextEvent> {
      *
      * @param {number} index The index to insert the embed at.
      * @param {Object | AbstractType_<any>} embed The Object that represents the embed.
-     * @param {TextAttributes} attributes Attribute information to apply on the
+     * @param {YTextAttributes} attributes Attribute information to apply on the
      *                                                                        embed
      *
      * @public
      */
-    insertEmbed(index: number, embed: object | AbstractType_<any>, attributes: TextAttributes = {}) {
+    insertEmbed(index: number, embed: object | AbstractType_<any>, attributes: YTextAttributes = {}) {
         if (this.doc !== null) {
             this.doc.transact(transaction => {
                 const pos = ItemTextListPosition.find(transaction, this, index)
@@ -928,12 +922,12 @@ export class YText extends AbstractType_<YTextEvent> {
      *
      * @param {number} index The position where to start formatting.
      * @param {number} length The amount of characters to assign properties to.
-     * @param {TextAttributes} attributes Attribute information to apply on the
+     * @param {YTextAttributes} attributes Attribute information to apply on the
      *                                                                        text.
      *
      * @public
      */
-    format(index: number, length: number, attributes: TextAttributes) {
+    format(index: number, length: number, attributes: YTextAttributes) {
         if (length === 0) {
             return
         }

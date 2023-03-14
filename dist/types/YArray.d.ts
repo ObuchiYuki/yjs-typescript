@@ -1,4 +1,4 @@
-import { AbstractType_ } from "../types/AbstractType_";
+import { AbstractType_ } from "./AbstractType_";
 import { YEvent, Doc, Transaction, Item, // eslint-disable-line
 ArraySearchMarker_, UpdateEncoderAny_, UpdateDecoderAny_, Contentable_ } from '../internals';
 /** Event that describes the changes on a YArray */

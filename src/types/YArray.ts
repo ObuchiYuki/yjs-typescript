@@ -1,4 +1,4 @@
-import { AbstractType_ } from "../types/AbstractType_"
+import { AbstractType_ } from "./AbstractType_"
 
 import {
     YEvent, YArrayRefID,

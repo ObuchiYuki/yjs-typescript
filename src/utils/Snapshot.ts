@@ -8,10 +8,10 @@ import {
     StructStore, ID
 } from '../internals'
 
-import * as map from 'lib0/map'
-import * as set from 'lib0/set'
 import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
+
+import * as lib0 from 'lib0-typescript'
 
 export class Snapshot {
     ds: DeleteSet
@@ -54,7 +54,7 @@ export class Snapshot {
     }
    
     splitAffectedStructs(transaction: Transaction) {
-        const meta = map.setIfUndefined(transaction.meta, this.splitAffectedStructs, set.create)
+        const meta = lib0.setIfUndefined(transaction.meta, this.splitAffectedStructs, () => new Set())
         const store = transaction.doc.store
         // check if we already split for this snapshot
         if (!meta.has(this)) {

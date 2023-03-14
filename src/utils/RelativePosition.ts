@@ -10,7 +10,8 @@ import {
 
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'
-import * as error from 'lib0/error'
+
+import { UnexpectedCaseError } from 'lib0-typescript'
 
 /**
  * A relative position is based on the Yjs model and is not affected by document changes.
@@ -84,7 +85,7 @@ export class RelativePosition {
             encoding.writeUint8(encoder, 2)
             type.encode(encoder)
         } else {
-            throw error.unexpectedCase()
+            throw new UnexpectedCaseError()
         }
         encoding.writeVarInt(encoder, assoc)
         
@@ -225,7 +226,7 @@ export class AbsolutePosition {
                     return null
                 }
             } else {
-                throw error.unexpectedCase()
+                throw new UnexpectedCaseError()
             }
             if (assoc >= 0) {
                 index = type._length

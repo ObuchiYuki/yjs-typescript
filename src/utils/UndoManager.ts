@@ -1,12 +1,9 @@
 import {
-    isParentOf,
     Transaction, Doc, Item, GC, DeleteSet, AbstractType_, YEvent,
     StructStore, ID
 } from '../internals'
 
-import * as time from 'lib0/time'
-import * as array from 'lib0/array'
-import { Observable } from 'lib0/observable'
+import * as lib0 from "lib0-typescript"
 
 export const followRedone = (store: StructStore, id: ID): { item: Item, diff: number } => {
     let nextID: ID|null = id
@@ -21,7 +18,6 @@ export const followRedone = (store: StructStore, id: ID): { item: Item, diff: nu
     
     return { item, diff }
 }
-
 
 class StackItem {
     deletions: DeleteSet
@@ -59,6 +55,22 @@ export type UndoManagerOptions = {
     doc?: Doc
 }
 
+export type UndoManagerChangeEvent = {
+    origin?: any,
+    stackItem: StackItem,
+    type: string,
+    undoStackCleared?: boolean,
+    changedParentTypes: Map<AbstractType_<YEvent<any>>, YEvent<any>[]>
+}
+
+export type UndoManagerMessages = {
+    'stack-cleared': [{ undoStackCleared: boolean, redoStackCleared: boolean }],
+    
+    'stack-item-added': [UndoManagerChangeEvent, UndoManager],
+    'stack-item-popped': [UndoManagerChangeEvent, UndoManager],
+    'stack-item-updated': [UndoManagerChangeEvent, UndoManager]
+}
+
 /**
  * Fires 'stack-item-added' event when a stack item was added to either the undo- or
  * the redo-stack. You may store additional stack information via the
@@ -68,7 +80,7 @@ export type UndoManagerOptions = {
  *
  * @extends {Observable<'stack-item-added'|'stack-item-popped'|'stack-cleared'|'stack-item-updated'>}
  */
-export class UndoManager extends Observable<'stack-item-added'|'stack-item-popped'|'stack-cleared'|'stack-item-updated'> {
+export class UndoManager extends lib0.Observable<UndoManagerMessages> {
 
     scope: AbstractType_<any>[]
     deleteFilter: (item: Item) => boolean
@@ -92,7 +104,7 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
         deleteFilter = () => true,
         trackedOrigins = new Set([null]),
         ignoreRemoteMapChanges = false,
-        doc = (array.isArray(typeScope) ? typeScope[0].doc : typeScope.doc) as Doc
+        doc = (Array.isArray(typeScope) ? typeScope[0].doc : typeScope.doc) as Doc
     }: UndoManagerOptions = {}) {
         super()
         this.scope = []
@@ -135,7 +147,7 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
                     insertions.add(client, startClock, len)
                 }
             })
-            const now = time.getUnixTime()
+            const now = Date.now()
             let didAdd = false
             if (this.lastChange > 0 && now - this.lastChange < this.captureTimeout && stack.length > 0 && !undoing && !redoing) {
                 // append change to last stack op
@@ -152,15 +164,22 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
             }
             // make sure that deleted structs are not gc'd
             transaction.deleteSet.iterate(transaction, item => {
-                if (item instanceof Item && this.scope.some(type => isParentOf(type, item))) {
+                if (item instanceof Item && this.scope.some(type => type.isParentOf(item))) {
                     Item.keepRecursive(item, true)
                 }
             })
-            const changeEvent = [{ stackItem: stack[stack.length - 1], origin: transaction.origin, type: undoing ? 'redo' : 'undo', changedParentTypes: transaction.changedParentTypes }, this]
+
+            const changeEvent = { 
+                stackItem: stack[stack.length - 1], 
+                origin: transaction.origin, 
+                type: undoing ? 'redo' : 'undo', 
+                changedParentTypes: transaction.changedParentTypes 
+            }
+
             if (didAdd) {
-                this.emit('stack-item-added', changeEvent)
+                this.emit('stack-item-added', [changeEvent, this])
             } else {
-                this.emit('stack-item-updated', changeEvent)
+                this.emit('stack-item-updated', [changeEvent, this])
             }
         }
         this.doc.on('afterTransaction', this.afterTransactionHandler)
@@ -172,7 +191,7 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
 
     clearStackItem(tr: Transaction, stackItem: StackItem) {
         stackItem.deletions.iterate(tr, item => {
-            if (item instanceof Item && this.scope.some(type => isParentOf(type, item))) {
+            if (item instanceof Item && this.scope.some(type => type.isParentOf(item))) {
                 Item.keepRecursive(item, false)
             }
         })
@@ -203,7 +222,7 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
                             }
                             struct = item
                         }
-                        if (!struct.deleted && scope.some(type => isParentOf(type, struct as Item))) {
+                        if (!struct.deleted && scope.some(type => type.isParentOf(struct as Item))) {
                             itemsToDelete.push(struct)
                         }
                     }
@@ -211,7 +230,7 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
                 stackItem.deletions.iterate(transaction, struct => {
                     if (
                         struct instanceof Item &&
-                        scope.some(type => isParentOf(type, struct)) &&
+                        scope.some(type => type.isParentOf(struct)) &&
                         // Never redo structs in stackItem.insertions because they were created and deleted in the same capture interval.
                         !stackItem.insertions.isDeleted(struct.id)
                     ) {
@@ -249,7 +268,7 @@ export class UndoManager extends Observable<'stack-item-added'|'stack-item-poppe
 
 
     addToScope(ytypes: Array<AbstractType_<any>> | AbstractType_<any>) {
-        ytypes = array.isArray(ytypes) ? ytypes : [ytypes]
+        ytypes = Array.isArray(ytypes) ? ytypes : [ytypes]
         ytypes.forEach(ytype => {
             if (this.scope.every(yt => yt !== ytype)) {
                 this.scope.push(ytype)

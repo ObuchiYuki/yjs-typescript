@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AbstractConnector = void 0;
-const observable_1 = require("lib0/observable");
+const lib0 = require("lib0-typescript");
 /**
  * This is an abstract interface that all Connectors should implement to keep them interchangeable.
  *
@@ -10,7 +10,7 @@ const observable_1 = require("lib0/observable");
  *
  * @extends {Observable<any>}
  */
-class AbstractConnector extends observable_1.Observable {
+class AbstractConnector extends lib0.Observable {
     constructor(ydoc, awareness) {
         super();
         this.doc = ydoc;

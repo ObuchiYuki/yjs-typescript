@@ -7,8 +7,6 @@ export * from './utils/UpdateEncoder'
 export * from './utils/encoding'
 export * from './utils/EventHandler'
 export * from './utils/ID'
-export * from './utils/functions/isParentOf'
-export * from './utils/functions/logType'
 export * from './utils/PermanentUserData'
 export * from './utils/RelativePosition'
 export * from './utils/Snapshot'
@@ -19,7 +17,7 @@ export * from './utils/updates'
 export * from './types/YEvent'
 
 // export * from './types/AbstractType'
-export * from './structs/YArray'
+export * from './types/YArray'
 export * from './types/YMap'
 export * from './types/YText'
 export * from './types/YXmlFragment'
@@ -52,5 +50,4 @@ export * from "./types/ArraySearchMarker_"
 
 export * from "./utils/functions/generateNewClientID"
 export * from "./utils/functions/findRootTypeKey"
-export * from "./utils/functions/createMapIterator"
 export * from "./utils/functions/equalAttributes"

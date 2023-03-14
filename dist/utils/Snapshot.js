@@ -2,10 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.equalSnapshots = exports.Snapshot = void 0;
 const internals_1 = require("../internals");
-const map = require("lib0/map");
-const set = require("lib0/set");
 const decoding = require("lib0/decoding");
 const encoding = require("lib0/encoding");
+const lib0 = require("lib0-typescript");
 class Snapshot {
     constructor(ds, sv) {
         this.ds = ds;
@@ -32,7 +31,7 @@ class Snapshot {
         return Snapshot.decodeV2(buf, new internals_1.DSDecoderV1(decoding.createDecoder(buf)));
     }
     splitAffectedStructs(transaction) {
-        const meta = map.setIfUndefined(transaction.meta, this.splitAffectedStructs, set.create);
+        const meta = lib0.setIfUndefined(transaction.meta, this.splitAffectedStructs, () => new Set());
         const store = transaction.doc.store;
         // check if we already split for this snapshot
         if (!meta.has(this)) {

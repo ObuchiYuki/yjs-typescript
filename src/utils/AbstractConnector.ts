@@ -1,5 +1,5 @@
 
-import { Observable } from 'lib0/observable'
+import * as lib0 from "lib0-typescript"
 
 import {
     Doc // eslint-disable-line
@@ -13,7 +13,7 @@ import {
  *
  * @extends {Observable<any>}
  */
-export class AbstractConnector extends Observable<any> {
+export class AbstractConnector<Message extends { [s: string]: readonly unknown[]; }> extends lib0.Observable<Message> {
     doc: Doc
     awareness: any
     constructor (ydoc: Doc, awareness: any) {

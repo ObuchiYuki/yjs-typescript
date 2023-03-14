@@ -4,8 +4,8 @@ export declare class ItemTextListPosition {
     left: Item | null;
     right: Item | null;
     index: number;
-    currentAttributes: Map<string, any>;
-    constructor(left: Item | null, right: Item | null, index: number, currentAttributes: Map<string, any>);
+    currentAttributes: Map<string, YTextAttributeValue>;
+    constructor(left: Item | null, right: Item | null, index: number, currentAttributes: Map<string, YTextAttributeValue>);
     /** Only call this if you know that this.right is defined */
     forward(): void;
     /**
@@ -56,9 +56,9 @@ export declare const cleanupYTextFormatting: (type: YText) => number;
     *         font-size: '40px'
     *     }
     */
-export type TextAttributeValue = boolean | number | string | object | null | undefined;
-export type TextAttributes = {
-    [s: string]: TextAttributeValue;
+export type YTextAttributeValue = boolean | number | string | object | null | undefined;
+export type YTextAttributes = {
+    [s: string]: YTextAttributeValue;
 };
 export type YTextAction = "delete" | "insert" | "retain";
 /** Event that describes the changes on a YText type. */
@@ -124,29 +124,29 @@ export declare class YText extends AbstractType_<YTextEvent> {
         sanitize?: boolean;
     }): void;
     /** Returns the Delta representation of this YText type. */
-    toDelta(snapshot?: Snapshot, prevSnapshot?: Snapshot, computeYChange?: (action: 'removed' | 'added', id: ID) => any): any;
+    toDelta(snapshot?: Snapshot, prevSnapshot?: Snapshot, computeYChange?: (action: 'removed' | 'added', id: ID) => any): YEventDelta[];
     /**
      * Insert text at a given index.
      *
      * @param {number} index The index at which to start inserting.
      * @param {String} text The text to insert at the specified position.
-     * @param {TextAttributes} [attributes] Optionally define some formatting
+     * @param {YTextAttributes} [attributes] Optionally define some formatting
      *                                                                        information to apply on the inserted
      *                                                                        Text.
      * @public
      */
-    insert(index: number, text: string, attributes?: TextAttributes): void;
+    insert(index: number, text: string, attributes?: YTextAttributes): void;
     /**
      * Inserts an embed at a index.
      *
      * @param {number} index The index to insert the embed at.
      * @param {Object | AbstractType_<any>} embed The Object that represents the embed.
-     * @param {TextAttributes} attributes Attribute information to apply on the
+     * @param {YTextAttributes} attributes Attribute information to apply on the
      *                                                                        embed
      *
      * @public
      */
-    insertEmbed(index: number, embed: object | AbstractType_<any>, attributes?: TextAttributes): void;
+    insertEmbed(index: number, embed: object | AbstractType_<any>, attributes?: YTextAttributes): void;
     /**
      * Deletes text starting from an index.
      *
@@ -161,12 +161,12 @@ export declare class YText extends AbstractType_<YTextEvent> {
      *
      * @param {number} index The position where to start formatting.
      * @param {number} length The amount of characters to assign properties to.
-     * @param {TextAttributes} attributes Attribute information to apply on the
+     * @param {YTextAttributes} attributes Attribute information to apply on the
      *                                                                        text.
      *
      * @public
      */
-    format(index: number, length: number, attributes: TextAttributes): void;
+    format(index: number, length: number, attributes: YTextAttributes): void;
     /**
      * Removes an attribute.
      *

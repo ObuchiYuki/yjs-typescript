@@ -2,7 +2,7 @@ import * as Y from '../testHelper'
 import * as t from 'lib0/testing'
 import * as prng from 'lib0/prng'
 import * as math from 'lib0/math'
-import { YEventDelta } from '../../src/internals'
+import { AbstractType_, YEventDelta } from '../../src/internals'
 
 const { init, compare } = Y
 
@@ -1835,7 +1835,7 @@ export const testTypesAsEmbed = (tc: t.TestCase) => {
     text0.applyDelta([{
         insert: new Y.Map([['key', 'val']])
     }])
-    t.compare(text0.toDelta()[0].insert.toJSON(), { key: 'val' })
+    t.compare((text0.toDelta()[0].insert as AbstractType_<any>).toJSON(), { key: 'val' })
     let firedEvent = false
     text1.observe(event => {
         const d = event.delta
@@ -1846,7 +1846,7 @@ export const testTypesAsEmbed = (tc: t.TestCase) => {
     testConnector.flushAllMessages()
     const delta = text1.toDelta()
     t.assert(delta.length === 1)
-    t.compare(delta[0].insert.toJSON(), { key: 'val' })
+    t.compare((delta[0].insert as AbstractType_<any>).toJSON(), { key: 'val' })
     t.assert(firedEvent, 'fired the event observer containing a Type-Embed')
 }
 

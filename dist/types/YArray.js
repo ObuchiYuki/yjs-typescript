@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readYArray = exports.YArray = exports.YArrayEvent = void 0;
-const AbstractType_1 = require("../types/AbstractType_");
+const AbstractType_1 = require("./AbstractType_");
 const internals_1 = require("../internals");
 /** Event that describes the changes on a YArray */
 class YArrayEvent extends internals_1.YEvent {

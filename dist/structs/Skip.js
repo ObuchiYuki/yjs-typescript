@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Skip = exports.structSkipRefNumber = void 0;
 const Struct_1 = require("./Struct_");
-const error = require("lib0/error");
 const encoding = require("lib0/encoding");
+const lib0 = require("lib0-typescript");
 exports.structSkipRefNumber = 10;
 class Skip extends Struct_1.Struct_ {
     get deleted() { return true; }
@@ -16,8 +16,7 @@ class Skip extends Struct_1.Struct_ {
         return true;
     }
     integrate(transaction, offset) {
-        // skip structs cannot be integrated
-        error.unexpectedCase();
+        throw new lib0.UnexpectedCaseError();
     }
     write(encoder, offset) {
         encoder.writeInfo(exports.structSkipRefNumber);

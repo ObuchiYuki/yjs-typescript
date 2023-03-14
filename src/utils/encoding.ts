@@ -30,15 +30,13 @@ import {
     diffUpdateV2,
     convertUpdateFormatV2ToV1,
     DSDecoderV2, Doc, Transaction, GC, Item, StructStore, // eslint-disable-line
-    DeleteSet, ID
+    DeleteSet, ID, UpdateDecoderAny_
 } from '../internals'
 
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'
-import * as binary from 'lib0/binary'
-import * as map from 'lib0/map'
-import * as math from 'lib0/math'
-import * as array from 'lib0/array'
+
+import * as lib0 from "lib0-typescript"
 
 /**
  * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
@@ -50,7 +48,7 @@ import * as array from 'lib0/array'
  */
 const writeStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, structs: Array<GC | Item>, client: number, clock: number) => {
     // write first id
-    clock = math.max(clock, structs[0].id.clock) // make sure the first id exists
+    clock = Math.max(clock, structs[0].id.clock) // make sure the first id exists
     const startNewStructs = StructStore.findIndexSS(structs, clock)
     // write # encoded structs
     encoding.writeVarUint(encoder.restEncoder, structs.length - startNewStructs)
@@ -90,25 +88,13 @@ export const writeClientsStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, 
     encoding.writeVarUint(encoder.restEncoder, sm.size)
     // Write items with higher client ids first
     // This heavily improves the conflict algorithm.
-    array.from(sm.entries()).sort((a, b) => b[0] - a[0]).forEach(([client, clock]) => {
-        // @ts-ignore
-        writeStructs(encoder, store.clients.get(client), client, clock)
+    Array.from(sm.entries()).sort((a, b) => b[0] - a[0]).forEach(([client, clock]) => {
+        writeStructs(encoder, store.clients.get(client) ?? [], client, clock)
     })
 }
 
-/**
- * @param {UpdateDecoderV1 | UpdateDecoderV2} decoder The decoder object to read data from.
- * @param {Doc} doc
- * @return {Map<number, { i: number, refs: Array<Item | GC> }>}
- *
- * @private
- * @function
- */
-export const readClientsStructRefs = (decoder: UpdateDecoderV1 | UpdateDecoderV2, doc: Doc): Map<number, { i: number; refs: Array<Item | GC> }> => {
-    /**
-     * @type {Map<number, { i: number, refs: Array<Item | GC> }>}
-     */
-    const clientRefs: Map<number, { i: number; refs: Array<Item | GC> }> = map.create()
+export const readClientsStructRefs = (decoder: UpdateDecoderAny_, doc: Doc): Map<number, { i: number; refs: Array<Item | GC> }> => {
+    const clientRefs = new Map<number, { i: number; refs: Array<Item | GC> }>()
     const numOfStateUpdates = decoding.readVarUint(decoder.restDecoder)
     for (let i = 0; i < numOfStateUpdates; i++) {
         const numberOfStructs = decoding.readVarUint(decoder.restDecoder)
@@ -122,7 +108,7 @@ export const readClientsStructRefs = (decoder: UpdateDecoderV1 | UpdateDecoderV2
         clientRefs.set(client, { i: 0, refs })
         for (let i = 0; i < numberOfStructs; i++) {
             const info = decoder.readInfo()
-            switch (binary.BITS5 & info) {
+            switch (lib0.Bits.n5 & info) {
                 case 0: { // GC
                     const len = decoder.readLen()
                     refs[i] = new GC(new ID(client, clock), len)
@@ -142,7 +128,7 @@ export const readClientsStructRefs = (decoder: UpdateDecoderV1 | UpdateDecoderV2
                      * Below a non-optimized version is shown that implements the basic algorithm with
                      * a few comments
                      */
-                    const cantCopyParentInfo = (info & (binary.BIT7 | binary.BIT8)) === 0
+                    const cantCopyParentInfo = (info & (lib0.Bit.n7 | lib0.Bit.n8)) === 0
                     // If parent = null and neither left nor right are defined, then we know that `parent` is child of `y`
                     // and we read the next string as parentYKey.
                     // It indicates how we store/retrieve parent from `y.share`
@@ -150,11 +136,11 @@ export const readClientsStructRefs = (decoder: UpdateDecoderV1 | UpdateDecoderV2
                     const struct = new Item(
                         new ID(client, clock),
                         null, // leftd
-                        (info & binary.BIT8) === binary.BIT8 ? decoder.readLeftID() : null, // origin
+                        (info & lib0.Bit.n8) === lib0.Bit.n8 ? decoder.readLeftID() : null, // origin
                         null, // right
-                        (info & binary.BIT7) === binary.BIT7 ? decoder.readRightID() : null, // right origin
+                        (info & lib0.Bit.n7) === lib0.Bit.n7 ? decoder.readRightID() : null, // right origin
                         cantCopyParentInfo ? (decoder.readParentInfo() ? doc.get(decoder.readString()) : decoder.readLeftID()) : null, // parent
-                        cantCopyParentInfo && (info & binary.BIT6) === binary.BIT6 ? decoder.readString() : null, // parentSub
+                        cantCopyParentInfo && (info & lib0.Bit.n6) === lib0.Bit.n6 ? decoder.readString() : null, // parentSub
                         readItemContent(decoder, info) // item content
                     )
                     /* A non-optimized implementation of the above algorithm:
@@ -225,7 +211,7 @@ const integrateStructs = (transaction: Transaction, store: StructStore, clientsS
      */
     const stack: Array<Item | GC> = []
     // sort them so that we take the higher id first, in case of conflicts the lower id will probably not conflict with the id from the higher user.
-    let clientsStructRefsIds = array.from(clientsStructRefs.keys()).sort((a, b) => a - b)
+    let clientsStructRefsIds = Array.from(clientsStructRefs.keys()).sort((a, b) => a - b)
     if (clientsStructRefsIds.length === 0) {
         return null
     }
@@ -295,7 +281,7 @@ const integrateStructs = (transaction: Transaction, store: StructStore, clientsS
     // iterate over all struct readers until we are done
     while (true) {
         if (stackHead.constructor !== Skip) {
-            const localClock = map.setIfUndefined(state, stackHead.id.client, () => store.getState(stackHead.id.client))
+            const localClock = lib0.setIfUndefined(state, stackHead.id.client, () => store.getState(stackHead.id.client))
             const offset = localClock - stackHead.id.clock
             if (offset < 0) {
                 // update from the same client is missing
@@ -596,7 +582,7 @@ export const decodeStateVector = (decodedState: Uint8Array): Map<number, number>
  */
 export const writeStateVector = (encoder: DSEncoderV1 | DSEncoderV2, sv: Map<number, number>) => {
     encoding.writeVarUint(encoder.restEncoder, sv.size)
-    array.from(sv.entries()).sort((a, b) => b[0] - a[0]).forEach(([client, clock]) => {
+    Array.from(sv.entries()).sort((a, b) => b[0] - a[0]).forEach(([client, clock]) => {
         encoding.writeVarUint(encoder.restEncoder, client) // @todo use a special client decoder that is based on mapping
         encoding.writeVarUint(encoder.restEncoder, clock)
     })

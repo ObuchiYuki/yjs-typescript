@@ -3,7 +3,7 @@ import {
     AbstractType_
 } from '../../internals'
 
-import * as error from 'lib0/error'
+import * as lib0 from "lib0-typescript"
 
 /**
  * The top types are mapped from y.share.get(keyname) => type.
@@ -16,5 +16,5 @@ export const findRootTypeKey = (type: AbstractType_<any>): string => {
             return key
         }
     }
-    throw error.unexpectedCase()
+    throw new lib0.UnexpectedCaseError()
 }

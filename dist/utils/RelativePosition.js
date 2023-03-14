@@ -4,7 +4,7 @@ exports.compareRelativePositions = exports.AbsolutePosition = exports.RelativePo
 const internals_1 = require("../internals");
 const encoding = require("lib0/encoding");
 const decoding = require("lib0/decoding");
-const error = require("lib0/error");
+const lib0_typescript_1 = require("lib0-typescript");
 /**
  * A relative position is based on the Yjs model and is not affected by document changes.
  * E.g. If you place a relative position before a certain character, it will always point to this character.
@@ -79,7 +79,7 @@ class RelativePosition {
             type.encode(encoder);
         }
         else {
-            throw error.unexpectedCase();
+            throw new lib0_typescript_1.UnexpectedCaseError();
         }
         encoding.writeVarInt(encoder, assoc);
         return encoding.toUint8Array(encoder);
@@ -208,7 +208,7 @@ class AbsolutePosition {
                 }
             }
             else {
-                throw error.unexpectedCase();
+                throw new lib0_typescript_1.UnexpectedCaseError();
             }
             if (assoc >= 0) {
                 index = type._length;

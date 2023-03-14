@@ -3,7 +3,7 @@
  */
 import { StructStore, AbstractType_, YArray, YText, YMap, YXmlFragment, Item, Transaction, YEvent, // eslint-disable-line
 Contentable_ } from '../internals';
-import { Observable } from 'lib0/observable';
+import * as lib0 from 'lib0-typescript';
 export type DocOpts = {
     gc?: boolean;
     gcFilter?: (item: Item) => boolean;
@@ -13,11 +13,30 @@ export type DocOpts = {
     autoLoad?: boolean;
     shouldLoad?: boolean;
 };
+export type DocMessageType = {
+    "load": [];
+    "sync": [boolean, Doc];
+    "destroy": [Doc];
+    "destroyed": [boolean];
+    "update": [Uint8Array, any, Doc, Transaction];
+    "updateV2": [Uint8Array, any, Doc, Transaction];
+    "beforeObserverCalls": [Transaction, Doc];
+    "beforeTransaction": [Transaction, Doc];
+    "afterTransaction": [Transaction, Doc];
+    "afterTransactionCleanup": [Transaction, Doc];
+    "beforeAllTransactions": [Doc];
+    "afterAllTransactions": [Doc, Transaction[]];
+    "subdocs": [{
+        loaded: Set<Doc>;
+        added: Set<Doc>;
+        removed: Set<Doc>;
+    }, Doc, Transaction];
+};
 /**
  * A Yjs instance handles the state of shared data.
  * @extends Observable<string>
  */
-export declare class Doc extends Observable<string> {
+export declare class Doc extends lib0.Observable<DocMessageType> {
     gcFilter: (arg0: Item) => boolean;
     gc: boolean;
     clientID: number;

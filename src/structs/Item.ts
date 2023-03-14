@@ -10,9 +10,7 @@ import {
     UpdateDecoderAny_, UpdateEncoderAny_, ContentDecoder_, Content_, Snapshot,
 } from '../internals'
 
-import * as error from 'lib0/error'
-import * as binary from 'lib0/binary'
-
+import * as lib0 from "lib0-typescript"
 
 // ================================================================================================================ //
 // MARK: - Item -
@@ -57,18 +55,18 @@ export class Item extends Struct_ {
     info: number
 
     /** This is used to mark the item as an indexed fast-search marker */
-    set marker(isMarked: boolean) { if (((this.info & binary.BIT4) > 0) !== isMarked) {  this.info ^= binary.BIT4  } }
-    get marker () { return (this.info & binary.BIT4) > 0 }
+    set marker(isMarked: boolean) { if (((this.info & lib0.Bit.n4) > 0) !== isMarked) {  this.info ^= lib0.Bit.n4  } }
+    get marker () { return (this.info & lib0.Bit.n4) > 0 }
 
     /** If true, do not garbage collect this Item. */
-    get keep () { return (this.info & binary.BIT1) > 0 }
-    set keep (doKeep) { if (this.keep !== doKeep) { this.info ^= binary.BIT1 } }
+    get keep () { return (this.info & lib0.Bit.n1) > 0 }
+    set keep (doKeep) { if (this.keep !== doKeep) { this.info ^= lib0.Bit.n1 } }
 
-    get countable () { return (this.info & binary.BIT2) > 0 }
+    get countable () { return (this.info & lib0.Bit.n2) > 0 }
 
     /** Whether this item was deleted or not. */
-    get deleted(): boolean { return (this.info & binary.BIT3) > 0 }
-    set deleted(doDelete: boolean) { if (this.deleted !== doDelete) { this.info ^= binary.BIT3 } }
+    get deleted(): boolean { return (this.info & lib0.Bit.n3) > 0 }
+    set deleted(doDelete: boolean) { if (this.deleted !== doDelete) { this.info ^= lib0.Bit.n3 } }
 
     // ================================================================================================================ //
     // MARK: - Methods -
@@ -99,7 +97,7 @@ export class Item extends Struct_ {
         this.parentSub = parentSub
         this.redone = null
         this.content = content
-        this.info = this.content.isCountable() ? binary.BIT2 : 0
+        this.info = this.content.isCountable() ? lib0.Bit.n2 : 0
     }
 
     isVisible(snapshot?: Snapshot) {
@@ -108,7 +106,7 @@ export class Item extends Struct_ {
         : snapshot.sv.has(this.id.client) && (snapshot.sv.get(this.id.client) || 0) > this.id.clock && !snapshot.ds.isDeleted(this.id)
     }
 
-    markDeleted() { this.info |= binary.BIT3 }
+    markDeleted() { this.info |= lib0.Bit.n3 }
 
     /** Split leftItem into two items; this -> leftItem */
     split(transaction: Transaction, diff: number): Item {
@@ -479,7 +477,7 @@ export class Item extends Struct_ {
 
     gc(store: StructStore, parentGCd: boolean) {
         if (!this.deleted) {
-            throw error.unexpectedCase()
+            throw new lib0.UnexpectedCaseError()
         }
         this.content.gc(store)
         if (parentGCd) {
@@ -499,10 +497,10 @@ export class Item extends Struct_ {
         const origin = offset > 0 ? new ID(this.id.client, this.id.clock + offset - 1) : this.origin
         const rightOrigin = this.rightOrigin
         const parentSub = this.parentSub
-        const info = (this.content.getRef() & binary.BITS5) |
-            (origin === null ? 0 : binary.BIT8) | // origin is defined
-            (rightOrigin === null ? 0 : binary.BIT7) | // right origin is defined
-            (parentSub === null ? 0 : binary.BIT6) // parentSub is non-null
+        const info = (this.content.getRef() & lib0.Bits.n5) |
+            (origin === null ? 0 : lib0.Bit.n8) | // origin is defined
+            (rightOrigin === null ? 0 : lib0.Bit.n7) | // right origin is defined
+            (parentSub === null ? 0 : lib0.Bit.n6) // parentSub is non-null
         encoder.writeInfo(info)
         if (origin !== null) {
             encoder.writeLeftID(origin)
@@ -531,7 +529,7 @@ export class Item extends Struct_ {
                 encoder.writeParentInfo(false) // write parent id
                 encoder.writeLeftID(parent)
             } else {
-                error.unexpectedCase()
+                throw new lib0.UnexpectedCaseError()
             }
             if (parentSub !== null) {
                 encoder.writeString(parentSub)
@@ -544,12 +542,12 @@ export class Item extends Struct_ {
 }
 
 export const readItemContent = (decoder: UpdateDecoderAny_, info: number): Content_ => {
-    return contentDecoders_[info & binary.BITS5](decoder)
+    return contentDecoders_[info & lib0.Bits.n5](decoder)
 }
 
 /** A lookup map for reading Item content. */
 export const contentDecoders_: ContentDecoder_[] = [
-    () => { error.unexpectedCase() }, // GC is not ItemContent
+    () => { throw new lib0.UnexpectedCaseError() }, // GC is not ItemContent
     readContentDeleted, // 1
     readContentJSON, // 2
     readContentBinary, // 3
@@ -559,5 +557,5 @@ export const contentDecoders_: ContentDecoder_[] = [
     readContentType, // 7
     readContentAny, // 8
     readContentDoc, // 9
-    () => { error.unexpectedCase() } // 10 - Skip is not ItemContent
+    () => { throw new lib0.UnexpectedCaseError() } // 10 - Skip is not ItemContent
 ]

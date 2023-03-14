@@ -17,6 +17,14 @@ export declare abstract class AbstractType_<EventType> {
     constructor();
     /** Accumulate all (list) children of a type and return them as an Array. */
     getChildren(): Item[];
+    /**
+     * Check if `parent` is a parent of `child`.
+     *
+     * @param {AbstractType_<any>} parent
+     * @param {Item|null} child
+     * @return {Boolean} Whether `parent` is a parent of `child`.
+     */
+    isParentOf(child: Item | null): boolean;
     /** Call event listeners with an event. This will also add an event to all parents (for `.observeDeep` handlers). */
     callObservers<EventType extends YEvent<any>>(this: AbstractType_<any>, transaction: Transaction, event: EventType): void;
     listSlice(start: number, end: number): any[];
@@ -77,4 +85,9 @@ export declare abstract class AbstractType_<EventType> {
     /** Unregister an observer function. */
     unobserveDeep(f: (events: Array<YEvent<any>>, transaction: Transaction) => void): void;
     toJSON(): any;
+    /**
+     * Convenient helper to log type information.
+     * Do not use in productive systems as the output can be immense!
+     */
+    logType(): void;
 }

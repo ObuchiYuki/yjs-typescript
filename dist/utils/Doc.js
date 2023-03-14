@@ -5,16 +5,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Doc = void 0;
 const internals_1 = require("../internals");
-const observable_1 = require("lib0/observable");
 const random = require("lib0/random");
-const map = require("lib0/map");
-const array = require("lib0/array");
-const promise = require("lib0/promise");
+const lib0 = require("lib0-typescript");
 /**
  * A Yjs instance handles the state of shared data.
  * @extends Observable<string>
  */
-class Doc extends observable_1.Observable {
+class Doc extends lib0.Observable {
     /**
      * @param {DocOpts} opts configuration
      */
@@ -36,7 +33,7 @@ class Doc extends observable_1.Observable {
         this.meta = meta;
         this.isLoaded = false;
         this.isSynced = false;
-        this.whenLoaded = promise.create(resolve => {
+        this.whenLoaded = new Promise(resolve => {
             this.on('load', () => {
                 this.isLoaded = true;
                 resolve(this);
@@ -118,7 +115,7 @@ class Doc extends observable_1.Observable {
      * @return {AbstractType_<any>} The created type. Constructed with TypeConstructor
      */
     get(name, TypeConstructor = internals_1.AbstractType_) {
-        const type = map.setIfUndefined(this.share, name, () => {
+        const type = lib0.setIfUndefined(this.share, name, () => {
             const t = new TypeConstructor();
             t._integrate(this, null);
             return t;
@@ -166,7 +163,7 @@ class Doc extends observable_1.Observable {
     /** Emit `destroy` event and unregister all event handlers. */
     destroy() {
         var _a;
-        array.from(this.subdocs).forEach(subdoc => subdoc.destroy());
+        Array.from(this.subdocs).forEach(subdoc => subdoc.destroy());
         const item = this._item;
         if (item !== null) {
             this._item = null;

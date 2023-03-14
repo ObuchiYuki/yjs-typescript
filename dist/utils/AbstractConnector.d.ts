@@ -1,4 +1,4 @@
-import { Observable } from 'lib0/observable';
+import * as lib0 from "lib0-typescript";
 import { Doc } from '../internals';
 /**
  * This is an abstract interface that all Connectors should implement to keep them interchangeable.
@@ -8,7 +8,9 @@ import { Doc } from '../internals';
  *
  * @extends {Observable<any>}
  */
-export declare class AbstractConnector extends Observable<any> {
+export declare class AbstractConnector<Message extends {
+    [s: string]: readonly unknown[];
+}> extends lib0.Observable<Message> {
     doc: Doc;
     awareness: any;
     constructor(ydoc: Doc, awareness: any);

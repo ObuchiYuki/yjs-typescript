@@ -7,11 +7,11 @@ import * as syncProtocol from './sync'
 import * as object from 'lib0/object'
 import * as map from 'lib0/map'
 import * as Y from '../src/index'
+import { DocMessageType } from '../src/internals.js'
 export * from '../src/index'
 
 if (typeof window !== 'undefined') {
-    // @ts-ignore
-    window.Y = Y // eslint-disable-line
+    (window as any).Y = Y
 }
 
 /**
@@ -89,7 +89,7 @@ export class TestYInstance extends Y.Doc {
          */
         this.updates = []
         // set up observe on local model
-        this.on(enc.updateEventName, /** @param {Uint8Array} update @param {any} origin */ (update: Uint8Array, origin: any) => {
+        this.on(enc.updateEventName as "update"|"updateV2", (update: Uint8Array, origin: any) => {
             if (origin !== testConnector) {
                 const encoder = encoding.createEncoder()
                 syncProtocol.writeUpdate(encoder, update)
@@ -376,7 +376,7 @@ export const compare = (users: Array<TestYInstance>) => {
         t.compare(userXmlValues[i], userXmlValues[i + 1])
         t.compare(userTextValues[i].map(/** @param {any} a */ (a: any) => typeof a.insert === 'string' ? a.insert : ' ').join('').length, users[i].getText('text').length)
         t.compare(userTextValues[i], userTextValues[i + 1], '', (_constructor, a, b) => {
-            if (a instanceof Y.AbstractType_) {
+            if (a instanceof Y.AbstractType_ && b instanceof Y.AbstractType_) {
                 t.compare(a.toJSON(), b.toJSON())
             } else if (a !== b) {
                 t.fail('Deltas dont match')

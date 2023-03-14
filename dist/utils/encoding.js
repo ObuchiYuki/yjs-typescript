@@ -19,10 +19,7 @@ exports.encodeStateVector = exports.encodeStateVectorV2 = exports.writeDocumentS
 const internals_1 = require("../internals");
 const encoding = require("lib0/encoding");
 const decoding = require("lib0/decoding");
-const binary = require("lib0/binary");
-const map = require("lib0/map");
-const math = require("lib0/math");
-const array = require("lib0/array");
+const lib0 = require("lib0-typescript");
 /**
  * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
  * @param {Array<GC|Item>} structs All structs by `client`
@@ -33,7 +30,7 @@ const array = require("lib0/array");
  */
 const writeStructs = (encoder, structs, client, clock) => {
     // write first id
-    clock = math.max(clock, structs[0].id.clock); // make sure the first id exists
+    clock = Math.max(clock, structs[0].id.clock); // make sure the first id exists
     const startNewStructs = internals_1.StructStore.findIndexSS(structs, clock);
     // write # encoded structs
     encoding.writeVarUint(encoder.restEncoder, structs.length - startNewStructs);
@@ -72,25 +69,14 @@ const writeClientsStructs = (encoder, store, _sm) => {
     encoding.writeVarUint(encoder.restEncoder, sm.size);
     // Write items with higher client ids first
     // This heavily improves the conflict algorithm.
-    array.from(sm.entries()).sort((a, b) => b[0] - a[0]).forEach(([client, clock]) => {
-        // @ts-ignore
-        writeStructs(encoder, store.clients.get(client), client, clock);
+    Array.from(sm.entries()).sort((a, b) => b[0] - a[0]).forEach(([client, clock]) => {
+        var _a;
+        writeStructs(encoder, (_a = store.clients.get(client)) !== null && _a !== void 0 ? _a : [], client, clock);
     });
 };
 exports.writeClientsStructs = writeClientsStructs;
-/**
- * @param {UpdateDecoderV1 | UpdateDecoderV2} decoder The decoder object to read data from.
- * @param {Doc} doc
- * @return {Map<number, { i: number, refs: Array<Item | GC> }>}
- *
- * @private
- * @function
- */
 const readClientsStructRefs = (decoder, doc) => {
-    /**
-     * @type {Map<number, { i: number, refs: Array<Item | GC> }>}
-     */
-    const clientRefs = map.create();
+    const clientRefs = new Map();
     const numOfStateUpdates = decoding.readVarUint(decoder.restDecoder);
     for (let i = 0; i < numOfStateUpdates; i++) {
         const numberOfStructs = decoding.readVarUint(decoder.restDecoder);
@@ -104,7 +90,7 @@ const readClientsStructRefs = (decoder, doc) => {
         clientRefs.set(client, { i: 0, refs });
         for (let i = 0; i < numberOfStructs; i++) {
             const info = decoder.readInfo();
-            switch (binary.BITS5 & info) {
+            switch (lib0.Bits.n5 & info) {
                 case 0: { // GC
                     const len = decoder.readLen();
                     refs[i] = new internals_1.GC(new internals_1.ID(client, clock), len);
@@ -124,17 +110,17 @@ const readClientsStructRefs = (decoder, doc) => {
                      * Below a non-optimized version is shown that implements the basic algorithm with
                      * a few comments
                      */
-                    const cantCopyParentInfo = (info & (binary.BIT7 | binary.BIT8)) === 0;
+                    const cantCopyParentInfo = (info & (lib0.Bit.n7 | lib0.Bit.n8)) === 0;
                     // If parent = null and neither left nor right are defined, then we know that `parent` is child of `y`
                     // and we read the next string as parentYKey.
                     // It indicates how we store/retrieve parent from `y.share`
                     // @type {string|null}
                     const struct = new internals_1.Item(new internals_1.ID(client, clock), null, // leftd
-                    (info & binary.BIT8) === binary.BIT8 ? decoder.readLeftID() : null, // origin
+                    (info & lib0.Bit.n8) === lib0.Bit.n8 ? decoder.readLeftID() : null, // origin
                     null, // right
-                    (info & binary.BIT7) === binary.BIT7 ? decoder.readRightID() : null, // right origin
+                    (info & lib0.Bit.n7) === lib0.Bit.n7 ? decoder.readRightID() : null, // right origin
                     cantCopyParentInfo ? (decoder.readParentInfo() ? doc.get(decoder.readString()) : decoder.readLeftID()) : null, // parent
-                    cantCopyParentInfo && (info & binary.BIT6) === binary.BIT6 ? decoder.readString() : null, // parentSub
+                    cantCopyParentInfo && (info & lib0.Bit.n6) === lib0.Bit.n6 ? decoder.readString() : null, // parentSub
                     (0, internals_1.readItemContent)(decoder, info) // item content
                     );
                     /* A non-optimized implementation of the above algorithm:
@@ -205,7 +191,7 @@ const integrateStructs = (transaction, store, clientsStructRefs) => {
      */
     const stack = [];
     // sort them so that we take the higher id first, in case of conflicts the lower id will probably not conflict with the id from the higher user.
-    let clientsStructRefsIds = array.from(clientsStructRefs.keys()).sort((a, b) => a - b);
+    let clientsStructRefsIds = Array.from(clientsStructRefs.keys()).sort((a, b) => a - b);
     if (clientsStructRefsIds.length === 0) {
         return null;
     }
@@ -274,7 +260,7 @@ const integrateStructs = (transaction, store, clientsStructRefs) => {
     // iterate over all struct readers until we are done
     while (true) {
         if (stackHead.constructor !== internals_1.Skip) {
-            const localClock = map.setIfUndefined(state, stackHead.id.client, () => store.getState(stackHead.id.client));
+            const localClock = lib0.setIfUndefined(state, stackHead.id.client, () => store.getState(stackHead.id.client));
             const offset = localClock - stackHead.id.clock;
             if (offset < 0) {
                 // update from the same client is missing
@@ -579,7 +565,7 @@ exports.decodeStateVector = decodeStateVector;
  */
 const writeStateVector = (encoder, sv) => {
     encoding.writeVarUint(encoder.restEncoder, sv.size);
-    array.from(sv.entries()).sort((a, b) => b[0] - a[0]).forEach(([client, clock]) => {
+    Array.from(sv.entries()).sort((a, b) => b[0] - a[0]).forEach(([client, clock]) => {
         encoding.writeVarUint(encoder.restEncoder, client); // @todo use a special client decoder that is based on mapping
         encoding.writeVarUint(encoder.restEncoder, clock);
     });

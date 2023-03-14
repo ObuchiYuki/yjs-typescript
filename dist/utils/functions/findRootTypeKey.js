@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.findRootTypeKey = void 0;
-const error = require("lib0/error");
+const lib0 = require("lib0-typescript");
 /**
  * The top types are mapped from y.share.get(keyname) => type.
  * `type` does not store any information about the `keyname`.
@@ -13,6 +13,6 @@ const findRootTypeKey = (type) => {
             return key;
         }
     }
-    throw error.unexpectedCase();
+    throw new lib0.UnexpectedCaseError();
 };
 exports.findRootTypeKey = findRootTypeKey;

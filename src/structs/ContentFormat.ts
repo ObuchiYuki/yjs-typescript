@@ -4,7 +4,7 @@ import {
     Content_, ContentDecoder_, AbstractType_
 } from '../internals'
 
-import * as error from 'lib0/error'
+import * as lib0 from "lib0-typescript"
 
 export class ContentFormat implements Content_ {
     constructor(
@@ -20,7 +20,7 @@ export class ContentFormat implements Content_ {
 
     copy(): ContentFormat { return new ContentFormat(this.key, this.value) }
 
-    splice(offset: number): ContentFormat { throw error.methodUnimplemented() }
+    splice(offset: number): ContentFormat { throw new lib0.UnimplementedMethodError() }
 
     mergeWith(right: ContentFormat): boolean { return false }
 

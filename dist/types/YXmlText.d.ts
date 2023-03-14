@@ -26,7 +26,7 @@ export declare class YXmlText extends YText {
     toDOM(_document: Document | undefined, hooks: {
         [s: string]: any;
     }, binding: any): Text;
-    toString(): any;
+    toString(): string;
     toJSON(): string;
     _write(encoder: UpdateEncoderV1 | UpdateEncoderV2): void;
 }

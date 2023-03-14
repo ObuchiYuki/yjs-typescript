@@ -1,11 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertUpdateFormatV2ToV1 = exports.convertUpdateFormatV1ToV2 = exports.convertUpdateFormat = exports.diffUpdate = exports.diffUpdateV2 = exports.mergeUpdatesV2 = exports.parseUpdateMeta = exports.parseUpdateMetaV2 = exports.encodeStateVectorFromUpdate = exports.encodeStateVectorFromUpdateV2 = exports.mergeUpdates = exports.LazyStructWriter = exports.decodeUpdateV2 = exports.decodeUpdate = exports.logUpdateV2 = exports.logUpdate = exports.LazyStructReader = void 0;
-const binary = require("lib0/binary");
 const decoding = require("lib0/decoding");
 const encoding = require("lib0/encoding");
-const logging = require("lib0/logging");
-const math = require("lib0/math");
+const lib0 = require("lib0-typescript");
 const internals_1 = require("../internals");
 /**
  * @param {UpdateDecoderV1 | UpdateDecoderV2} decoder
@@ -24,19 +22,19 @@ function* lazyStructReaderGenerator(decoder) {
                 yield new internals_1.Skip(new internals_1.ID(client, clock), len);
                 clock += len;
             }
-            else if ((binary.BITS5 & info) !== 0) {
-                const cantCopyParentInfo = (info & (binary.BIT7 | binary.BIT8)) === 0;
+            else if ((lib0.Bits.n5 & info) !== 0) {
+                const cantCopyParentInfo = (info & (lib0.Bit.n7 | lib0.Bit.n8)) === 0;
                 // If parent = null and neither left nor right are defined, then we know that `parent` is child of `y`
                 // and we read the next string as parentYKey.
                 // It indicates how we store/retrieve parent from `y.share`
                 // @type {string|null}
                 const struct = new internals_1.Item(new internals_1.ID(client, clock), null, // left
-                (info & binary.BIT8) === binary.BIT8 ? decoder.readLeftID() : null, // origin
+                (info & lib0.Bit.n8) === lib0.Bit.n8 ? decoder.readLeftID() : null, // origin
                 null, // right
-                (info & binary.BIT7) === binary.BIT7 ? decoder.readRightID() : null, // right origin
-                // @ts-ignore Force writing a string here.
+                (info & lib0.Bit.n7) === lib0.Bit.n7 ? decoder.readRightID() : null, // right origin
+                // Force writing a string here.
                 cantCopyParentInfo ? (decoder.readParentInfo() ? decoder.readString() : decoder.readLeftID()) : null, // parent
-                cantCopyParentInfo && (info & binary.BIT6) === binary.BIT6 ? decoder.readString() : null, // parentSub
+                cantCopyParentInfo && (info & lib0.Bit.n6) === lib0.Bit.n6 ? decoder.readString() : null, // parentSub
                 (0, internals_1.readItemContent)(decoder, info) // item content
                 );
                 yield struct;
@@ -95,9 +93,9 @@ const logUpdateV2 = (update, YDecoder = internals_1.UpdateDecoderV2) => {
     for (let curr = lazyDecoder.curr; curr !== null; curr = lazyDecoder.next()) {
         structs.push(curr);
     }
-    logging.print('Structs: ', structs);
+    console.log('Structs: ', structs);
     const ds = internals_1.DeleteSet.decode(updateDecoder);
-    logging.print('DeleteSet: ', ds);
+    console.log('DeleteSet: ', ds);
 };
 exports.logUpdateV2 = logUpdateV2;
 /**
@@ -433,7 +431,7 @@ const diffUpdateV2 = (update, sv, YDecoder = internals_1.UpdateDecoderV2, YEncod
             continue;
         }
         if (curr.id.clock + curr.length > svClock) {
-            writeStructToLazyStructWriter(lazyStructWriter, curr, math.max(svClock - curr.id.clock, 0));
+            writeStructToLazyStructWriter(lazyStructWriter, curr, Math.max(svClock - curr.id.clock, 0));
             reader.next();
             while (reader.curr && reader.curr.id.client === currClient) {
                 writeStructToLazyStructWriter(lazyStructWriter, reader.curr, 0);

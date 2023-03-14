@@ -4,7 +4,7 @@ import {
     Content_, ContentDecoder_
 } from '../internals'
 
-import * as error from 'lib0/error'
+import * as lib0 from "lib0-typescript"
 
 const createDocFromOpts = (guid: string, opts: ContentDocOpts) => {
     return new Doc({ guid, ...opts, shouldLoad: opts.shouldLoad || opts.autoLoad || false })
@@ -42,7 +42,7 @@ export class ContentDoc implements Content_ {
     
     copy(): ContentDoc { return new ContentDoc(createDocFromOpts(this.doc.guid, this.opts)) }
 
-    splice(offset: number): ContentDoc { throw error.methodUnimplemented() }
+    splice(offset: number): ContentDoc { throw new lib0.UnimplementedMethodError() }
 
     mergeWith(right: ContentDoc): boolean { return false }
 

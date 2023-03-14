@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readContentBinary = exports.ContentBinary = void 0;
-const error = require("lib0/error");
+const lib0 = require("lib0-typescript");
 class ContentBinary {
     constructor(content) {
         this.content = content;
@@ -10,7 +10,7 @@ class ContentBinary {
     getContent() { return [this.content]; }
     isCountable() { return true; }
     copy() { return new ContentBinary(this.content); }
-    splice(offset) { throw error.methodUnimplemented(); }
+    splice(offset) { throw new lib0.UnimplementedMethodError(); }
     mergeWith(right) { return false; }
     integrate(transaction, item) { }
     delete(transaction) { }

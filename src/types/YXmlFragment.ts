@@ -87,7 +87,6 @@ export class YXmlTreeWalker {
         }
         this._firstCall = false
         if (n === null) {
-            // @ts-ignore
             return { value: undefined, done: true }
         }
         this._currentNode = n
@@ -134,8 +133,10 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
 
     clone(): YXmlFragment {
         const el = new YXmlFragment()
-        // @ts-ignore
-        el.insert(0, this.toArray().map(item => item instanceof AbstractType_ ? item.clone() : item))
+        const array = this.toArray().map(item => {
+            return item instanceof AbstractType_ ? item.clone() : item
+        })
+        el.insert(0, array as (YXmlElement | YXmlText)[])
         return el
     }
 
@@ -181,8 +182,10 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      */
     querySelector(query: CSS_Selector): YXmlElement | YXmlText | YXmlHook | null {
         query = query.toUpperCase()
-        // @ts-ignore
-        const iterator = new YXmlTreeWalker(this, element => element.nodeName && element.nodeName.toUpperCase() === query)
+        const iterator = new YXmlTreeWalker(this, element => {
+            const xmlElement = element as YXmlElement
+            return xmlElement.nodeName != null && xmlElement.nodeName.toUpperCase() === query
+        })
         const next = iterator.next()
         if (next.done) {
             return null
@@ -204,8 +207,11 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
      */
     querySelectorAll(query: CSS_Selector): Array<YXmlElement | YXmlText | YXmlHook | null> {
         query = query.toUpperCase()
-        // @ts-ignore
-        return array.from(new YXmlTreeWalker(this, element => element.nodeName && element.nodeName.toUpperCase() === query))
+        const walker = new YXmlTreeWalker(this, element => {
+            const xmlElement = element as YXmlElement
+            return xmlElement.nodeName != null && xmlElement.nodeName.toUpperCase() === query
+        })
+        return Array.from(walker)
     }
 
     /**
@@ -276,8 +282,8 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
                 this.listInsertGenerics(transaction, index, content)
             })
         } else {
-            // @ts-ignore _prelimContent is defined because this is not yet integrated
-            this._prelimContent.splice(index, 0, ...content)
+            // _prelimContent is defined because this is not yet integrated
+            this._prelimContent?.splice(index, 0, ...content)
         }
     }
 
@@ -319,8 +325,8 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
                 this.listDelete(transaction, index, length)
             })
         } else {
-            // @ts-ignore _prelimContent is defined because this is not yet integrated
-            this._prelimContent.splice(index, length)
+            // _prelimContent is defined because this is not yet integrated
+            this._prelimContent?.splice(index, length)
         }
     }
 

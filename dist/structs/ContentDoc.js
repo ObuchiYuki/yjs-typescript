@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readContentDoc = exports.ContentDoc = void 0;
 const internals_1 = require("../internals");
-const error = require("lib0/error");
+const lib0 = require("lib0-typescript");
 const createDocFromOpts = (guid, opts) => {
     return new internals_1.Doc(Object.assign(Object.assign({ guid }, opts), { shouldLoad: opts.shouldLoad || opts.autoLoad || false }));
 };
@@ -28,7 +28,7 @@ class ContentDoc {
     getContent() { return [this.doc]; }
     isCountable() { return true; }
     copy() { return new ContentDoc(createDocFromOpts(this.doc.guid, this.opts)); }
-    splice(offset) { throw error.methodUnimplemented(); }
+    splice(offset) { throw new lib0.UnimplementedMethodError(); }
     mergeWith(right) { return false; }
     integrate(transaction, item) {
         // this needs to be reflected in doc.destroy as well

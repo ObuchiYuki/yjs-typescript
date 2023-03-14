@@ -2,11 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Transaction = void 0;
 const internals_1 = require("../internals");
-const map = require("lib0/map");
-const math = require("lib0/math");
-const set = require("lib0/set");
-const logging = require("lib0/logging");
+const map = require("lib0-typescript/dist/Utility/map");
 const function_1 = require("lib0/function");
+// import * as map from 'lib0-typescript/dist/Utility/map'
 /**
  * A transaction is created for every change on the Yjs model. It is possible
  * to bundle changes on the Yjs model in a single transaction to
@@ -79,7 +77,7 @@ class Transaction {
     addChangedType(type, parentSub) {
         const item = type._item;
         if (item === null || (item.id.clock < (this.beforeState.get(item.id.client) || 0) && !item.deleted)) {
-            map.setIfUndefined(this.changed, type, set.create).add(parentSub);
+            map.setIfUndefined(this.changed, type, () => new Set()).add(parentSub);
         }
     }
     static cleanup(transactions, i) {
@@ -144,7 +142,7 @@ class Transaction {
                     if (beforeClock !== clock) {
                         const structs = store.clients.get(client);
                         // we iterate from right to left so we can safely remove entries
-                        const firstChangePos = math.max(internals_1.StructStore.findIndexSS(structs, beforeClock), 1);
+                        const firstChangePos = Math.max(internals_1.StructStore.findIndexSS(structs, beforeClock), 1);
                         for (let i = structs.length - 1; i >= firstChangePos; i--) {
                             internals_1.Struct_.tryMergeWithLeft(structs, i);
                         }
@@ -165,19 +163,19 @@ class Transaction {
                     }
                 }
                 if (!transaction.local && transaction.afterState.get(doc.clientID) !== transaction.beforeState.get(doc.clientID)) {
-                    logging.print(logging.ORANGE, logging.BOLD, '[yjs] ', logging.UNBOLD, logging.RED, 'Changed the client-id because another client seems to be using it.');
+                    console.warn('[yjs] Changed the client-id because another client seems to be using it.');
                     doc.clientID = (0, internals_1.generateNewClientID)();
                 }
                 // @todo Merge all the transactions into one and provide send the data as a single update message
                 doc.emit('afterTransactionCleanup', [transaction, doc]);
-                if (doc._observers.has('update')) {
+                if (doc.isObserving('update')) {
                     const encoder = new internals_1.UpdateEncoderV1();
                     const hasContent = transaction.encodeUpdateMessage(encoder);
                     if (hasContent) {
                         doc.emit('update', [encoder.toUint8Array(), transaction.origin, doc, transaction]);
                     }
                 }
-                if (doc._observers.has('updateV2')) {
+                if (doc.isObserving('updateV2')) {
                     const encoder = new internals_1.UpdateEncoderV2();
                     const hasContent = transaction.encodeUpdateMessage(encoder);
                     if (hasContent) {

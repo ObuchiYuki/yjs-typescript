@@ -1,18 +1,12 @@
-
-/**
- * @module YMap
- */
-
 import {
     YEvent,
     YMapRefID,
-    Doc, Transaction, Item, // eslint-disable-line,
-    createMapIterator, UpdateEncoderAny_, UpdateDecoderAny_
+    Doc, Transaction, Item,
+    UpdateEncoderAny_, UpdateDecoderAny_
 } from '../internals'
-
 import { AbstractType_, Contentable_ } from "./AbstractType_"
 
-import * as iterator from 'lib0/iterator'
+import * as lib0 from "lib0-typescript"
 
 /** Event that describes the changes on a YMap. */
 export class YMapEvent<T extends Contentable_> extends YEvent<YMap<T>> {
@@ -104,24 +98,28 @@ export class YMap<MapType extends Contentable_> extends AbstractType_<YMapEvent<
         return map
     }
 
+    private createMapIterator(): IterableIterator<any[]> {
+        return lib0.filterIterator(this._map.entries(), entry => !entry[1].deleted)
+    }    
+
     /** Returns the size of the YMap (count of key/value pairs) */
     get size(): number {
-        return [...createMapIterator(this._map)].length
+        return [...this.createMapIterator()].length
     }
 
     /** Returns the keys for each element in the YMap Type. */
     keys(): IterableIterator<string> {
-        return iterator.iteratorMap(createMapIterator(this._map), (v: any[]) => v[0])
+        return lib0.mapIterator(this.createMapIterator(), (v: any[]) => v[0])
     }
 
     /** Returns the values for each element in the YMap Type. */
     values(): IterableIterator<any> {
-        return iterator.iteratorMap(createMapIterator(this._map), (v: any) => v[1].content.getContent()[v[1].length - 1])
+        return lib0.mapIterator(this.createMapIterator(), (v: any) => v[1].content.getContent()[v[1].length - 1])
     }
 
     /** Returns an Iterator of [key, value] pairs */
     entries(): IterableIterator<any> {
-        return iterator.iteratorMap(createMapIterator(this._map), (v: any) => [v[0], v[1].content.getContent()[v[1].length - 1]])
+        return lib0.mapIterator(this.createMapIterator(), (v: any) => [v[0], v[1].content.getContent()[v[1].length - 1]])
     }
 
     /** Executes a provided function on once on every key-value pair. */

@@ -51,7 +51,6 @@ class YXmlTreeWalker {
         }
         this._firstCall = false;
         if (n === null) {
-            // @ts-ignore
             return { value: undefined, done: true };
         }
         this._currentNode = n;

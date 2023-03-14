@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readContentType = exports.ContentType = exports.YXmlTextRefID = exports.YXmlHookRefID = exports.YXmlFragmentRefID = exports.YXmlElementRefID = exports.YTextRefID = exports.YMapRefID = exports.YArrayRefID = exports.typeRefs = void 0;
 const internals_1 = require("../internals");
-const error = require("lib0/error");
+const lib0 = require("lib0-typescript");
 exports.typeRefs = [
     internals_1.readYArray,
     internals_1.readYMap,
@@ -27,7 +27,7 @@ class ContentType {
     getContent() { return [this.type]; }
     isCountable() { return true; }
     copy() { return new ContentType(this.type._copy()); }
-    splice(offset) { throw error.methodUnimplemented(); }
+    splice(offset) { throw new lib0.UnimplementedMethodError(); }
     mergeWith(right) { return false; }
     integrate(transaction, item) {
         this.type._integrate(transaction.doc, item);

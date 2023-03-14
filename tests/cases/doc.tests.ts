@@ -281,7 +281,7 @@ export const testLoadDocsEvent = async (_tc: t.TestCase) => {
     ydoc.on('load', () => {
         loadedEvent = true
     })
-    ydoc.emit('load', [ydoc])
+    ydoc.emit('load', [])
     await ydoc.whenLoaded
     t.assert(loadedEvent)
     t.assert(ydoc.isLoaded)

@@ -27,7 +27,7 @@ type Enc = {
   parseUpdateMeta: (update: Uint8Array) => { from: Map<number, number>, to: Map<number, number> },
   encodeStateVectorFromUpdate: (update: Uint8Array) => Uint8Array,
   encodeStateVector: (doc: Y.Doc | Map<number, number>) => Uint8Array,
-  updateEventName: string,
+  updateEventName: "update"|"updateV2",
   description: string,
   diffUpdate: (update: Uint8Array, sv: Uint8Array) => Uint8Array
 }

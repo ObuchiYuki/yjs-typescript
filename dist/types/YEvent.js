@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.YEvent = void 0;
-const array = require("lib0/array");
 /** YEvent describes the changes on a YType. */
 class YEvent {
     /**
@@ -58,7 +57,7 @@ class YEvent {
                     if (this.deletes(item)) {
                         if (prev !== null && this.deletes(prev)) {
                             action = 'delete';
-                            oldValue = array.last(prev.content.getContent());
+                            oldValue = prev.content.getContent().at(-1);
                         }
                         else {
                             return;
@@ -67,7 +66,7 @@ class YEvent {
                     else {
                         if (prev !== null && this.deletes(prev)) {
                             action = 'update';
-                            oldValue = array.last(prev.content.getContent());
+                            oldValue = prev.content.getContent().at(-1);
                         }
                         else {
                             action = 'add';
@@ -78,7 +77,7 @@ class YEvent {
                 else {
                     if (this.deletes(item)) {
                         action = 'delete';
-                        oldValue = array.last(item.content.getContent());
+                        oldValue = item.content.getContent().at(-1);
                     }
                     else {
                         return;

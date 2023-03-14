@@ -48,11 +48,9 @@ export {
   logUpdateV2,
   decodeUpdate,
   decodeUpdateV2,
-  isParentOf,
   equalSnapshots,
-  PermanentUserData, // @TODO experimental
+  PermanentUserData, 
   AbstractConnector,
-  logType,
   mergeUpdates,
   mergeUpdatesV2,
   parseUpdateMeta,

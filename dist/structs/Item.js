@@ -3,28 +3,27 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.contentDecoders_ = exports.readItemContent = exports.Item = void 0;
 const Struct_1 = require("./Struct_");
 const internals_1 = require("../internals");
-const error = require("lib0/error");
-const binary = require("lib0/binary");
+const lib0 = require("lib0-typescript");
 // ================================================================================================================ //
 // MARK: - Item -
 // ================================================================================================================ //
 /** Abstract class that represents any content. */
 class Item extends Struct_1.Struct_ {
     /** This is used to mark the item as an indexed fast-search marker */
-    set marker(isMarked) { if (((this.info & binary.BIT4) > 0) !== isMarked) {
-        this.info ^= binary.BIT4;
+    set marker(isMarked) { if (((this.info & lib0.Bit.n4) > 0) !== isMarked) {
+        this.info ^= lib0.Bit.n4;
     } }
-    get marker() { return (this.info & binary.BIT4) > 0; }
+    get marker() { return (this.info & lib0.Bit.n4) > 0; }
     /** If true, do not garbage collect this Item. */
-    get keep() { return (this.info & binary.BIT1) > 0; }
+    get keep() { return (this.info & lib0.Bit.n1) > 0; }
     set keep(doKeep) { if (this.keep !== doKeep) {
-        this.info ^= binary.BIT1;
+        this.info ^= lib0.Bit.n1;
     } }
-    get countable() { return (this.info & binary.BIT2) > 0; }
+    get countable() { return (this.info & lib0.Bit.n2) > 0; }
     /** Whether this item was deleted or not. */
-    get deleted() { return (this.info & binary.BIT3) > 0; }
+    get deleted() { return (this.info & lib0.Bit.n3) > 0; }
     set deleted(doDelete) { if (this.deleted !== doDelete) {
-        this.info ^= binary.BIT3;
+        this.info ^= lib0.Bit.n3;
     } }
     // ================================================================================================================ //
     // MARK: - Methods -
@@ -51,14 +50,14 @@ class Item extends Struct_1.Struct_ {
         this.parentSub = parentSub;
         this.redone = null;
         this.content = content;
-        this.info = this.content.isCountable() ? binary.BIT2 : 0;
+        this.info = this.content.isCountable() ? lib0.Bit.n2 : 0;
     }
     isVisible(snapshot) {
         return snapshot === undefined
             ? !this.deleted
             : snapshot.sv.has(this.id.client) && (snapshot.sv.get(this.id.client) || 0) > this.id.clock && !snapshot.ds.isDeleted(this.id);
     }
-    markDeleted() { this.info |= binary.BIT3; }
+    markDeleted() { this.info |= lib0.Bit.n3; }
     /** Split leftItem into two items; this -> leftItem */
     split(transaction, diff) {
         // create rightItem
@@ -410,7 +409,7 @@ class Item extends Struct_1.Struct_ {
     }
     gc(store, parentGCd) {
         if (!this.deleted) {
-            throw error.unexpectedCase();
+            throw new lib0.UnexpectedCaseError();
         }
         this.content.gc(store);
         if (parentGCd) {
@@ -430,10 +429,10 @@ class Item extends Struct_1.Struct_ {
         const origin = offset > 0 ? new internals_1.ID(this.id.client, this.id.clock + offset - 1) : this.origin;
         const rightOrigin = this.rightOrigin;
         const parentSub = this.parentSub;
-        const info = (this.content.getRef() & binary.BITS5) |
-            (origin === null ? 0 : binary.BIT8) | // origin is defined
-            (rightOrigin === null ? 0 : binary.BIT7) | // right origin is defined
-            (parentSub === null ? 0 : binary.BIT6); // parentSub is non-null
+        const info = (this.content.getRef() & lib0.Bits.n5) |
+            (origin === null ? 0 : lib0.Bit.n8) | // origin is defined
+            (rightOrigin === null ? 0 : lib0.Bit.n7) | // right origin is defined
+            (parentSub === null ? 0 : lib0.Bit.n6); // parentSub is non-null
         encoder.writeInfo(info);
         if (origin !== null) {
             encoder.writeLeftID(origin);
@@ -466,7 +465,7 @@ class Item extends Struct_1.Struct_ {
                 encoder.writeLeftID(parent);
             }
             else {
-                error.unexpectedCase();
+                throw new lib0.UnexpectedCaseError();
             }
             if (parentSub !== null) {
                 encoder.writeString(parentSub);
@@ -477,12 +476,12 @@ class Item extends Struct_1.Struct_ {
 }
 exports.Item = Item;
 const readItemContent = (decoder, info) => {
-    return exports.contentDecoders_[info & binary.BITS5](decoder);
+    return exports.contentDecoders_[info & lib0.Bits.n5](decoder);
 };
 exports.readItemContent = readItemContent;
 /** A lookup map for reading Item content. */
 exports.contentDecoders_ = [
-    () => { error.unexpectedCase(); },
+    () => { throw new lib0.UnexpectedCaseError(); },
     internals_1.readContentDeleted,
     internals_1.readContentJSON,
     internals_1.readContentBinary,
@@ -492,5 +491,5 @@ exports.contentDecoders_ = [
     internals_1.readContentType,
     internals_1.readContentAny,
     internals_1.readContentDoc,
-    () => { error.unexpectedCase(); } // 10 - Skip is not ItemContent
+    () => { throw new lib0.UnexpectedCaseError(); } // 10 - Skip is not ItemContent
 ];

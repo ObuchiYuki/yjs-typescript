@@ -4,7 +4,8 @@ import {
 
 } from '../internals'
 
-import * as error from 'lib0/error'
+import * as lib0 from "lib0-typescript"
+
 
 export class ContentBinary implements Content_ {
     constructor (public content: Uint8Array) {}
@@ -17,7 +18,7 @@ export class ContentBinary implements Content_ {
 
     copy(): ContentBinary { return new ContentBinary(this.content) }
 
-    splice(offset: number): ContentBinary { throw error.methodUnimplemented() }
+    splice(offset: number): ContentBinary { throw new lib0.UnimplementedMethodError() }
 
     mergeWith(right: ContentBinary): boolean { return false }
     

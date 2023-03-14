@@ -14,7 +14,7 @@ import {
     Content_, ContentDecoder_
 } from '../internals'
 
-import * as error from 'lib0/error'
+import * as lib0 from "lib0-typescript"
 
 export const typeRefs: ((decoder: UpdateDecoderAny_) => AbstractType_<any>)[] = [
     readYArray,
@@ -45,7 +45,7 @@ export class ContentType implements Content_ {
 
     copy(): ContentType { return new ContentType(this.type._copy()) }
 
-    splice(offset: number): ContentType { throw error.methodUnimplemented() }
+    splice(offset: number): ContentType { throw new lib0.UnimplementedMethodError() }
 
     mergeWith(right: ContentType): boolean { return false }
 

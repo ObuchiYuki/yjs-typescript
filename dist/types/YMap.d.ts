@@ -1,6 +1,3 @@
-/**
- * @module YMap
- */
 import { YEvent, Doc, Transaction, Item, UpdateEncoderAny_, UpdateDecoderAny_ } from '../internals';
 import { AbstractType_, Contentable_ } from "./AbstractType_";
 /** Event that describes the changes on a YMap. */
@@ -48,6 +45,7 @@ export declare class YMap<MapType extends Contentable_> extends AbstractType_<YM
     toJSON(): {
         [s: string]: any;
     };
+    private createMapIterator;
     /** Returns the size of the YMap (count of key/value pairs) */
     get size(): number;
     /** Returns the keys for each element in the YMap Type. */

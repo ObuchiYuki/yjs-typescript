@@ -5,11 +5,10 @@ import {
     Struct_
 } from '../internals'
 
-import * as array from 'lib0/array'
-import * as math from 'lib0/math'
-import * as map from 'lib0/map'
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'
+
+import * as lib0 from "lib0-typescript"
 
 export class DeleteItem {
     constructor(public clock: number, public len: number) {}
@@ -18,7 +17,7 @@ export class DeleteItem {
         let left = 0
         let right = dis.length - 1
         while (left <= right) {
-            const midindex = math.floor((left + right) / 2)
+            const midindex = Math.floor((left + right) / 2)
             const mid = dis[midindex]
             const midclock = mid.clock
             if (midclock <= clock) {
@@ -68,7 +67,7 @@ export class DeleteSet {
                 const left = dels[j - 1]
                 const right = dels[i]
                 if (left.clock + left.len >= right.clock) {
-                    left.len = math.max(left.len, right.clock + right.len - left.clock)
+                    left.len = Math.max(left.len, right.clock + right.len - left.clock)
                 } else {
                     if (j < i) { dels[j] = right }
                     j++
@@ -79,7 +78,7 @@ export class DeleteSet {
     }
 
     add(client: number, clock: number, length: number){
-        map.setIfUndefined(this.clients, client, () => [] as DeleteItem[])
+        lib0.setIfUndefined(this.clients, client, () => [] as DeleteItem[])
             .push(new DeleteItem(clock, length))
     }
     
@@ -87,7 +86,7 @@ export class DeleteSet {
         encoding.writeVarUint(encoder.restEncoder, this.clients.size)
     
         // Ensure that the delete set is written in a deterministic order
-        array.from(this.clients.entries())
+        Array.from(this.clients.entries())
             .sort((a, b) => b[0] - a[0])
             .forEach(([client, dsitems]) => {
                 encoder.resetDsCurVal()
@@ -134,7 +133,7 @@ export class DeleteSet {
             for (let di = deleteItems.length - 1; di >= 0; di--) {
                 const deleteItem = deleteItems[di]
                 // start with merging the item next to the last deleted item
-                const mostRightIndexToCheck = math.min(structs.length - 1, 1 + StructStore.findIndexSS(structs, deleteItem.clock + deleteItem.len - 1))
+                const mostRightIndexToCheck = Math.min(structs.length - 1, 1 + StructStore.findIndexSS(structs, deleteItem.clock + deleteItem.len - 1))
                 for (
                     let si = mostRightIndexToCheck, struct = structs[si];
                     si > 0 && struct.id.clock >= deleteItem.clock;
@@ -158,9 +157,9 @@ export class DeleteSet {
         for (let dssI = 0; dssI < dss.length; dssI++) {
             dss[dssI].clients.forEach((delsLeft, client) => {
                 if (!merged.clients.has(client)) {
-                    const dels: DeleteItem[] = delsLeft.slice()
+                    let dels: DeleteItem[] = delsLeft.slice()
                     for (let i = dssI + 1; i < dss.length; i++) {
-                        array.appendTo(dels, dss[i].clients.get(client) || [])
+                        dels = dels.concat(dss[i].clients.get(client) || [])
                     }
                     merged.clients.set(client, dels)
                 }
@@ -178,7 +177,7 @@ export class DeleteSet {
             const client = decoding.readVarUint(decoder.restDecoder)
             const numberOfDeletes = decoding.readVarUint(decoder.restDecoder)
             if (numberOfDeletes > 0) {
-                const dsField = map.setIfUndefined(ds.clients, client, () => [] as DeleteItem[])
+                const dsField = lib0.setIfUndefined(ds.clients, client, () => [] as DeleteItem[])
                 for (let i = 0; i < numberOfDeletes; i++) {
                     dsField.push(new DeleteItem(decoder.readDsClock(), decoder.readDsLen()))
                 }

@@ -1,12 +1,9 @@
 "use strict";
-/**
- * @module YMap
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readYMap = exports.YMap = exports.YMapEvent = void 0;
 const internals_1 = require("../internals");
 const AbstractType_1 = require("./AbstractType_");
-const iterator = require("lib0/iterator");
+const lib0 = require("lib0-typescript");
 /** Event that describes the changes on a YMap. */
 class YMapEvent extends internals_1.YEvent {
     /**
@@ -86,21 +83,24 @@ class YMap extends AbstractType_1.AbstractType_ {
         });
         return map;
     }
+    createMapIterator() {
+        return lib0.filterIterator(this._map.entries(), entry => !entry[1].deleted);
+    }
     /** Returns the size of the YMap (count of key/value pairs) */
     get size() {
-        return [...(0, internals_1.createMapIterator)(this._map)].length;
+        return [...this.createMapIterator()].length;
     }
     /** Returns the keys for each element in the YMap Type. */
     keys() {
-        return iterator.iteratorMap((0, internals_1.createMapIterator)(this._map), (v) => v[0]);
+        return lib0.mapIterator(this.createMapIterator(), (v) => v[0]);
     }
     /** Returns the values for each element in the YMap Type. */
     values() {
-        return iterator.iteratorMap((0, internals_1.createMapIterator)(this._map), (v) => v[1].content.getContent()[v[1].length - 1]);
+        return lib0.mapIterator(this.createMapIterator(), (v) => v[1].content.getContent()[v[1].length - 1]);
     }
     /** Returns an Iterator of [key, value] pairs */
     entries() {
-        return iterator.iteratorMap((0, internals_1.createMapIterator)(this._map), (v) => [v[0], v[1].content.getContent()[v[1].length - 1]]);
+        return lib0.mapIterator(this.createMapIterator(), (v) => [v[0], v[1].content.getContent()[v[1].length - 1]]);
     }
     /** Executes a provided function on once on every key-value pair. */
     forEach(f) {

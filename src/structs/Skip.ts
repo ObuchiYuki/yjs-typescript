@@ -5,8 +5,8 @@ import {
     UpdateEncoderAny_
 } from '../internals'
 
-import * as error from 'lib0/error'
 import * as encoding from 'lib0/encoding'
+import * as lib0 from "lib0-typescript"
 
 export const structSkipRefNumber = 10
 
@@ -23,8 +23,7 @@ export class Skip extends Struct_ {
     }
 
     integrate(transaction: Transaction, offset: number) {
-        // skip structs cannot be integrated
-        error.unexpectedCase()
+        throw new lib0.UnexpectedCaseError()
     }
 
     write(encoder: UpdateEncoderAny_, offset: number) {

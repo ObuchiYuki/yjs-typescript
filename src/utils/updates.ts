@@ -1,9 +1,9 @@
 
-import * as binary from 'lib0/binary'
 import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
-import * as logging from 'lib0/logging'
-import * as math from 'lib0/math'
+
+import * as lib0 from "lib0-typescript"
+
 import {
     readItemContent,
     Skip,
@@ -30,8 +30,8 @@ function * lazyStructReaderGenerator (decoder: UpdateDecoderV1 | UpdateDecoderV2
                 const len = decoding.readVarUint(decoder.restDecoder)
                 yield new Skip(new ID(client, clock), len)
                 clock += len
-            } else if ((binary.BITS5 & info) !== 0) {
-                const cantCopyParentInfo = (info & (binary.BIT7 | binary.BIT8)) === 0
+            } else if ((lib0.Bits.n5 & info) !== 0) {
+                const cantCopyParentInfo = (info & (lib0.Bit.n7 | lib0.Bit.n8)) === 0
                 // If parent = null and neither left nor right are defined, then we know that `parent` is child of `y`
                 // and we read the next string as parentYKey.
                 // It indicates how we store/retrieve parent from `y.share`
@@ -39,12 +39,12 @@ function * lazyStructReaderGenerator (decoder: UpdateDecoderV1 | UpdateDecoderV2
                 const struct = new Item(
                     new ID(client, clock),
                     null, // left
-                    (info & binary.BIT8) === binary.BIT8 ? decoder.readLeftID() : null, // origin
+                    (info & lib0.Bit.n8) === lib0.Bit.n8 ? decoder.readLeftID() : null, // origin
                     null, // right
-                    (info & binary.BIT7) === binary.BIT7 ? decoder.readRightID() : null, // right origin
-                    // @ts-ignore Force writing a string here.
-                    cantCopyParentInfo ? (decoder.readParentInfo() ? decoder.readString() : decoder.readLeftID()) : null, // parent
-                    cantCopyParentInfo && (info & binary.BIT6) === binary.BIT6 ? decoder.readString() : null, // parentSub
+                    (info & lib0.Bit.n7) === lib0.Bit.n7 ? decoder.readRightID() : null, // right origin
+                    // Force writing a string here.
+                    cantCopyParentInfo ? (decoder.readParentInfo() ? decoder.readString() : decoder.readLeftID()) : null as any, // parent
+                    cantCopyParentInfo && (info & lib0.Bit.n6) === lib0.Bit.n6 ? decoder.readString() : null, // parentSub
                     readItemContent(decoder, info) // item content
                 )
                 yield struct
@@ -108,9 +108,9 @@ export const logUpdateV2 = (update: Uint8Array, YDecoder: typeof UpdateDecoderV2
     for (let curr = lazyDecoder.curr; curr !== null; curr = lazyDecoder.next()) {
         structs.push(curr)
     }
-    logging.print('Structs: ', structs)
+    console.log('Structs: ', structs)
     const ds = DeleteSet.decode(updateDecoder)
-    logging.print('DeleteSet: ', ds)
+    console.log('DeleteSet: ', ds)
 }
 
 /**
@@ -466,7 +466,7 @@ export const diffUpdateV2 = (update: Uint8Array, sv: Uint8Array, YDecoder: typeo
             continue
         }
         if (curr.id.clock + curr.length > svClock) {
-            writeStructToLazyStructWriter(lazyStructWriter, curr, math.max(svClock - curr.id.clock, 0))
+            writeStructToLazyStructWriter(lazyStructWriter, curr, Math.max(svClock - curr.id.clock, 0))
             reader.next()
             while (reader.curr && reader.curr.id.client === currClient) {
                 writeStructToLazyStructWriter(lazyStructWriter, reader.curr, 0)

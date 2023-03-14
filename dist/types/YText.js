@@ -3,8 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.readYText = exports.YText = exports.YTextEvent = exports.cleanupYTextFormatting = exports.ItemTextListPosition = void 0;
 const AbstractType_1 = require("./AbstractType_");
 const internals_1 = require("../internals");
-const map = require("lib0/map");
-const error = require("lib0/error");
+const lib0 = require("lib0-typescript");
 class ItemTextListPosition {
     constructor(left, right, index, currentAttributes) {
         this.left = left;
@@ -15,7 +14,7 @@ class ItemTextListPosition {
     /** Only call this if you know that this.right is defined */
     forward() {
         if (this.right === null) {
-            error.unexpectedCase();
+            throw new lib0.UnexpectedCaseError();
         }
         if (this.right.content.constructor === internals_1.ContentFormat) {
             if (!this.right.deleted) {
@@ -239,7 +238,7 @@ const formatText = (transaction, parent, currPos, length, attributes) => {
  */
 const cleanupFormattingGap = (transaction, start, curr, startAttributes, currAttributes) => {
     let end = start;
-    const endFormats = map.create();
+    const endFormats = new Map();
     while (end && (!end.countable || end.deleted)) {
         if (!end.deleted && end.content.constructor === internals_1.ContentFormat) {
             const cf = end.content;
@@ -321,8 +320,8 @@ const cleanupYTextFormatting = (type) => {
     (_a = type.doc) === null || _a === void 0 ? void 0 : _a.transact(transaction => {
         let start = type._start;
         let end = type._start;
-        let startAttributes = map.create();
-        const currentAttributes = map.copy(startAttributes);
+        let startAttributes = new Map();
+        const currentAttributes = new Map();
         while (end) {
             if (end.deleted === false) {
                 switch (end.content.constructor) {
@@ -331,7 +330,7 @@ const cleanupYTextFormatting = (type) => {
                         break;
                     default:
                         res += cleanupFormattingGap(transaction, start, end, startAttributes, currentAttributes);
-                        startAttributes = map.copy(currentAttributes);
+                        startAttributes = new Map(currentAttributes);
                         start = end;
                         break;
                 }
@@ -344,7 +343,7 @@ const cleanupYTextFormatting = (type) => {
 exports.cleanupYTextFormatting = cleanupYTextFormatting;
 const deleteText = (transaction, currPos, length) => {
     const startLength = length;
-    const startAttrs = map.copy(currPos.currentAttributes);
+    const startAttrs = new Map(currPos.currentAttributes);
     const start = currPos.right;
     while (length > 0 && currPos.right !== null) {
         if (currPos.right.deleted === false) {
@@ -747,9 +746,6 @@ class YText extends AbstractType_1.AbstractType_ {
                     addAttributes = true;
                     attributes[key] = value;
                 });
-                /**
-                 * @type {Object<string,any>}
-                 */
                 const op = { insert: str };
                 if (addAttributes) {
                     op.attributes = attributes;
@@ -826,7 +822,7 @@ class YText extends AbstractType_1.AbstractType_ {
      *
      * @param {number} index The index at which to start inserting.
      * @param {String} text The text to insert at the specified position.
-     * @param {TextAttributes} [attributes] Optionally define some formatting
+     * @param {YTextAttributes} [attributes] Optionally define some formatting
      *                                                                        information to apply on the inserted
      *                                                                        Text.
      * @public
@@ -855,7 +851,7 @@ class YText extends AbstractType_1.AbstractType_ {
      *
      * @param {number} index The index to insert the embed at.
      * @param {Object | AbstractType_<any>} embed The Object that represents the embed.
-     * @param {TextAttributes} attributes Attribute information to apply on the
+     * @param {YTextAttributes} attributes Attribute information to apply on the
      *                                                                        embed
      *
      * @public
@@ -899,7 +895,7 @@ class YText extends AbstractType_1.AbstractType_ {
      *
      * @param {number} index The position where to start formatting.
      * @param {number} length The amount of characters to assign properties to.
-     * @param {TextAttributes} attributes Attribute information to apply on the
+     * @param {YTextAttributes} attributes Attribute information to apply on the
      *                                                                        text.
      *
      * @public

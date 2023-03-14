@@ -2,9 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UndoManager = exports.followRedone = void 0;
 const internals_1 = require("../internals");
-const time = require("lib0/time");
-const array = require("lib0/array");
-const observable_1 = require("lib0/observable");
+const lib0 = require("lib0-typescript");
 const followRedone = (store, id) => {
     let nextID = id;
     let diff = 0;
@@ -36,8 +34,8 @@ class StackItem {
  *
  * @extends {Observable<'stack-item-added'|'stack-item-popped'|'stack-cleared'|'stack-item-updated'>}
  */
-class UndoManager extends observable_1.Observable {
-    constructor(typeScope, { captureTimeout = 500, captureTransaction = tr => true, deleteFilter = () => true, trackedOrigins = new Set([null]), ignoreRemoteMapChanges = false, doc = (array.isArray(typeScope) ? typeScope[0].doc : typeScope.doc) } = {}) {
+class UndoManager extends lib0.Observable {
+    constructor(typeScope, { captureTimeout = 500, captureTransaction = tr => true, deleteFilter = () => true, trackedOrigins = new Set([null]), ignoreRemoteMapChanges = false, doc = (Array.isArray(typeScope) ? typeScope[0].doc : typeScope.doc) } = {}) {
         super();
         this.scope = [];
         this.addToScope(typeScope);
@@ -78,7 +76,7 @@ class UndoManager extends observable_1.Observable {
                     insertions.add(client, startClock, len);
                 }
             });
-            const now = time.getUnixTime();
+            const now = Date.now();
             let didAdd = false;
             if (this.lastChange > 0 && now - this.lastChange < this.captureTimeout && stack.length > 0 && !undoing && !redoing) {
                 // append change to last stack op
@@ -96,16 +94,21 @@ class UndoManager extends observable_1.Observable {
             }
             // make sure that deleted structs are not gc'd
             transaction.deleteSet.iterate(transaction, item => {
-                if (item instanceof internals_1.Item && this.scope.some(type => (0, internals_1.isParentOf)(type, item))) {
+                if (item instanceof internals_1.Item && this.scope.some(type => type.isParentOf(item))) {
                     internals_1.Item.keepRecursive(item, true);
                 }
             });
-            const changeEvent = [{ stackItem: stack[stack.length - 1], origin: transaction.origin, type: undoing ? 'redo' : 'undo', changedParentTypes: transaction.changedParentTypes }, this];
+            const changeEvent = {
+                stackItem: stack[stack.length - 1],
+                origin: transaction.origin,
+                type: undoing ? 'redo' : 'undo',
+                changedParentTypes: transaction.changedParentTypes
+            };
             if (didAdd) {
-                this.emit('stack-item-added', changeEvent);
+                this.emit('stack-item-added', [changeEvent, this]);
             }
             else {
-                this.emit('stack-item-updated', changeEvent);
+                this.emit('stack-item-updated', [changeEvent, this]);
             }
         };
         this.doc.on('afterTransaction', this.afterTransactionHandler);
@@ -115,7 +118,7 @@ class UndoManager extends observable_1.Observable {
     }
     clearStackItem(tr, stackItem) {
         stackItem.deletions.iterate(tr, item => {
-            if (item instanceof internals_1.Item && this.scope.some(type => (0, internals_1.isParentOf)(type, item))) {
+            if (item instanceof internals_1.Item && this.scope.some(type => type.isParentOf(item))) {
                 internals_1.Item.keepRecursive(item, false);
             }
         });
@@ -143,14 +146,14 @@ class UndoManager extends observable_1.Observable {
                             }
                             struct = item;
                         }
-                        if (!struct.deleted && scope.some(type => (0, internals_1.isParentOf)(type, struct))) {
+                        if (!struct.deleted && scope.some(type => type.isParentOf(struct))) {
                             itemsToDelete.push(struct);
                         }
                     }
                 });
                 stackItem.deletions.iterate(transaction, struct => {
                     if (struct instanceof internals_1.Item &&
-                        scope.some(type => (0, internals_1.isParentOf)(type, struct)) &&
+                        scope.some(type => type.isParentOf(struct)) &&
                         // Never redo structs in stackItem.insertions because they were created and deleted in the same capture interval.
                         !stackItem.insertions.isDeleted(struct.id)) {
                         itemsToRedo.add(struct);
@@ -185,7 +188,7 @@ class UndoManager extends observable_1.Observable {
         return result;
     }
     addToScope(ytypes) {
-        ytypes = array.isArray(ytypes) ? ytypes : [ytypes];
+        ytypes = Array.isArray(ytypes) ? ytypes : [ytypes];
         ytypes.forEach(ytype => {
             if (this.scope.every(yt => yt !== ytype)) {
                 this.scope.push(ytype);

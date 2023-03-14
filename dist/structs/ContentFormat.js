@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readContentFormat = exports.ContentFormat = void 0;
-const error = require("lib0/error");
+const lib0 = require("lib0-typescript");
 class ContentFormat {
     constructor(key, value) {
         this.key = key;
@@ -11,7 +11,7 @@ class ContentFormat {
     getContent() { return []; }
     isCountable() { return false; }
     copy() { return new ContentFormat(this.key, this.value); }
-    splice(offset) { throw error.methodUnimplemented(); }
+    splice(offset) { throw new lib0.UnimplementedMethodError(); }
     mergeWith(right) { return false; }
     integrate(transaction, item) {
         // @todo searchmarker are currently unsupported for rich text documents

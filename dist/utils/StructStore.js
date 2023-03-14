@@ -3,8 +3,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StructStore = void 0;
 const internals_1 = require("../internals");
-const math = require("lib0/math");
-const error = require("lib0/error");
+const lib0 = require("lib0-typescript");
 class StructStore {
     constructor() {
         this.clients = new Map();
@@ -48,7 +47,7 @@ class StructStore {
         else {
             const lastStruct = structs[structs.length - 1];
             if (lastStruct.id.clock + lastStruct.length !== struct.id.clock) {
-                throw error.unexpectedCase();
+                throw new lib0.UnexpectedCaseError();
             }
         }
         structs.push(struct);
@@ -111,7 +110,7 @@ StructStore.findIndexSS = (structs, clock) => {
     // @todo does it even make sense to pivot the search?
     // If a good split misses, it might actually increase the time to find the correct item.
     // Currently, the only advantage is that search with pivoting might find the item on the first try.
-    let midindex = math.floor((clock / (midclock + mid.length - 1)) * right); // pivoting the search
+    let midindex = Math.floor((clock / (midclock + mid.length - 1)) * right); // pivoting the search
     while (left <= right) {
         mid = structs[midindex];
         midclock = mid.id.clock;
@@ -124,11 +123,11 @@ StructStore.findIndexSS = (structs, clock) => {
         else {
             right = midindex - 1;
         }
-        midindex = math.floor((left + right) / 2);
+        midindex = Math.floor((left + right) / 2);
     }
     // Always check state before looking for a struct in StructStore
     // Therefore the case of not finding a struct is unexpected
-    throw error.unexpectedCase();
+    throw new lib0.UnexpectedCaseError();
 };
 StructStore.findIndexCleanStart = (transaction, structs, clock) => {
     const index = StructStore.findIndexSS(structs, clock);

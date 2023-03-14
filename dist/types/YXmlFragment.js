@@ -4,7 +4,6 @@ exports.readYXmlFragment = exports.YXmlFragment = exports.YXmlTreeWalker = void 
 const AbstractType_1 = require("./AbstractType_");
 const internals_1 = require("../internals");
 const error = require("lib0/error");
-const array = require("lib0/array");
 /**
  * Dom filter function.
  *
@@ -62,7 +61,6 @@ class YXmlTreeWalker {
         }
         this._firstCall = false;
         if (n === null) {
-            // @ts-ignore
             return { value: undefined, done: true };
         }
         this._currentNode = n;
@@ -103,8 +101,10 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
     }
     clone() {
         const el = new YXmlFragment();
-        // @ts-ignore
-        el.insert(0, this.toArray().map(item => item instanceof AbstractType_1.AbstractType_ ? item.clone() : item));
+        const array = this.toArray().map(item => {
+            return item instanceof AbstractType_1.AbstractType_ ? item.clone() : item;
+        });
+        el.insert(0, array);
         return el;
     }
     get length() {
@@ -147,8 +147,10 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      */
     querySelector(query) {
         query = query.toUpperCase();
-        // @ts-ignore
-        const iterator = new YXmlTreeWalker(this, element => element.nodeName && element.nodeName.toUpperCase() === query);
+        const iterator = new YXmlTreeWalker(this, element => {
+            const xmlElement = element;
+            return xmlElement.nodeName != null && xmlElement.nodeName.toUpperCase() === query;
+        });
         const next = iterator.next();
         if (next.done) {
             return null;
@@ -170,8 +172,11 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      */
     querySelectorAll(query) {
         query = query.toUpperCase();
-        // @ts-ignore
-        return array.from(new YXmlTreeWalker(this, element => element.nodeName && element.nodeName.toUpperCase() === query));
+        const walker = new YXmlTreeWalker(this, element => {
+            const xmlElement = element;
+            return xmlElement.nodeName != null && xmlElement.nodeName.toUpperCase() === query;
+        });
+        return Array.from(walker);
     }
     /**
      * Creates YXmlEvent and calls observers.
@@ -232,14 +237,15 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      * @param {Array<YXmlElement|YXmlText>} content The array of content
      */
     insert(index, content) {
+        var _a;
         if (this.doc !== null) {
             this.doc.transact(transaction => {
                 this.listInsertGenerics(transaction, index, content);
             });
         }
         else {
-            // @ts-ignore _prelimContent is defined because this is not yet integrated
-            this._prelimContent.splice(index, 0, ...content);
+            // _prelimContent is defined because this is not yet integrated
+            (_a = this._prelimContent) === null || _a === void 0 ? void 0 : _a.splice(index, 0, ...content);
         }
     }
     /**
@@ -275,14 +281,15 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      * @param {number} [length=1] The number of elements to remove. Defaults to 1.
      */
     delete(index, length = 1) {
+        var _a;
         if (this.doc !== null) {
             this.doc.transact(transaction => {
                 this.listDelete(transaction, index, length);
             });
         }
         else {
-            // @ts-ignore _prelimContent is defined because this is not yet integrated
-            this._prelimContent.splice(index, length);
+            // _prelimContent is defined because this is not yet integrated
+            (_a = this._prelimContent) === null || _a === void 0 ? void 0 : _a.splice(index, length);
         }
     }
     /**

@@ -1,5 +1,5 @@
-import { Transaction, Doc, Item, DeleteSet, AbstractType_, StructStore, ID } from '../internals';
-import { Observable } from 'lib0/observable';
+import { Transaction, Doc, Item, DeleteSet, AbstractType_, YEvent, StructStore, ID } from '../internals';
+import * as lib0 from "lib0-typescript";
 export declare const followRedone: (store: StructStore, id: ID) => {
     item: Item;
     diff: number;
@@ -31,6 +31,22 @@ export type UndoManagerOptions = {
     ignoreRemoteMapChanges?: boolean;
     doc?: Doc;
 };
+export type UndoManagerChangeEvent = {
+    origin?: any;
+    stackItem: StackItem;
+    type: string;
+    undoStackCleared?: boolean;
+    changedParentTypes: Map<AbstractType_<YEvent<any>>, YEvent<any>[]>;
+};
+export type UndoManagerMessages = {
+    'stack-cleared': [{
+        undoStackCleared: boolean;
+        redoStackCleared: boolean;
+    }];
+    'stack-item-added': [UndoManagerChangeEvent, UndoManager];
+    'stack-item-popped': [UndoManagerChangeEvent, UndoManager];
+    'stack-item-updated': [UndoManagerChangeEvent, UndoManager];
+};
 /**
  * Fires 'stack-item-added' event when a stack item was added to either the undo- or
  * the redo-stack. You may store additional stack information via the
@@ -40,7 +56,7 @@ export type UndoManagerOptions = {
  *
  * @extends {Observable<'stack-item-added'|'stack-item-popped'|'stack-cleared'|'stack-item-updated'>}
  */
-export declare class UndoManager extends Observable<'stack-item-added' | 'stack-item-popped' | 'stack-cleared' | 'stack-item-updated'> {
+export declare class UndoManager extends lib0.Observable<UndoManagerMessages> {
     scope: AbstractType_<any>[];
     deleteFilter: (item: Item) => boolean;
     trackedOrigins: Set<any>;

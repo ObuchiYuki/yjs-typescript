@@ -1,7 +1,7 @@
 /**
  * @module encoding
  */
-import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, DSEncoderV2, DSDecoderV1, DSEncoderV1, DSDecoderV2, Doc, Transaction, GC, Item, StructStore } from '../internals';
+import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, DSEncoderV2, DSDecoderV1, DSEncoderV1, DSDecoderV2, Doc, Transaction, GC, Item, StructStore, UpdateDecoderAny_ } from '../internals';
 import * as decoding from 'lib0/decoding';
 /**
  * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
@@ -12,15 +12,7 @@ import * as decoding from 'lib0/decoding';
  * @function
  */
 export declare const writeClientsStructs: (encoder: UpdateEncoderV1 | UpdateEncoderV2, store: StructStore, _sm: Map<number, number>) => void;
-/**
- * @param {UpdateDecoderV1 | UpdateDecoderV2} decoder The decoder object to read data from.
- * @param {Doc} doc
- * @return {Map<number, { i: number, refs: Array<Item | GC> }>}
- *
- * @private
- * @function
- */
-export declare const readClientsStructRefs: (decoder: UpdateDecoderV1 | UpdateDecoderV2, doc: Doc) => Map<number, {
+export declare const readClientsStructRefs: (decoder: UpdateDecoderAny_, doc: Doc) => Map<number, {
     i: number;
     refs: Array<Item | GC>;
 }>;
