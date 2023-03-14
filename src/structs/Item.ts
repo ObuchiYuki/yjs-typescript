@@ -7,7 +7,7 @@ import {
     readContentDeleted, readContentBinary, readContentJSON, readContentAny, readContentString, readContentEmbed, readContentDoc, readContentFormat, readContentType,
     DeleteSet, ContentType, ContentDeleted, StructStore, ID, AbstractType_, Transaction,
 
-    UpdateDecoderAny_, UpdateEncoderAny_, __AbstractStruct, ContentDecoder_, Content_, Snapshot,
+    UpdateDecoderAny_, UpdateEncoderAny_, ContentDecoder_, Content_, Snapshot,
 } from '../internals'
 
 import * as error from 'lib0/error'

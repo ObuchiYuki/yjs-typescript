@@ -4,7 +4,7 @@ import {
     DeleteSet,
     Item,
     generateNewClientID,
-    GC, StructStore, AbstractType_, __AbstractStruct, YEvent, Doc, // eslint-disable-line
+    GC, StructStore, AbstractType_, YEvent, Doc, // eslint-disable-line
     UpdateEncoderAny_, ID, UpdateEncoderV1, UpdateEncoderV2, Struct_
 } from '../internals'
 

@@ -1,5 +1,4 @@
-import { Item, AbstractType_, Transaction, // eslint-disable-line
-Struct_ } from '../internals';
+import { Item, AbstractType_, Transaction, Struct_ } from '../internals';
 export type YEventDelta = {
     insert?: string | Array<any> | object | AbstractType_<any>;
     retain?: number;

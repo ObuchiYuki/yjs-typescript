@@ -1,6 +1,6 @@
 
 import {
-    Item, AbstractType_, Transaction, __AbstractStruct, // eslint-disable-line
+    Item, AbstractType_, Transaction,
     Struct_
 } from '../internals'
 

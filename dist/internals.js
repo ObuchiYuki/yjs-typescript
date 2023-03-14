@@ -41,7 +41,6 @@ __exportStar(require("./types/YXmlElement"), exports);
 __exportStar(require("./types/YXmlEvent"), exports);
 __exportStar(require("./types/YXmlHook"), exports);
 __exportStar(require("./types/YXmlText"), exports);
-__exportStar(require("./structs/AbstractStruct"), exports);
 __exportStar(require("./structs/GC"), exports);
 __exportStar(require("./structs/ContentBinary"), exports);
 __exportStar(require("./structs/ContentDeleted"), exports);

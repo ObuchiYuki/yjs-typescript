@@ -24,7 +24,6 @@ export * from './types/YXmlElement';
 export * from './types/YXmlEvent';
 export * from './types/YXmlHook';
 export * from './types/YXmlText';
-export * from './structs/AbstractStruct';
 export * from './structs/GC';
 export * from './structs/ContentBinary';
 export * from './structs/ContentDeleted';
