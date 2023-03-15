@@ -194,7 +194,7 @@ const encodeStateVectorFromUpdateV2 = (update, YEncoder = internals_1.DSEncoderV
         // prepend the size of the state vector
         const enc = new lib0.Encoder();
         enc.writeVarUint(size);
-        enc.writeVarUint8Array(encoder.restEncoder.toUint8Array());
+        enc.writeUint8Array(encoder.restEncoder.toUint8Array());
         encoder.restEncoder = enc;
         return encoder.toUint8Array();
     }
