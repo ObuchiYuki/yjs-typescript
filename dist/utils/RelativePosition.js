@@ -2,9 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.compareRelativePositions = exports.AbsolutePosition = exports.RelativePosition = void 0;
 const internals_1 = require("../internals");
-const encoding = require("lib0/encoding");
-const decoding = require("lib0/decoding");
-const lib0_typescript_1 = require("lib0-typescript");
+const lib0 = require("lib0-typescript");
 /**
  * A relative position is based on the Yjs model and is not affected by document changes.
  * E.g. If you place a relative position before a certain character, it will always point to this character.
@@ -62,48 +60,48 @@ class RelativePosition {
         return json;
     }
     encode() {
-        const encoder = encoding.createEncoder();
+        const encoder = new lib0.Encoder();
         const { type, tname, item, assoc } = this;
         if (item !== null) {
-            encoding.writeVarUint(encoder, 0);
+            encoder.writeVarUint(0);
             item.encode(encoder);
         }
         else if (tname !== null) {
             // case 2: found position at the end of the list and type is stored in y.share
-            encoding.writeUint8(encoder, 1);
-            encoding.writeVarString(encoder, tname);
+            encoder.writeUint8(1);
+            encoder.writeVarString(tname);
         }
         else if (type !== null) {
             // case 3: found position at the end of the list and type is attached to an item
-            encoding.writeUint8(encoder, 2);
+            encoder.writeUint8(2);
             type.encode(encoder);
         }
         else {
-            throw new lib0_typescript_1.UnexpectedCaseError();
+            throw new lib0.UnexpectedCaseError();
         }
-        encoding.writeVarInt(encoder, assoc);
-        return encoding.toUint8Array(encoder);
+        encoder.writeVarInt(assoc);
+        return encoder.toUint8Array();
     }
     static decode(uint8Array) {
-        const decoder = decoding.createDecoder(uint8Array);
+        const decoder = new lib0.Decoder(uint8Array);
         let type = null;
         let tname = null;
         let itemID = null;
-        switch (decoding.readVarUint(decoder)) {
+        switch (decoder.readVarUint()) {
             case 0:
                 // case 1: found position somewhere in the linked list
                 itemID = internals_1.ID.decode(decoder);
                 break;
             case 1:
                 // case 2: found position at the end of the list and type is stored in y.share
-                tname = decoding.readVarString(decoder);
+                tname = decoder.readVarString();
                 break;
             case 2: {
                 // case 3: found position at the end of the list and type is attached to an item
                 type = internals_1.ID.decode(decoder);
             }
         }
-        const assoc = decoding.hasContent(decoder) ? decoding.readVarInt(decoder) : 0;
+        const assoc = decoder.hasContent() ? decoder.readVarInt() : 0;
         return new RelativePosition(type, tname, itemID, assoc);
     }
     static fromJSON(json) {
@@ -208,7 +206,7 @@ class AbsolutePosition {
                 }
             }
             else {
-                throw new lib0_typescript_1.UnexpectedCaseError();
+                throw new lib0.UnexpectedCaseError();
             }
             if (assoc >= 0) {
                 index = type._length;

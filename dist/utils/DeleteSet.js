@@ -2,8 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeleteSet = exports.DeleteItem = void 0;
 const internals_1 = require("../internals");
-const encoding = require("lib0/encoding");
-const decoding = require("lib0/decoding");
 const lib0 = require("lib0-typescript");
 class DeleteItem {
     constructor(clock, len) {
@@ -81,15 +79,15 @@ class DeleteSet {
             .push(new DeleteItem(clock, length));
     }
     encode(encoder) {
-        encoding.writeVarUint(encoder.restEncoder, this.clients.size);
+        encoder.restEncoder.writeVarUint(this.clients.size);
         // Ensure that the delete set is written in a deterministic order
         Array.from(this.clients.entries())
             .sort((a, b) => b[0] - a[0])
             .forEach(([client, dsitems]) => {
             encoder.resetDsCurVal();
-            encoding.writeVarUint(encoder.restEncoder, client);
+            encoder.restEncoder.writeVarUint(client);
             const len = dsitems.length;
-            encoding.writeVarUint(encoder.restEncoder, len);
+            encoder.restEncoder.writeVarUint(len);
             for (let i = 0; i < len; i++) {
                 const item = dsitems[i];
                 encoder.writeDsClock(item.clock);
@@ -153,11 +151,11 @@ class DeleteSet {
     }
     static decode(decoder) {
         const ds = new DeleteSet();
-        const numClients = decoding.readVarUint(decoder.restDecoder);
+        const numClients = decoder.restDecoder.readVarUint();
         for (let i = 0; i < numClients; i++) {
             decoder.resetDsCurVal();
-            const client = decoding.readVarUint(decoder.restDecoder);
-            const numberOfDeletes = decoding.readVarUint(decoder.restDecoder);
+            const client = decoder.restDecoder.readVarUint();
+            const numberOfDeletes = decoder.restDecoder.readVarUint();
             if (numberOfDeletes > 0) {
                 const dsField = lib0.setIfUndefined(ds.clients, client, () => []);
                 for (let i = 0; i < numberOfDeletes; i++) {
@@ -192,11 +190,11 @@ class DeleteSet {
     }
     static decodeAndApply(decoder, transaction, store) {
         const unappliedDS = new DeleteSet();
-        const numClients = decoding.readVarUint(decoder.restDecoder);
+        const numClients = decoder.restDecoder.readVarUint();
         for (let i = 0; i < numClients; i++) {
             decoder.resetDsCurVal();
-            const client = decoding.readVarUint(decoder.restDecoder);
-            const numberOfDeletes = decoding.readVarUint(decoder.restDecoder);
+            const client = decoder.restDecoder.readVarUint();
+            const numberOfDeletes = decoder.restDecoder.readVarUint();
             const structs = store.clients.get(client) || [];
             const state = store.getState(client);
             for (let i = 0; i < numberOfDeletes; i++) {
@@ -239,7 +237,7 @@ class DeleteSet {
         }
         if (unappliedDS.clients.size > 0) {
             const ds = new internals_1.UpdateEncoderV2();
-            encoding.writeVarUint(ds.restEncoder, 0); // encode 0 structs
+            ds.restEncoder.writeVarUint(0); // encode 0 structs
             unappliedDS.encode(ds);
             return ds.toUint8Array();
         }

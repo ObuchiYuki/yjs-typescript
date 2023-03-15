@@ -1,5 +1,5 @@
-import { UpdateEncoderAny_, StructStore, Item, Transaction, Content_, ContentDecoder_ } from '../internals';
-export declare class ContentFormat implements Content_ {
+import { UpdateEncoderAny_, StructStore, Item, Transaction, YContent, YContentDecoder } from '../internals';
+export declare class ContentFormat implements YContent {
     key: string;
     value: object;
     constructor(key: string, value: object);
@@ -15,4 +15,4 @@ export declare class ContentFormat implements Content_ {
     write(encoder: UpdateEncoderAny_, offset: number): void;
     getRef(): number;
 }
-export declare const readContentFormat: ContentDecoder_;
+export declare const readContentFormat: YContentDecoder;

@@ -1,13 +1,13 @@
 import {
     UpdateEncoderAny_, UpdateDecoderAny_, StructStore, Item, Transaction,
-    Content_, ContentDecoder_
+    YContent, YContentDecoder
 
 } from '../internals'
 
 import * as lib0 from "lib0-typescript"
 
 
-export class ContentBinary implements Content_ {
+export class ContentBinary implements YContent {
     constructor (public content: Uint8Array) {}
 
     getLength(): number { return 1 }
@@ -33,6 +33,6 @@ export class ContentBinary implements Content_ {
     getRef(): number { return 3 }
 }
 
-export const readContentBinary: ContentDecoder_ = decoder => {
+export const readContentBinary: YContentDecoder = decoder => {
     return new ContentBinary(decoder.readBuf())
 }

@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Skip = exports.structSkipRefNumber = void 0;
 const Struct_1 = require("./Struct_");
-const encoding = require("lib0/encoding");
 const lib0 = require("lib0-typescript");
 exports.structSkipRefNumber = 10;
 class Skip extends Struct_1.Struct_ {
@@ -21,7 +20,7 @@ class Skip extends Struct_1.Struct_ {
     write(encoder, offset) {
         encoder.writeInfo(exports.structSkipRefNumber);
         // write as VarUint because Skips can't make use of predictable length-encoding
-        encoding.writeVarUint(encoder.restEncoder, this.length - offset);
+        encoder.restEncoder.writeVarUint(this.length - offset);
     }
     getMissing(transaction, store) {
         return null;

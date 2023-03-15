@@ -1,12 +1,12 @@
 
 import {
     UpdateEncoderAny_, StructStore, Item, Transaction,
-    Content_, ContentDecoder_
+    YContent, YContentDecoder
 } from '../internals'
 
 import * as lib0 from "lib0-typescript"
 
-export class ContentEmbed implements Content_ {
+export class ContentEmbed implements YContent {
     constructor(public embed: object) {}
 
     getLength(): number { return 1 }
@@ -27,11 +27,11 @@ export class ContentEmbed implements Content_ {
     
     gc(store: StructStore) {}
 
-    write (encoder: UpdateEncoderAny_, offset: number) { encoder.writeJSON(this.embed) }
+    write(encoder: UpdateEncoderAny_, offset: number) { encoder.writeJSON(this.embed) }
 
     getRef(): number { return 5 }
 }
 
-export const readContentEmbed: ContentDecoder_ = decoder => {
+export const readContentEmbed: YContentDecoder = decoder => {
     return new ContentEmbed(decoder.readJSON())
 }

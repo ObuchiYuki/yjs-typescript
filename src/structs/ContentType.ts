@@ -11,7 +11,7 @@ import {
     
     StructStore, Transaction, Item, AbstractType_,
 
-    Content_, ContentDecoder_
+    YContent, YContentDecoder
 } from '../internals'
 
 import * as lib0 from "lib0-typescript"
@@ -34,7 +34,7 @@ export const YXmlFragmentRefID = 4
 export const YXmlHookRefID = 5
 export const YXmlTextRefID = 6
 
-export class ContentType implements Content_ {
+export class ContentType implements YContent {
     constructor(public type: AbstractType_<any>) {}
 
     getLength(): number { return 1 }
@@ -94,13 +94,13 @@ export class ContentType implements Content_ {
         this.type._map = new Map()
     }
 
-    write (encoder: UpdateEncoderAny_, offset: number) {
+    write(encoder: UpdateEncoderAny_, offset: number) {
         this.type._write(encoder)
     }
 
     getRef(): number { return 7 }
 }
 
-export const readContentType: ContentDecoder_ = decoder => {
+export const readContentType: YContentDecoder = decoder => {
     return new ContentType(typeRefs[decoder.readTypeRef()](decoder))
 }

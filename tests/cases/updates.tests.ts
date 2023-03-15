@@ -2,8 +2,8 @@ import * as t from 'lib0/testing'
 import { init, compare } from '../testHelper' // eslint-disable-line
 import * as Y from '../../src/index'
 import { readClientsStructRefs, UpdateDecoderV2, UpdateEncoderV2 } from '../../src/internals'
-import * as encoding from 'lib0/encoding'
-import * as decoding from 'lib0/decoding'
+
+import * as lib0 from "lib0-typescript"
 
 /**
  * @typedef {Object} Enc
@@ -203,12 +203,12 @@ const checkUpdateCases = (ydoc: Y.Doc, updates: Array<Uint8Array>, enc: Enc, has
           //  - t.compare(diffed, mergedDeletes)
           // because diffed contains the set of all deletes.
           // So we add all deletes from `diffed` to `partDeletes` and compare then
-          const decoder = decoding.createDecoder(diffed)
+          const decoder = new lib0.Decoder(diffed)
           const updateDecoder = new UpdateDecoderV2(decoder)
           readClientsStructRefs(updateDecoder, new Y.Doc())
           const ds = Y.DeleteSet.decode(updateDecoder)
           const updateEncoder = new UpdateEncoderV2()
-          encoding.writeVarUint(updateEncoder.restEncoder, 0) // 0 structs
+          updateEncoder.restEncoder.writeVarUint(0) // 0 structs
           ds.encode(updateEncoder)
           const deletesUpdate = updateEncoder.toUint8Array()
           const mergedDeletes = Y.mergeUpdatesV2([deletesUpdate, partMerged])

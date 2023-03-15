@@ -1,9 +1,9 @@
 import {
     Transaction, Item, StructStore,
-    Content_, ContentDecoder_, UpdateEncoderAny_
+    YContent, YContentDecoder, UpdateEncoderAny_
 } from '../internals'
 
-export class ContentString implements Content_ {
+export class ContentString implements YContent {
     constructor(public str: string) {}
 
     getLength(): number { return this.str.length }
@@ -42,13 +42,13 @@ export class ContentString implements Content_ {
     
     gc(store: StructStore) {}
     
-    write (encoder: UpdateEncoderAny_, offset: number) {
+    write(encoder: UpdateEncoderAny_, offset: number) {
         encoder.writeString(offset === 0 ? this.str : this.str.slice(offset))
     }
 
     getRef(): number { return 4 }
 }
 
-export const readContentString: ContentDecoder_ = decoder => {
+export const readContentString: YContentDecoder = decoder => {
     return new ContentString(decoder.readString())
 }

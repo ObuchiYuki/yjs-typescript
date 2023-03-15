@@ -1,7 +1,7 @@
 import {
     Doc, Transaction, EventHandler, YEvent, Item, 
     UpdateEncoderAny_, ArraySearchMarker_, Snapshot, 
-    ContentAny, ContentBinary, ContentDoc, ContentType, Content_, ID, StructStore
+    ContentAny, ContentBinary, ContentDoc, ContentType, YContent, ID, StructStore
 } from '../internals'
 
 import * as lib0 from "lib0-typescript"
@@ -401,7 +401,7 @@ export abstract class AbstractType_<EventType> {
         const left = this._map.get(key) || null
         const doc = transaction.doc
         const ownClientId = doc.clientID
-        let content: Content_
+        let content: YContent
         if (value == null) {
             content = new ContentAny([value])
         } else {

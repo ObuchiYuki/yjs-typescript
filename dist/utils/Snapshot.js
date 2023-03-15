@@ -2,8 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.equalSnapshots = exports.Snapshot = void 0;
 const internals_1 = require("../internals");
-const decoding = require("lib0/decoding");
-const encoding = require("lib0/encoding");
 const lib0 = require("lib0-typescript");
 class Snapshot {
     constructor(ds, sv) {
@@ -24,11 +22,11 @@ class Snapshot {
     encode() {
         return this.encodeV2(new internals_1.DSEncoderV1());
     }
-    static decodeV2(buf, decoder = new internals_1.DSDecoderV2(decoding.createDecoder(buf))) {
+    static decodeV2(buf, decoder = new internals_1.DSDecoderV2(new lib0.Decoder(buf))) {
         return new Snapshot(internals_1.DeleteSet.decode(decoder), (0, internals_1.readStateVector)(decoder));
     }
     static decode(buf) {
-        return Snapshot.decodeV2(buf, new internals_1.DSDecoderV1(decoding.createDecoder(buf)));
+        return Snapshot.decodeV2(buf, new internals_1.DSDecoderV1(new lib0.Decoder(buf)));
     }
     splitAffectedStructs(transaction) {
         const meta = lib0.setIfUndefined(transaction.meta, this.splitAffectedStructs, () => new Set());
@@ -57,7 +55,7 @@ class Snapshot {
                     size++;
                 }
             });
-            encoding.writeVarUint(encoder.restEncoder, size);
+            encoder.restEncoder.writeVarUint(size);
             // splitting the structs before writing them to the encoder
             for (const [client, clock] of sv) {
                 if (clock === 0) {
@@ -69,10 +67,10 @@ class Snapshot {
                 const structs = originDoc.store.clients.get(client) || [];
                 const lastStructIndex = internals_1.StructStore.findIndexSS(structs, clock - 1);
                 // write # encoded structs
-                encoding.writeVarUint(encoder.restEncoder, lastStructIndex + 1);
+                encoder.restEncoder.writeVarUint(lastStructIndex + 1);
                 encoder.writeClient(client);
                 // first clock written is 0
-                encoding.writeVarUint(encoder.restEncoder, 0);
+                encoder.restEncoder.writeVarUint(0);
                 for (let i = 0; i <= lastStructIndex; i++) {
                     structs[i].write(encoder, 0);
                 }

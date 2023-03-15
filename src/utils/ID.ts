@@ -1,6 +1,5 @@
 
-import * as decoding from 'lib0/decoding'
-import * as encoding from 'lib0/encoding'
+import * as lib0 from 'lib0-typescript'
 
 export class ID {
     /** Client id */
@@ -13,16 +12,13 @@ export class ID {
         this.clock = clock
     }
 
-    encode(encoder: encoding.Encoder) {
-        encoding.writeVarUint(encoder, this.client)
-        encoding.writeVarUint(encoder, this.clock)
+    encode(encoder: lib0.Encoder) {
+        encoder.writeVarUint(this.client)
+        encoder.writeVarUint(this.clock)
     }
 
-    static decode(decoder: decoding.Decoder): ID {
-        return new ID(
-            decoding.readVarUint(decoder),
-            decoding.readVarUint(decoder)
-        )
+    static decode(decoder: lib0.Decoder): ID {
+        return new ID(decoder.readVarUint(), decoder.readVarUint())
     }
 }
 

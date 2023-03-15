@@ -1,5 +1,5 @@
 import { Struct_ } from "./Struct_";
-import { DeleteSet, StructStore, ID, AbstractType_, Transaction, UpdateDecoderAny_, UpdateEncoderAny_, ContentDecoder_, Content_, Snapshot } from '../internals';
+import { DeleteSet, StructStore, ID, AbstractType_, Transaction, UpdateDecoderAny_, UpdateEncoderAny_, YContentDecoder, YContent, Snapshot } from '../internals';
 /** Abstract class that represents any content. */
 export declare class Item extends Struct_ {
     /** The item that was originally to the left of this item. */
@@ -20,7 +20,7 @@ export declare class Item extends Struct_ {
     parentSub: string | null;
     /** If this type's effect is redone this type refers to the type that undid this operation. */
     redone: ID | null;
-    content: Content_;
+    content: YContent;
     /**
      * bit1: keep
      * bit2: countable
@@ -46,7 +46,7 @@ export declare class Item extends Struct_ {
     */
     static keepRecursive(item: Item | null, keep: boolean): void;
     /** parent is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.*/
-    constructor(id: ID, left: Item | null, origin: ID | null, right: Item | null, rightOrigin: ID | null, parent: AbstractType_<any> | ID | null, parentSub: string | null, content: Content_);
+    constructor(id: ID, left: Item | null, origin: ID | null, right: Item | null, rightOrigin: ID | null, parent: AbstractType_<any> | ID | null, parentSub: string | null, content: YContent);
     isVisible(snapshot?: Snapshot): boolean;
     markDeleted(): void;
     /** Split leftItem into two items; this -> leftItem */
@@ -77,6 +77,6 @@ export declare class Item extends Struct_ {
      */
     write(encoder: UpdateEncoderAny_, offset: number): void;
 }
-export declare const readItemContent: (decoder: UpdateDecoderAny_, info: number) => Content_;
+export declare const readItemContent: (decoder: UpdateDecoderAny_, info: number) => YContent;
 /** A lookup map for reading Item content. */
-export declare const contentDecoders_: ContentDecoder_[];
+export declare const contentDecoders_: YContentDecoder[];

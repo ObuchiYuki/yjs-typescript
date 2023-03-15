@@ -1,4 +1,4 @@
-import { UpdateEncoderAny_, UpdateDecoderAny_, StructStore, Transaction, Item, AbstractType_, Content_, ContentDecoder_ } from '../internals';
+import { UpdateEncoderAny_, UpdateDecoderAny_, StructStore, Transaction, Item, AbstractType_, YContent, YContentDecoder } from '../internals';
 export declare const typeRefs: ((decoder: UpdateDecoderAny_) => AbstractType_<any>)[];
 export declare const YArrayRefID = 0;
 export declare const YMapRefID = 1;
@@ -7,7 +7,7 @@ export declare const YXmlElementRefID = 3;
 export declare const YXmlFragmentRefID = 4;
 export declare const YXmlHookRefID = 5;
 export declare const YXmlTextRefID = 6;
-export declare class ContentType implements Content_ {
+export declare class ContentType implements YContent {
     type: AbstractType_<any>;
     constructor(type: AbstractType_<any>);
     getLength(): number;
@@ -22,4 +22,4 @@ export declare class ContentType implements Content_ {
     write(encoder: UpdateEncoderAny_, offset: number): void;
     getRef(): number;
 }
-export declare const readContentType: ContentDecoder_;
+export declare const readContentType: YContentDecoder;

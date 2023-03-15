@@ -1,7 +1,7 @@
-import * as encoding from 'lib0/encoding';
+import * as lib0 from 'lib0-typescript';
 import { ID } from '../internals';
 export declare class DSEncoderV1 {
-    restEncoder: encoding.Encoder;
+    restEncoder: lib0.Encoder;
     constructor();
     toUint8Array(): Uint8Array;
     resetDsCurVal(): void;
@@ -50,7 +50,7 @@ export declare class UpdateEncoderV1 extends DSEncoderV1 {
     writeKey(key: string): void;
 }
 export declare class DSEncoderV2 {
-    restEncoder: encoding.Encoder;
+    restEncoder: lib0.Encoder;
     dsCurrVal: number;
     constructor();
     toUint8Array(): Uint8Array;
@@ -68,15 +68,15 @@ export declare class UpdateEncoderV2 extends DSEncoderV2 {
     keyMap: Map<string, number>;
     /** Refers to the next uniqe key-identifier to me used. See writeKey method for more information. */
     keyClock: number;
-    keyClockEncoder: encoding.IntDiffOptRleEncoder;
-    clientEncoder: encoding.UintOptRleEncoder;
-    leftClockEncoder: encoding.UintOptRleEncoder;
-    rightClockEncoder: encoding.UintOptRleEncoder;
-    infoEncoder: encoding.RleEncoder<number>;
-    stringEncoder: encoding.StringEncoder;
-    parentInfoEncoder: encoding.RleEncoder<number>;
-    typeRefEncoder: encoding.UintOptRleEncoder;
-    lenEncoder: encoding.UintOptRleEncoder;
+    keyClockEncoder: lib0.IntDiffOptRleEncoder;
+    clientEncoder: lib0.UintOptRleEncoder;
+    leftClockEncoder: lib0.UintOptRleEncoder;
+    rightClockEncoder: lib0.UintOptRleEncoder;
+    infoEncoder: lib0.RleEncoder<number>;
+    stringEncoder: lib0.StringEncoder;
+    parentInfoEncoder: lib0.RleEncoder<number>;
+    typeRefEncoder: lib0.UintOptRleEncoder;
+    lenEncoder: lib0.UintOptRleEncoder;
     constructor();
     toUint8Array(): Uint8Array;
     writeLeftID(id: ID): void;

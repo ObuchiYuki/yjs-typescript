@@ -5,7 +5,6 @@ import {
     UpdateEncoderAny_
 } from '../internals'
 
-import * as encoding from 'lib0/encoding'
 import * as lib0 from "lib0-typescript"
 
 export const structSkipRefNumber = 10
@@ -29,7 +28,7 @@ export class Skip extends Struct_ {
     write(encoder: UpdateEncoderAny_, offset: number) {
         encoder.writeInfo(structSkipRefNumber)
         // write as VarUint because Skips can't make use of predictable length-encoding
-        encoding.writeVarUint(encoder.restEncoder, this.length - offset)
+        encoder.restEncoder.writeVarUint(this.length - offset)
     }
 
     getMissing(transaction: Transaction, store: StructStore): null | number {

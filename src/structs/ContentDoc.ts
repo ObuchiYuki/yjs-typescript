@@ -1,7 +1,7 @@
 
 import {
     Doc, UpdateEncoderAny_, StructStore, Transaction, Item,
-    Content_, ContentDecoder_
+    YContent, YContentDecoder
 } from '../internals'
 
 import * as lib0 from "lib0-typescript"
@@ -17,7 +17,7 @@ export type ContentDocOpts = {
     shouldLoad?: boolean
 }
 
-export class ContentDoc implements Content_ {
+export class ContentDoc implements YContent {
     doc: Doc
     opts: ContentDocOpts
 
@@ -73,6 +73,6 @@ export class ContentDoc implements Content_ {
     getRef(): number { return 9 }
 }
 
-export const readContentDoc: ContentDecoder_ = decoder => {
+export const readContentDoc: YContentDecoder = decoder => {
     return new ContentDoc(createDocFromOpts(decoder.readString(), decoder.readAny()))
 }

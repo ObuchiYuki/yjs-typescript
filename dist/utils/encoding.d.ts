@@ -2,7 +2,7 @@
  * @module encoding
  */
 import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, DSEncoderV2, DSDecoderV1, DSEncoderV1, DSDecoderV2, Doc, Transaction, GC, Item, StructStore, UpdateDecoderAny_ } from '../internals';
-import * as decoding from 'lib0/decoding';
+import * as lib0 from "lib0-typescript";
 /**
  * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
  * @param {StructStore} store
@@ -36,7 +36,7 @@ export declare const writeStructsFromTransaction: (encoder: UpdateEncoderV1 | Up
  *
  * @function
  */
-export declare const readUpdateV2: (decoder: decoding.Decoder, ydoc: Doc, transactionOrigin: any, structDecoder?: UpdateDecoderV1 | UpdateDecoderV2) => void;
+export declare const readUpdateV2: (decoder: lib0.Decoder, ydoc: Doc, transactionOrigin: any, structDecoder?: UpdateDecoderV1 | UpdateDecoderV2) => void;
 /**
  * Read and apply a document update.
  *
@@ -48,7 +48,7 @@ export declare const readUpdateV2: (decoder: decoding.Decoder, ydoc: Doc, transa
  *
  * @function
  */
-export declare const readUpdate: (decoder: decoding.Decoder, ydoc: Doc, transactionOrigin: any) => void;
+export declare const readUpdate: (decoder: lib0.Decoder, ydoc: Doc, transactionOrigin: any) => void;
 /**
  * Apply a document update created by, for example, `y.on('update', update => ..)` or `update = encodeStateAsUpdate()`.
  *

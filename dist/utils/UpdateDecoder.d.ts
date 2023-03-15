@@ -1,8 +1,8 @@
-import * as decoding from 'lib0/decoding';
 import { ID } from '../internals';
+import * as lib0 from 'lib0-typescript';
 export declare class DSDecoderV1 {
-    restDecoder: decoding.Decoder;
-    constructor(decoder: decoding.Decoder);
+    restDecoder: lib0.Decoder;
+    constructor(decoder: lib0.Decoder);
     resetDsCurVal(): void;
     readDsClock(): number;
     readDsLen(): number;
@@ -26,14 +26,14 @@ export declare class UpdateDecoderV1 extends DSDecoderV1 {
     readLen(): number;
     readAny(): any;
     readBuf(): Uint8Array;
-    /** Legacy implementation uses JSON parse. We use any-decoding in v2. */
+    /** Legacy implementation uses JSON parse. We use any-lib0 in v2. */
     readJSON(): any;
     readKey(): string;
 }
 export declare class DSDecoderV2 {
     dsCurrVal: number;
-    restDecoder: decoding.Decoder;
-    constructor(decoder: decoding.Decoder);
+    restDecoder: lib0.Decoder;
+    constructor(decoder: lib0.Decoder);
     resetDsCurVal(): void;
     readDsClock(): number;
     readDsLen(): number;
@@ -44,16 +44,16 @@ export declare class UpdateDecoderV2 extends DSDecoderV2 {
      * from stringEncoder and push it to keys.
      */
     keys: string[];
-    keyClockDecoder: decoding.IntDiffOptRleDecoder;
-    clientDecoder: decoding.UintOptRleDecoder;
-    leftClockDecoder: decoding.IntDiffOptRleDecoder;
-    rightClockDecoder: decoding.IntDiffOptRleDecoder;
-    infoDecoder: decoding.RleDecoder<number>;
-    stringDecoder: decoding.StringDecoder;
-    parentInfoDecoder: decoding.RleDecoder<number>;
-    typeRefDecoder: decoding.UintOptRleDecoder;
-    lenDecoder: decoding.UintOptRleDecoder;
-    constructor(decoder: decoding.Decoder);
+    keyClockDecoder: lib0.IntDiffOptRleDecoder;
+    clientDecoder: lib0.UintOptRleDecoder;
+    leftClockDecoder: lib0.IntDiffOptRleDecoder;
+    rightClockDecoder: lib0.IntDiffOptRleDecoder;
+    infoDecoder: lib0.RleDecoder<number>;
+    stringDecoder: lib0.StringDecoder;
+    parentInfoDecoder: lib0.RleDecoder<number>;
+    typeRefDecoder: lib0.UintOptRleDecoder;
+    lenDecoder: lib0.UintOptRleDecoder;
+    constructor(decoder: lib0.Decoder);
     readLeftID(): ID;
     readRightID(): ID;
     /**

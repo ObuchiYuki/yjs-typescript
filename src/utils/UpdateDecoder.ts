@@ -1,31 +1,31 @@
-import * as decoding from 'lib0/decoding'
 import { ID } from '../internals'
+import * as lib0 from 'lib0-typescript'
 
 export class DSDecoderV1 {
-    restDecoder: decoding.Decoder
+    restDecoder: lib0.Decoder
 
-    constructor(decoder: decoding.Decoder) {
+    constructor(decoder: lib0.Decoder) {
         this.restDecoder = decoder
     }
 
     resetDsCurVal () {}
 
     readDsClock(): number {
-        return decoding.readVarUint(this.restDecoder)
+        return this.restDecoder.readVarUint()
     }
 
     readDsLen(): number {
-        return decoding.readVarUint(this.restDecoder)
+        return this.restDecoder.readVarUint()
     }
 }
 
 export class UpdateDecoderV1 extends DSDecoderV1 {
     readLeftID(): ID {
-        return new ID(decoding.readVarUint(this.restDecoder), decoding.readVarUint(this.restDecoder))
+        return new ID(this.restDecoder.readVarUint(), this.restDecoder.readVarUint())
     }
 
     readRightID(): ID {
-        return new ID(decoding.readVarUint(this.restDecoder), decoding.readVarUint(this.restDecoder))
+        return new ID(this.restDecoder.readVarUint(), this.restDecoder.readVarUint())
     }
 
     /**
@@ -33,56 +33,56 @@ export class UpdateDecoderV1 extends DSDecoderV1 {
      * Use this in favor of readID whenever possible to reduce the number of objects created.
      */
     readClient(): number {
-        return decoding.readVarUint(this.restDecoder)
+        return this.restDecoder.readVarUint()
     }
 
     /**
      * @return {number} info An unsigned 8-bit integer
      */
     readInfo(): number {
-        return decoding.readUint8(this.restDecoder)
+        return this.restDecoder.readUint8()
     }
 
     readString(): string {
-        return decoding.readVarString(this.restDecoder)
+        return this.restDecoder.readVarString()
     }
 
     readParentInfo(): boolean {
-        return decoding.readVarUint(this.restDecoder) === 1
+        return this.restDecoder.readVarUint() === 1
     }
 
     readTypeRef(): number {
-        return decoding.readVarUint(this.restDecoder)
+        return this.restDecoder.readVarUint()
     }
 
     /** Write len of a struct - well suited for Opt RLE encoder. */
     readLen(): number {
-        return decoding.readVarUint(this.restDecoder)
+        return this.restDecoder.readVarUint()
     }
 
     readAny(): any {
-        return decoding.readAny(this.restDecoder)
+        return this.restDecoder.readAny()
     }
 
     readBuf(): Uint8Array {
-        return decoding.readVarUint8Array(this.restDecoder)
+        return this.restDecoder.readVarUint8Array()
     }
 
-    /** Legacy implementation uses JSON parse. We use any-decoding in v2. */
+    /** Legacy implementation uses JSON parse. We use any-lib0 in v2. */
     readJSON(): any {
-        return JSON.parse(decoding.readVarString(this.restDecoder))
+        return JSON.parse(this.restDecoder.readVarString())
     }
 
     readKey(): string {
-        return decoding.readVarString(this.restDecoder)
+        return this.restDecoder.readVarString()
     }
 }
 
 export class DSDecoderV2 {
     dsCurrVal: number = 0
-    restDecoder: decoding.Decoder
+    restDecoder: lib0.Decoder
 
-    constructor (decoder: decoding.Decoder) {
+    constructor (decoder: lib0.Decoder) {
         this.restDecoder = decoder
     }
 
@@ -91,12 +91,12 @@ export class DSDecoderV2 {
     }
 
     readDsClock(): number {
-        this.dsCurrVal += decoding.readVarUint(this.restDecoder)
+        this.dsCurrVal += this.restDecoder.readVarUint()
         return this.dsCurrVal
     }
 
     readDsLen(): number {
-        const diff = decoding.readVarUint(this.restDecoder) + 1
+        const diff = this.restDecoder.readVarUint() + 1
         this.dsCurrVal += diff
         return diff
     }
@@ -108,29 +108,29 @@ export class UpdateDecoderV2 extends DSDecoderV2 {
      * from stringEncoder and push it to keys. 
      */
     keys: string[] = []
-    keyClockDecoder: decoding.IntDiffOptRleDecoder
-    clientDecoder: decoding.UintOptRleDecoder
-    leftClockDecoder: decoding.IntDiffOptRleDecoder
-    rightClockDecoder: decoding.IntDiffOptRleDecoder
-    infoDecoder: decoding.RleDecoder<number>
-    stringDecoder: decoding.StringDecoder
-    parentInfoDecoder: decoding.RleDecoder<number>
-    typeRefDecoder: decoding.UintOptRleDecoder
-    lenDecoder: decoding.UintOptRleDecoder
+    keyClockDecoder: lib0.IntDiffOptRleDecoder
+    clientDecoder: lib0.UintOptRleDecoder
+    leftClockDecoder: lib0.IntDiffOptRleDecoder
+    rightClockDecoder: lib0.IntDiffOptRleDecoder
+    infoDecoder: lib0.RleDecoder<number>
+    stringDecoder: lib0.StringDecoder
+    parentInfoDecoder: lib0.RleDecoder<number>
+    typeRefDecoder: lib0.UintOptRleDecoder
+    lenDecoder: lib0.UintOptRleDecoder
 
-    constructor(decoder: decoding.Decoder) {
+    constructor(decoder: lib0.Decoder) {
         super(decoder)
 
-        decoding.readVarUint(decoder) // read feature flag - currently unused
-        this.keyClockDecoder = new decoding.IntDiffOptRleDecoder(decoding.readVarUint8Array(decoder))
-        this.clientDecoder = new decoding.UintOptRleDecoder(decoding.readVarUint8Array(decoder))
-        this.leftClockDecoder = new decoding.IntDiffOptRleDecoder(decoding.readVarUint8Array(decoder))
-        this.rightClockDecoder = new decoding.IntDiffOptRleDecoder(decoding.readVarUint8Array(decoder))
-        this.infoDecoder = new decoding.RleDecoder(decoding.readVarUint8Array(decoder), decoding.readUint8)
-        this.stringDecoder = new decoding.StringDecoder(decoding.readVarUint8Array(decoder))
-        this.parentInfoDecoder = new decoding.RleDecoder(decoding.readVarUint8Array(decoder), decoding.readUint8)
-        this.typeRefDecoder = new decoding.UintOptRleDecoder(decoding.readVarUint8Array(decoder))
-        this.lenDecoder = new decoding.UintOptRleDecoder(decoding.readVarUint8Array(decoder))
+        decoder.readVarUint() // read feature flag - currently unused
+        this.keyClockDecoder = new lib0.IntDiffOptRleDecoder(decoder.readVarUint8Array())
+        this.clientDecoder = new lib0.UintOptRleDecoder(decoder.readVarUint8Array())
+        this.leftClockDecoder = new lib0.IntDiffOptRleDecoder(decoder.readVarUint8Array())
+        this.rightClockDecoder = new lib0.IntDiffOptRleDecoder(decoder.readVarUint8Array())
+        this.infoDecoder = new lib0.RleDecoder(decoder.readVarUint8Array(), decoder => decoder.readUint8())
+        this.stringDecoder = new lib0.StringDecoder(decoder.readVarUint8Array())
+        this.parentInfoDecoder = new lib0.RleDecoder(decoder.readVarUint8Array(), decoder => decoder.readUint8())
+        this.typeRefDecoder = new lib0.UintOptRleDecoder(decoder.readVarUint8Array())
+        this.lenDecoder = new lib0.UintOptRleDecoder(decoder.readVarUint8Array())
     }
 
     readLeftID(): ID {
@@ -153,7 +153,7 @@ export class UpdateDecoderV2 extends DSDecoderV2 {
      * @return {number} info An unsigned 8-bit integer
      */
     readInfo(): number {
-        return /** @type {number} */ (this.infoDecoder.read())
+        return this.infoDecoder.read()
     }
 
     readString(): string {
@@ -179,11 +179,11 @@ export class UpdateDecoderV2 extends DSDecoderV2 {
     }
 
     readAny(): any {
-        return decoding.readAny(this.restDecoder)
+        return this.restDecoder.readAny()
     }
 
     readBuf(): Uint8Array {
-        return decoding.readVarUint8Array(this.restDecoder)
+        return this.restDecoder.readVarUint8Array()
     }
 
     /**
@@ -192,7 +192,7 @@ export class UpdateDecoderV2 extends DSDecoderV2 {
      * Initial we incoded objects using JSON. Now we use the much faster lib0/any-encoder. This method mainly exists for legacy purposes for the v1 encoder.
      */
     readJSON(): any {
-        return decoding.readAny(this.restDecoder)
+        return this.restDecoder.readAny()
     }
 
     readKey(): string {

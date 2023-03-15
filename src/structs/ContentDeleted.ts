@@ -1,10 +1,10 @@
 
 import {
     UpdateEncoderAny_, StructStore, Item, Transaction,
-    Content_, ContentDecoder_
+    YContent, YContentDecoder
 } from '../internals'
 
-export class ContentDeleted implements Content_ {
+export class ContentDeleted implements YContent {
     constructor(public len: number) {}
 
     getLength(): number { return this.len }
@@ -40,6 +40,6 @@ export class ContentDeleted implements Content_ {
     getRef(): number { return 1 }
 }
 
-export const readContentDeleted: ContentDecoder_ = decoder => {
+export const readContentDeleted: YContentDecoder = decoder => {
     return new ContentDeleted(decoder.readLen())
 }

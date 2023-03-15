@@ -43,7 +43,7 @@ export * from './structs/Skip'
 
 export * from "./types/AbstractType_"
 
-export * from "./structs/Content_"
+export * from "./structs/YContent"
 export * from "./structs/Struct_"
 
 export * from "./types/ArraySearchMarker_"

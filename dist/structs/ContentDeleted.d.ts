@@ -1,5 +1,5 @@
-import { UpdateEncoderAny_, StructStore, Item, Transaction, Content_, ContentDecoder_ } from '../internals';
-export declare class ContentDeleted implements Content_ {
+import { UpdateEncoderAny_, StructStore, Item, Transaction, YContent, YContentDecoder } from '../internals';
+export declare class ContentDeleted implements YContent {
     len: number;
     constructor(len: number);
     getLength(): number;
@@ -14,4 +14,4 @@ export declare class ContentDeleted implements Content_ {
     write(encoder: UpdateEncoderAny_, offset: number): void;
     getRef(): number;
 }
-export declare const readContentDeleted: ContentDecoder_;
+export declare const readContentDeleted: YContentDecoder;

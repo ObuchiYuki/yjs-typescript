@@ -7,7 +7,7 @@ import {
     readContentDeleted, readContentBinary, readContentJSON, readContentAny, readContentString, readContentEmbed, readContentDoc, readContentFormat, readContentType,
     DeleteSet, ContentType, ContentDeleted, StructStore, ID, AbstractType_, Transaction,
 
-    UpdateDecoderAny_, UpdateEncoderAny_, ContentDecoder_, Content_, Snapshot,
+    UpdateDecoderAny_, UpdateEncoderAny_, YContentDecoder, YContent, Snapshot,
 } from '../internals'
 
 import * as lib0 from "lib0-typescript"
@@ -44,7 +44,7 @@ export class Item extends Struct_ {
     /** If this type's effect is redone this type refers to the type that undid this operation. */
     redone: ID | null
     
-    content: Content_
+    content: YContent
 
     /**
      * bit1: keep
@@ -86,7 +86,7 @@ export class Item extends Struct_ {
     
     /** parent is a type if integrated, is null if it is possible to copy parent from left or right, is ID before integration to search for it.*/
     constructor(
-        id: ID, left: Item | null, origin: ID | null, right: Item | null, rightOrigin: ID | null, parent: AbstractType_<any>|ID|null, parentSub: string | null, content: Content_
+        id: ID, left: Item | null, origin: ID | null, right: Item | null, rightOrigin: ID | null, parent: AbstractType_<any>|ID|null, parentSub: string | null, content: YContent
     ) {
         super(id, content.getLength())
         this.origin = origin
@@ -541,12 +541,12 @@ export class Item extends Struct_ {
 
 }
 
-export const readItemContent = (decoder: UpdateDecoderAny_, info: number): Content_ => {
+export const readItemContent = (decoder: UpdateDecoderAny_, info: number): YContent => {
     return contentDecoders_[info & lib0.Bits.n5](decoder)
 }
 
 /** A lookup map for reading Item content. */
-export const contentDecoders_: ContentDecoder_[] = [
+export const contentDecoders_: YContentDecoder[] = [
     () => { throw new lib0.UnexpectedCaseError() }, // GC is not ItemContent
     readContentDeleted, // 1
     readContentJSON, // 2

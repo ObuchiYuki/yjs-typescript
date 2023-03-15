@@ -8,8 +8,6 @@ import {
 
 } from '../internals'
 
-import * as error from 'lib0/error'
-import * as array from 'lib0/array'
 
 /**
  * Define the elements to which a set of CSS queries apply.
@@ -307,7 +305,7 @@ export class YXmlFragment extends AbstractType_<YXmlEvent> {
             const pc = this._prelimContent as any[]
             const index = ref === null ? 0 : pc.findIndex(el => el === ref) + 1
             if (index === 0 && ref !== null) {
-                throw error.create('Reference item not found')
+                throw new Error('Reference item not found')
             }
             pc.splice(index, 0, ...content)
         }

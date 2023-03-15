@@ -1,59 +1,58 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateEncoderV2 = exports.DSEncoderV2 = exports.UpdateEncoderV1 = exports.DSEncoderV1 = void 0;
-const error = require("lib0/error");
-const encoding = require("lib0/encoding");
+const lib0 = require("lib0-typescript");
 class DSEncoderV1 {
     constructor() {
-        this.restEncoder = encoding.createEncoder();
+        this.restEncoder = new lib0.Encoder();
     }
     toUint8Array() {
-        return encoding.toUint8Array(this.restEncoder);
+        return this.restEncoder.toUint8Array();
     }
     resetDsCurVal() {
         // nop
     }
     writeDsClock(clock) {
-        encoding.writeVarUint(this.restEncoder, clock);
+        this.restEncoder.writeVarUint(clock);
     }
     writeDsLen(len) {
-        encoding.writeVarUint(this.restEncoder, len);
+        this.restEncoder.writeVarUint(len);
     }
 }
 exports.DSEncoderV1 = DSEncoderV1;
 class UpdateEncoderV1 extends DSEncoderV1 {
     writeLeftID(id) {
-        encoding.writeVarUint(this.restEncoder, id.client);
-        encoding.writeVarUint(this.restEncoder, id.clock);
+        this.restEncoder.writeVarUint(id.client);
+        this.restEncoder.writeVarUint(id.clock);
     }
     writeRightID(id) {
-        encoding.writeVarUint(this.restEncoder, id.client);
-        encoding.writeVarUint(this.restEncoder, id.clock);
+        this.restEncoder.writeVarUint(id.client);
+        this.restEncoder.writeVarUint(id.clock);
     }
     /** Use writeClient and writeClock instead of writeID if possible. */
     writeClient(client) {
-        encoding.writeVarUint(this.restEncoder, client);
+        this.restEncoder.writeVarUint(client);
     }
     /**
      * @param {number} info An unsigned 8-bit integer
      */
     writeInfo(info) {
-        encoding.writeUint8(this.restEncoder, info);
+        this.restEncoder.writeUint8(info);
     }
     writeString(s) {
-        encoding.writeVarString(this.restEncoder, s);
+        this.restEncoder.writeVarString(s);
     }
     /**
      * @param {boolean} isYKey
      */
     writeParentInfo(isYKey) {
-        encoding.writeVarUint(this.restEncoder, isYKey ? 1 : 0);
+        this.restEncoder.writeVarUint(isYKey ? 1 : 0);
     }
     /**
      * @param {number} info An unsigned 8-bit integer
      */
     writeTypeRef(info) {
-        encoding.writeVarUint(this.restEncoder, info);
+        this.restEncoder.writeVarUint(info);
     }
     /**
      * Write len of a struct - well suited for Opt RLE encoder.
@@ -61,41 +60,41 @@ class UpdateEncoderV1 extends DSEncoderV1 {
      * @param {number} len
      */
     writeLen(len) {
-        encoding.writeVarUint(this.restEncoder, len);
+        this.restEncoder.writeVarUint(len);
     }
     /**
      * @param {any} any
      */
     writeAny(any) {
-        encoding.writeAny(this.restEncoder, any);
+        this.restEncoder.writeAny(any);
     }
     /**
      * @param {Uint8Array} buf
      */
     writeBuf(buf) {
-        encoding.writeVarUint8Array(this.restEncoder, buf);
+        this.restEncoder.writeVarUint8Array(buf);
     }
     /**
      * @param {any} embed
      */
     writeJSON(embed) {
-        encoding.writeVarString(this.restEncoder, JSON.stringify(embed));
+        this.restEncoder.writeVarString(JSON.stringify(embed));
     }
     /**
      * @param {string} key
      */
     writeKey(key) {
-        encoding.writeVarString(this.restEncoder, key);
+        this.restEncoder.writeVarString(key);
     }
 }
 exports.UpdateEncoderV1 = UpdateEncoderV1;
 class DSEncoderV2 {
     constructor() {
         this.dsCurrVal = 0;
-        this.restEncoder = encoding.createEncoder(); // encodes all the rest / non-optimized
+        this.restEncoder = new lib0.Encoder(); // encodes all the rest / non-optimized
     }
     toUint8Array() {
-        return encoding.toUint8Array(this.restEncoder);
+        return this.restEncoder.toUint8Array();
     }
     resetDsCurVal() {
         this.dsCurrVal = 0;
@@ -106,16 +105,16 @@ class DSEncoderV2 {
     writeDsClock(clock) {
         const diff = clock - this.dsCurrVal;
         this.dsCurrVal = clock;
-        encoding.writeVarUint(this.restEncoder, diff);
+        this.restEncoder.writeVarUint(diff);
     }
     /**
      * @param {number} len
      */
     writeDsLen(len) {
         if (len === 0) {
-            error.unexpectedCase();
+            throw new lib0.UnexpectedCaseError();
         }
-        encoding.writeVarUint(this.restEncoder, len - 1);
+        this.restEncoder.writeVarUint(len - 1);
         this.dsCurrVal += len;
     }
 }
@@ -125,31 +124,35 @@ class UpdateEncoderV2 extends DSEncoderV2 {
         super();
         this.keyMap = new Map();
         this.keyClock = 0;
-        this.keyClockEncoder = new encoding.IntDiffOptRleEncoder();
-        this.clientEncoder = new encoding.UintOptRleEncoder();
-        this.leftClockEncoder = new encoding.IntDiffOptRleEncoder();
-        this.rightClockEncoder = new encoding.IntDiffOptRleEncoder();
-        this.infoEncoder = new encoding.RleEncoder(encoding.writeUint8);
-        this.stringEncoder = new encoding.StringEncoder();
-        this.parentInfoEncoder = new encoding.RleEncoder(encoding.writeUint8);
-        this.typeRefEncoder = new encoding.UintOptRleEncoder();
-        this.lenEncoder = new encoding.UintOptRleEncoder();
+        this.keyClockEncoder = new lib0.IntDiffOptRleEncoder();
+        this.clientEncoder = new lib0.UintOptRleEncoder();
+        this.leftClockEncoder = new lib0.IntDiffOptRleEncoder();
+        this.rightClockEncoder = new lib0.IntDiffOptRleEncoder();
+        this.infoEncoder = new lib0.RleEncoder((encoder, value) => {
+            encoder.write(value);
+        });
+        this.stringEncoder = new lib0.StringEncoder();
+        this.parentInfoEncoder = new lib0.RleEncoder((encoder, value) => {
+            encoder.write(value);
+        });
+        this.typeRefEncoder = new lib0.UintOptRleEncoder();
+        this.lenEncoder = new lib0.UintOptRleEncoder();
     }
     toUint8Array() {
-        const encoder = encoding.createEncoder();
-        encoding.writeVarUint(encoder, 0); // this is a feature flag that we might use in the future
-        encoding.writeVarUint8Array(encoder, this.keyClockEncoder.toUint8Array());
-        encoding.writeVarUint8Array(encoder, this.clientEncoder.toUint8Array());
-        encoding.writeVarUint8Array(encoder, this.leftClockEncoder.toUint8Array());
-        encoding.writeVarUint8Array(encoder, this.rightClockEncoder.toUint8Array());
-        encoding.writeVarUint8Array(encoder, encoding.toUint8Array(this.infoEncoder));
-        encoding.writeVarUint8Array(encoder, this.stringEncoder.toUint8Array());
-        encoding.writeVarUint8Array(encoder, encoding.toUint8Array(this.parentInfoEncoder));
-        encoding.writeVarUint8Array(encoder, this.typeRefEncoder.toUint8Array());
-        encoding.writeVarUint8Array(encoder, this.lenEncoder.toUint8Array());
+        const encoder = new lib0.Encoder();
+        encoder.writeVarUint(0); // this is a feature flag that we might use in the future
+        encoder.writeVarUint8Array(this.keyClockEncoder.toUint8Array());
+        encoder.writeVarUint8Array(this.clientEncoder.toUint8Array());
+        encoder.writeVarUint8Array(this.leftClockEncoder.toUint8Array());
+        encoder.writeVarUint8Array(this.rightClockEncoder.toUint8Array());
+        encoder.writeVarUint8Array(this.infoEncoder.encoder.toUint8Array());
+        encoder.writeVarUint8Array(this.stringEncoder.toUint8Array());
+        encoder.writeVarUint8Array(this.parentInfoEncoder.encoder.toUint8Array());
+        encoder.writeVarUint8Array(this.typeRefEncoder.toUint8Array());
+        encoder.writeVarUint8Array(this.lenEncoder.toUint8Array());
         // @note The rest encoder is appended! (note the missing var)
-        encoding.writeUint8Array(encoder, encoding.toUint8Array(this.restEncoder));
-        return encoding.toUint8Array(encoder);
+        encoder.writeUint8Array(this.restEncoder.toUint8Array());
+        return encoder.toUint8Array();
     }
     writeLeftID(id) {
         this.clientEncoder.write(id.client);
@@ -185,10 +188,10 @@ class UpdateEncoderV2 extends DSEncoderV2 {
         this.lenEncoder.write(len);
     }
     writeAny(any) {
-        encoding.writeAny(this.restEncoder, any);
+        this.restEncoder.writeAny(any);
     }
     writeBuf(buf) {
-        encoding.writeVarUint8Array(this.restEncoder, buf);
+        this.restEncoder.writeVarUint8Array(buf);
     }
     /**
      * This is mainly here for legacy purposes.
@@ -196,7 +199,7 @@ class UpdateEncoderV2 extends DSEncoderV2 {
      * Initial we incoded objects using JSON. Now we use the much faster lib0/any-encoder. This method mainly exists for legacy purposes for the v1 encoder.
      */
     writeJSON(embed) {
-        encoding.writeAny(this.restEncoder, embed);
+        this.restEncoder.writeAny(embed);
     }
     /**
      * Property keys are often reused. For example, in y-prosemirror the key `bold` might

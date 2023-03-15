@@ -1,12 +1,9 @@
 import {
     Transaction, Item, StructStore, 
-    Content_, ContentDecoder_, UpdateEncoderAny_
+    YContent, YContentDecoder, UpdateEncoderAny_
 } from '../internals'
 
-/**
- * @private
- */
-export class ContentJSON implements Content_ {
+export class ContentJSON implements YContent {
     constructor(public arr: any[]) {}
 
     getLength(): number { return this.arr.length }
@@ -46,7 +43,7 @@ export class ContentJSON implements Content_ {
     getRef(): number { return 2 }
 }
 
-export const readContentJSON: ContentDecoder_ = decoder => {
+export const readContentJSON: YContentDecoder = decoder => {
     const len = decoder.readLen()
     const cs = []
     for (let i = 0; i < len; i++) {

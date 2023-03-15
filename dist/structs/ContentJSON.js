@@ -1,9 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.readContentJSON = exports.ContentJSON = void 0;
-/**
- * @private
- */
 class ContentJSON {
     constructor(arr) {
         this.arr = arr;

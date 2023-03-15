@@ -35,7 +35,7 @@ export * from './structs/ContentType';
 export * from './structs/Item';
 export * from './structs/Skip';
 export * from "./types/AbstractType_";
-export * from "./structs/Content_";
+export * from "./structs/YContent";
 export * from "./structs/Struct_";
 export * from "./types/ArraySearchMarker_";
 export * from "./utils/functions/generateNewClientID";

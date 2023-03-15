@@ -5,7 +5,7 @@ import {
     DSEncoderV1, DSDecoderV1, ID, DeleteSet, YArrayEvent, Transaction, Doc, // eslint-disable-line
 } from '../internals'
 
-import * as decoding from 'lib0/decoding'
+import * as lib0 from 'lib0-typescript'
 
 export class PermanentUserData {
     yusers: YMap<any>
@@ -41,12 +41,12 @@ export class PermanentUserData {
                 event.changes.added.forEach(item => {
                     item.content.getContent().forEach(encodedDs => {
                         if (encodedDs instanceof Uint8Array) {
-                            this.dss.set(userDescription, DeleteSet.mergeAll([this.dss.get(userDescription) || new DeleteSet(), DeleteSet.decode(new DSDecoderV1(decoding.createDecoder(encodedDs)))]))
+                            this.dss.set(userDescription, DeleteSet.mergeAll([this.dss.get(userDescription) || new DeleteSet(), DeleteSet.decode(new DSDecoderV1(new lib0.Decoder(encodedDs)))]))
                         }
                     })
                 })
             })
-            this.dss.set(userDescription, DeleteSet.mergeAll(ds.map((encodedDs: Uint8Array) => DeleteSet.decode(new DSDecoderV1(decoding.createDecoder(encodedDs))))))
+            this.dss.set(userDescription, DeleteSet.mergeAll(ds.map((encodedDs: Uint8Array) => DeleteSet.decode(new DSDecoderV1(new lib0.Decoder(encodedDs))))))
             ids.observe((event: YArrayEvent<any>) =>
                 event.changes.added.forEach(item => item.content.getContent().forEach(addClientId))
             )

@@ -1,14 +1,14 @@
 
 import * as t from 'lib0/testing'
 import * as prng from 'lib0/prng'
-import * as encoding from 'lib0/encoding'
-import * as decoding from 'lib0/decoding'
 import * as syncProtocol from './sync'
 import * as object from 'lib0/object'
 import * as map from 'lib0/map'
 import * as Y from '../src/index'
 import { DocMessageType } from '../src/internals.js'
 export * from '../src/index'
+
+import * as lib0 from "lib0-typescript"
 
 if (typeof window !== 'undefined') {
     (window as any).Y = Y
@@ -91,9 +91,9 @@ export class TestYInstance extends Y.Doc {
         // set up observe on local model
         this.on(enc.updateEventName as "update"|"updateV2", (update: Uint8Array, origin: any) => {
             if (origin !== testConnector) {
-                const encoder = encoding.createEncoder()
+                const encoder = new lib0.Encoder()
                 syncProtocol.writeUpdate(encoder, update)
-                broadcastMessage(this, encoding.toUint8Array(encoder))
+                broadcastMessage(this, encoder.toUint8Array())
             }
             this.updates.push(update)
         })
@@ -115,16 +115,16 @@ export class TestYInstance extends Y.Doc {
     connect () {
         if (!this.tc.onlineConns.has(this)) {
             this.tc.onlineConns.add(this)
-            const encoder = encoding.createEncoder()
+            const encoder = new lib0.Encoder()
             syncProtocol.writeSyncStep1(encoder, this)
             // publish SyncStep1
-            broadcastMessage(this, encoding.toUint8Array(encoder))
+            broadcastMessage(this, encoder.toUint8Array())
             this.tc.onlineConns.forEach(remoteYInstance => {
                 if (remoteYInstance !== this) {
                     // remote instance sends instance to this instance
-                    const encoder = encoding.createEncoder()
+                    const encoder = new lib0.Encoder()
                     syncProtocol.writeSyncStep1(encoder, remoteYInstance)
-                    this._receive(encoding.toUint8Array(encoder), remoteYInstance)
+                    this._receive(encoder.toUint8Array(), remoteYInstance)
                 }
             })
         }
@@ -197,13 +197,13 @@ export class TestConnector {
             if (m === undefined) {
                 return this.flushRandomMessage()
             }
-            const encoder = encoding.createEncoder()
+            const encoder = new lib0.Encoder()
             // console.log('receive (' + sender.userID + '->' + receiver.userID + '):\n', syncProtocol.stringifySyncMessage(decoding.createDecoder(m), receiver))
             // do not publish data created when this function is executed (could be ss2 or update message)
-            syncProtocol.readSyncMessage(decoding.createDecoder(m), encoder, receiver, receiver.tc)
-            if (encoding.length(encoder) > 0) {
+            syncProtocol.readSyncMessage(new lib0.Decoder(m), encoder, receiver, receiver.tc)
+            if (encoder.length > 0) {
                 // send reply message
-                sender._receive(encoding.toUint8Array(encoder), receiver)
+                sender._receive(encoder.toUint8Array(), receiver)
             }
             return true
         }

@@ -1,24 +1,22 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertUpdateFormatV2ToV1 = exports.convertUpdateFormatV1ToV2 = exports.convertUpdateFormat = exports.diffUpdate = exports.diffUpdateV2 = exports.mergeUpdatesV2 = exports.parseUpdateMeta = exports.parseUpdateMetaV2 = exports.encodeStateVectorFromUpdate = exports.encodeStateVectorFromUpdateV2 = exports.mergeUpdates = exports.LazyStructWriter = exports.decodeUpdateV2 = exports.decodeUpdate = exports.logUpdateV2 = exports.logUpdate = exports.LazyStructReader = void 0;
-const decoding = require("lib0/decoding");
-const encoding = require("lib0/encoding");
 const lib0 = require("lib0-typescript");
 const internals_1 = require("../internals");
 /**
  * @param {UpdateDecoderV1 | UpdateDecoderV2} decoder
  */
 function* lazyStructReaderGenerator(decoder) {
-    const numOfStateUpdates = decoding.readVarUint(decoder.restDecoder);
+    const numOfStateUpdates = decoder.restDecoder.readVarUint();
     for (let i = 0; i < numOfStateUpdates; i++) {
-        const numberOfStructs = decoding.readVarUint(decoder.restDecoder);
+        const numberOfStructs = decoder.restDecoder.readVarUint();
         const client = decoder.readClient();
-        let clock = decoding.readVarUint(decoder.restDecoder);
+        let clock = decoder.restDecoder.readVarUint();
         for (let i = 0; i < numberOfStructs; i++) {
             const info = decoder.readInfo();
             // @todo use switch instead of ifs
             if (info === 10) {
-                const len = decoding.readVarUint(decoder.restDecoder);
+                const len = decoder.restDecoder.readVarUint();
                 yield new internals_1.Skip(new internals_1.ID(client, clock), len);
                 clock += len;
             }
@@ -88,7 +86,7 @@ exports.logUpdate = logUpdate;
  */
 const logUpdateV2 = (update, YDecoder = internals_1.UpdateDecoderV2) => {
     const structs = [];
-    const updateDecoder = new YDecoder(decoding.createDecoder(update));
+    const updateDecoder = new YDecoder(new lib0.Decoder(update));
     const lazyDecoder = new LazyStructReader(updateDecoder, false);
     for (let curr = lazyDecoder.curr; curr !== null; curr = lazyDecoder.next()) {
         structs.push(curr);
@@ -111,7 +109,7 @@ exports.decodeUpdate = decodeUpdate;
  */
 const decodeUpdateV2 = (update, YDecoder = internals_1.UpdateDecoderV2) => {
     const structs = [];
-    const updateDecoder = new YDecoder(decoding.createDecoder(update));
+    const updateDecoder = new YDecoder(new lib0.Decoder(update));
     const lazyDecoder = new LazyStructReader(updateDecoder, false);
     for (let curr = lazyDecoder.curr; curr !== null; curr = lazyDecoder.next()) {
         structs.push(curr);
@@ -159,7 +157,7 @@ exports.mergeUpdates = mergeUpdates;
  */
 const encodeStateVectorFromUpdateV2 = (update, YEncoder = internals_1.DSEncoderV2, YDecoder = internals_1.UpdateDecoderV2) => {
     const encoder = new YEncoder();
-    const updateDecoder = new LazyStructReader(new YDecoder(decoding.createDecoder(update)), false);
+    const updateDecoder = new LazyStructReader(new YDecoder(new lib0.Decoder(update)), false);
     let curr = updateDecoder.curr;
     if (curr !== null) {
         let size = 0;
@@ -172,8 +170,8 @@ const encodeStateVectorFromUpdateV2 = (update, YEncoder = internals_1.DSEncoderV
                     size++;
                     // We found a new client
                     // write what we have to the encoder
-                    encoding.writeVarUint(encoder.restEncoder, currClient);
-                    encoding.writeVarUint(encoder.restEncoder, currClock);
+                    encoder.restEncoder.writeVarUint(currClient);
+                    encoder.restEncoder.writeVarUint(currClock);
                 }
                 currClient = curr.id.client;
                 currClock = 0;
@@ -190,18 +188,18 @@ const encodeStateVectorFromUpdateV2 = (update, YEncoder = internals_1.DSEncoderV
         // write what we have
         if (currClock !== 0) {
             size++;
-            encoding.writeVarUint(encoder.restEncoder, currClient);
-            encoding.writeVarUint(encoder.restEncoder, currClock);
+            encoder.restEncoder.writeVarUint(currClient);
+            encoder.restEncoder.writeVarUint(currClock);
         }
         // prepend the size of the state vector
-        const enc = encoding.createEncoder();
-        encoding.writeVarUint(enc, size);
-        encoding.writeBinaryEncoder(enc, encoder.restEncoder);
+        const enc = new lib0.Encoder();
+        enc.writeVarUint(size);
+        enc.writeVarUint8Array(encoder.restEncoder.toUint8Array());
         encoder.restEncoder = enc;
         return encoder.toUint8Array();
     }
     else {
-        encoding.writeVarUint(encoder.restEncoder, 0);
+        encoder.restEncoder.writeVarUint(0);
         return encoder.toUint8Array();
     }
 };
@@ -226,7 +224,7 @@ const parseUpdateMetaV2 = (update, YDecoder = internals_1.UpdateDecoderV2) => {
      * @type {Map<number, number>}
      */
     const to = new Map();
-    const updateDecoder = new LazyStructReader(new YDecoder(decoding.createDecoder(update)), false);
+    const updateDecoder = new LazyStructReader(new YDecoder(new lib0.Decoder(update)), false);
     let curr = updateDecoder.curr;
     if (curr !== null) {
         let currClient = curr.id.client;
@@ -293,7 +291,7 @@ const mergeUpdatesV2 = (updates, YDecoder = internals_1.UpdateDecoderV2, YEncode
     if (updates.length === 1) {
         return updates[0];
     }
-    const updateDecoders = updates.map(update => new YDecoder(decoding.createDecoder(update)));
+    const updateDecoders = updates.map(update => new YDecoder(new lib0.Decoder(update)));
     let lazyStructDecoders = updateDecoders.map(decoder => new LazyStructReader(decoder, true));
     /**
      * @todo we don't need offset because we always slice before
@@ -419,7 +417,7 @@ const diffUpdateV2 = (update, sv, YDecoder = internals_1.UpdateDecoderV2, YEncod
     const state = (0, internals_1.decodeStateVector)(sv);
     const encoder = new YEncoder();
     const lazyStructWriter = new LazyStructWriter(encoder);
-    const decoder = new YDecoder(decoding.createDecoder(update));
+    const decoder = new YDecoder(new lib0.Decoder(update));
     const reader = new LazyStructReader(decoder, false);
     while (reader.curr) {
         const curr = reader.curr;
@@ -463,8 +461,8 @@ exports.diffUpdate = diffUpdate;
  */
 const flushLazyStructWriter = (lazyWriter) => {
     if (lazyWriter.written > 0) {
-        lazyWriter.clientStructs.push({ written: lazyWriter.written, restEncoder: encoding.toUint8Array(lazyWriter.encoder.restEncoder) });
-        lazyWriter.encoder.restEncoder = encoding.createEncoder();
+        lazyWriter.clientStructs.push({ written: lazyWriter.written, restEncoder: lazyWriter.encoder.restEncoder.toUint8Array() });
+        lazyWriter.encoder.restEncoder = new lib0.Encoder();
         lazyWriter.written = 0;
     }
 };
@@ -483,7 +481,7 @@ const writeStructToLazyStructWriter = (lazyWriter, struct, offset) => {
         // write next client
         lazyWriter.encoder.writeClient(struct.id.client);
         // write startClock
-        encoding.writeVarUint(lazyWriter.encoder.restEncoder, struct.id.clock + offset);
+        lazyWriter.encoder.restEncoder.writeVarUint(struct.id.clock + offset);
     }
     struct.write(lazyWriter.encoder, offset);
     lazyWriter.written++;
@@ -504,16 +502,16 @@ const finishLazyStructWriting = (lazyWriter) => {
      * This works similarly to `writeClientsStructs`
      */
     // write # states that were updated - i.e. the clients
-    encoding.writeVarUint(restEncoder, lazyWriter.clientStructs.length);
+    restEncoder.writeVarUint(lazyWriter.clientStructs.length);
     for (let i = 0; i < lazyWriter.clientStructs.length; i++) {
         const partStructs = lazyWriter.clientStructs[i];
         /**
          * Works similarly to `writeStructs`
          */
         // write # encoded structs
-        encoding.writeVarUint(restEncoder, partStructs.written);
+        restEncoder.writeVarUint(partStructs.written);
         // write the rest of the fragment
-        encoding.writeUint8Array(restEncoder, partStructs.restEncoder);
+        restEncoder.writeUint8Array(partStructs.restEncoder);
     }
 };
 /**
@@ -522,7 +520,7 @@ const finishLazyStructWriting = (lazyWriter) => {
  * @param {typeof UpdateEncoderV2 | typeof UpdateEncoderV1 } YEncoder
  */
 const convertUpdateFormat = (update, YDecoder, YEncoder) => {
-    const updateDecoder = new YDecoder(decoding.createDecoder(update));
+    const updateDecoder = new YDecoder(new lib0.Decoder(update));
     const lazyDecoder = new LazyStructReader(updateDecoder, false);
     const updateEncoder = new YEncoder();
     const lazyWriter = new LazyStructWriter(updateEncoder);

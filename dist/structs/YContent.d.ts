@@ -1,10 +1,10 @@
 import { Item, Transaction, StructStore, UpdateEncoderAny_, UpdateDecoderAny_ } from "../internals";
-export interface Content_ {
+export interface YContent {
     getLength(): number;
     getContent(): any[];
     isCountable(): boolean;
-    copy(): Content_;
-    splice(offset: number): Content_;
+    copy(): YContent;
+    splice(offset: number): YContent;
     mergeWith(right: this): boolean;
     integrate(transaction: Transaction, item: Item): void;
     delete(transaction: Transaction): void;
@@ -12,4 +12,4 @@ export interface Content_ {
     write(encoder: UpdateEncoderAny_, offset: number): void;
     getRef(): number;
 }
-export type ContentDecoder_ = (decoder: UpdateDecoderAny_) => Content_;
+export type YContentDecoder = (decoder: UpdateDecoderAny_) => YContent;

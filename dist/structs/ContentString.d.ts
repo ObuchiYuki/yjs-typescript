@@ -1,5 +1,5 @@
-import { Transaction, Item, StructStore, Content_, ContentDecoder_, UpdateEncoderAny_ } from '../internals';
-export declare class ContentString implements Content_ {
+import { Transaction, Item, StructStore, YContent, YContentDecoder, UpdateEncoderAny_ } from '../internals';
+export declare class ContentString implements YContent {
     str: string;
     constructor(str: string);
     getLength(): number;
@@ -14,4 +14,4 @@ export declare class ContentString implements Content_ {
     write(encoder: UpdateEncoderAny_, offset: number): void;
     getRef(): number;
 }
-export declare const readContentString: ContentDecoder_;
+export declare const readContentString: YContentDecoder;

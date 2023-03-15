@@ -53,7 +53,7 @@ __exportStar(require("./structs/Item"), exports);
 __exportStar(require("./structs/Skip"), exports);
 // ======================================================================================== //
 __exportStar(require("./types/AbstractType_"), exports);
-__exportStar(require("./structs/Content_"), exports);
+__exportStar(require("./structs/YContent"), exports);
 __exportStar(require("./structs/Struct_"), exports);
 __exportStar(require("./types/ArraySearchMarker_"), exports);
 __exportStar(require("./utils/functions/generateNewClientID"), exports);

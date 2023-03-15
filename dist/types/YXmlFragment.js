@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.readYXmlFragment = exports.YXmlFragment = exports.YXmlTreeWalker = void 0;
 const AbstractType_1 = require("./AbstractType_");
 const internals_1 = require("../internals");
-const error = require("lib0/error");
 /**
  * Dom filter function.
  *
@@ -269,7 +268,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
             const pc = this._prelimContent;
             const index = ref === null ? 0 : pc.findIndex(el => el === ref) + 1;
             if (index === 0 && ref !== null) {
-                throw error.create('Reference item not found');
+                throw new Error('Reference item not found');
             }
             pc.splice(index, 0, ...content);
         }

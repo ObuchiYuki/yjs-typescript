@@ -1,18 +1,17 @@
 
-import { UnexpectedCaseError } from 'lib0-typescript'
-import * as encoding from 'lib0/encoding'
+import * as lib0 from 'lib0-typescript'
 
 import { ID } from '../internals'
 
 export class DSEncoderV1 {
-    restEncoder: encoding.Encoder
+    restEncoder: lib0.Encoder
 
     constructor() {
-        this.restEncoder = encoding.createEncoder()
+        this.restEncoder = new lib0.Encoder()
     }
 
     toUint8Array () {
-        return encoding.toUint8Array(this.restEncoder)
+        return this.restEncoder.toUint8Array()
     }
 
     resetDsCurVal () {
@@ -20,53 +19,53 @@ export class DSEncoderV1 {
     }
 
     writeDsClock(clock: number) {
-        encoding.writeVarUint(this.restEncoder, clock)
+        this.restEncoder.writeVarUint(clock)
     }
 
     writeDsLen(len: number) {
-        encoding.writeVarUint(this.restEncoder, len)
+        this.restEncoder.writeVarUint(len)
     }
 }
 
 export class UpdateEncoderV1 extends DSEncoderV1 {
     writeLeftID(id: ID) {
-        encoding.writeVarUint(this.restEncoder, id.client)
-        encoding.writeVarUint(this.restEncoder, id.clock)
+        this.restEncoder.writeVarUint(id.client)
+        this.restEncoder.writeVarUint(id.clock)
     }
 
     writeRightID(id: ID) {
-        encoding.writeVarUint(this.restEncoder, id.client)
-        encoding.writeVarUint(this.restEncoder, id.clock)
+        this.restEncoder.writeVarUint(id.client)
+        this.restEncoder.writeVarUint(id.clock)
     }
 
     /** Use writeClient and writeClock instead of writeID if possible. */
     writeClient(client: number) {
-        encoding.writeVarUint(this.restEncoder, client)
+        this.restEncoder.writeVarUint(client)
     }
 
     /**
      * @param {number} info An unsigned 8-bit integer
      */
     writeInfo(info: number) {
-        encoding.writeUint8(this.restEncoder, info)
+        this.restEncoder.writeUint8(info)
     }
 
     writeString(s: string) {
-        encoding.writeVarString(this.restEncoder, s)
+        this.restEncoder.writeVarString(s)
     }
 
     /**
      * @param {boolean} isYKey
      */
     writeParentInfo(isYKey: boolean) {
-        encoding.writeVarUint(this.restEncoder, isYKey ? 1 : 0)
+        this.restEncoder.writeVarUint(isYKey ? 1 : 0)
     }
 
     /**
      * @param {number} info An unsigned 8-bit integer
      */
     writeTypeRef(info: number) {
-        encoding.writeVarUint(this.restEncoder, info)
+        this.restEncoder.writeVarUint(info)
     }
 
     /**
@@ -75,48 +74,48 @@ export class UpdateEncoderV1 extends DSEncoderV1 {
      * @param {number} len
      */
     writeLen(len: number) {
-        encoding.writeVarUint(this.restEncoder, len)
+        this.restEncoder.writeVarUint(len)
     }
 
     /**
      * @param {any} any
      */
     writeAny(any: any) {
-        encoding.writeAny(this.restEncoder, any)
+        this.restEncoder.writeAny(any)
     }
 
     /**
      * @param {Uint8Array} buf
      */
     writeBuf(buf: Uint8Array) {
-        encoding.writeVarUint8Array(this.restEncoder, buf)
+        this.restEncoder.writeVarUint8Array(buf)
     }
 
     /**
      * @param {any} embed
      */
     writeJSON(embed: any) {
-        encoding.writeVarString(this.restEncoder, JSON.stringify(embed))
+        this.restEncoder.writeVarString(JSON.stringify(embed))
     }
 
     /**
      * @param {string} key
      */
     writeKey(key: string) {
-        encoding.writeVarString(this.restEncoder, key)
+        this.restEncoder.writeVarString(key)
     }
 }
 
 export class DSEncoderV2 {
-    restEncoder: encoding.Encoder
+    restEncoder: lib0.Encoder
     dsCurrVal: number = 0
 
     constructor () {
-        this.restEncoder = encoding.createEncoder() // encodes all the rest / non-optimized
+        this.restEncoder = new lib0.Encoder() // encodes all the rest / non-optimized
     }
 
     toUint8Array() {
-        return encoding.toUint8Array(this.restEncoder)
+        return this.restEncoder.toUint8Array()
     }
 
     resetDsCurVal() {
@@ -129,7 +128,7 @@ export class DSEncoderV2 {
     writeDsClock(clock: number) {
         const diff = clock - this.dsCurrVal
         this.dsCurrVal = clock
-        encoding.writeVarUint(this.restEncoder, diff)
+        this.restEncoder.writeVarUint(diff)
     }
 
     /**
@@ -137,9 +136,9 @@ export class DSEncoderV2 {
      */
     writeDsLen(len: number) {
         if (len === 0) {
-            throw new UnexpectedCaseError()
+            throw new lib0.UnexpectedCaseError()
         }
-        encoding.writeVarUint(this.restEncoder, len - 1)
+        this.restEncoder.writeVarUint(len - 1)
         this.dsCurrVal += len
     }
 }
@@ -150,46 +149,50 @@ export class UpdateEncoderV2 extends DSEncoderV2 {
     /** Refers to the next uniqe key-identifier to me used. See writeKey method for more information. */    
     keyClock: number
 
-    keyClockEncoder: encoding.IntDiffOptRleEncoder
-    clientEncoder: encoding.UintOptRleEncoder
-    leftClockEncoder: encoding.UintOptRleEncoder
-    rightClockEncoder: encoding.UintOptRleEncoder
-    infoEncoder: encoding.RleEncoder<number>
-    stringEncoder: encoding.StringEncoder
-    parentInfoEncoder: encoding.RleEncoder<number>
-    typeRefEncoder: encoding.UintOptRleEncoder
-    lenEncoder: encoding.UintOptRleEncoder
+    keyClockEncoder: lib0.IntDiffOptRleEncoder
+    clientEncoder: lib0.UintOptRleEncoder
+    leftClockEncoder: lib0.UintOptRleEncoder
+    rightClockEncoder: lib0.UintOptRleEncoder
+    infoEncoder: lib0.RleEncoder<number>
+    stringEncoder: lib0.StringEncoder
+    parentInfoEncoder: lib0.RleEncoder<number>
+    typeRefEncoder: lib0.UintOptRleEncoder
+    lenEncoder: lib0.UintOptRleEncoder
 
     constructor () {
         super()
         this.keyMap = new Map<string, number>()
         this.keyClock = 0
-        this.keyClockEncoder = new encoding.IntDiffOptRleEncoder()
-        this.clientEncoder = new encoding.UintOptRleEncoder()
-        this.leftClockEncoder = new encoding.IntDiffOptRleEncoder()
-        this.rightClockEncoder = new encoding.IntDiffOptRleEncoder()
-        this.infoEncoder = new encoding.RleEncoder(encoding.writeUint8)
-        this.stringEncoder = new encoding.StringEncoder()
-        this.parentInfoEncoder = new encoding.RleEncoder(encoding.writeUint8)
-        this.typeRefEncoder = new encoding.UintOptRleEncoder()
-        this.lenEncoder = new encoding.UintOptRleEncoder()
+        this.keyClockEncoder = new lib0.IntDiffOptRleEncoder()
+        this.clientEncoder = new lib0.UintOptRleEncoder()
+        this.leftClockEncoder = new lib0.IntDiffOptRleEncoder()
+        this.rightClockEncoder = new lib0.IntDiffOptRleEncoder()
+        this.infoEncoder = new lib0.RleEncoder((encoder, value) => {
+            encoder.write(value)
+        })
+        this.stringEncoder = new lib0.StringEncoder()
+        this.parentInfoEncoder = new lib0.RleEncoder((encoder, value) => {
+            encoder.write(value)
+        })
+        this.typeRefEncoder = new lib0.UintOptRleEncoder()
+        this.lenEncoder = new lib0.UintOptRleEncoder()
     }
 
     toUint8Array() {
-        const encoder = encoding.createEncoder()
-        encoding.writeVarUint(encoder, 0) // this is a feature flag that we might use in the future
-        encoding.writeVarUint8Array(encoder, this.keyClockEncoder.toUint8Array())
-        encoding.writeVarUint8Array(encoder, this.clientEncoder.toUint8Array())
-        encoding.writeVarUint8Array(encoder, this.leftClockEncoder.toUint8Array())
-        encoding.writeVarUint8Array(encoder, this.rightClockEncoder.toUint8Array())
-        encoding.writeVarUint8Array(encoder, encoding.toUint8Array(this.infoEncoder))
-        encoding.writeVarUint8Array(encoder, this.stringEncoder.toUint8Array())
-        encoding.writeVarUint8Array(encoder, encoding.toUint8Array(this.parentInfoEncoder))
-        encoding.writeVarUint8Array(encoder, this.typeRefEncoder.toUint8Array())
-        encoding.writeVarUint8Array(encoder, this.lenEncoder.toUint8Array())
+        const encoder = new lib0.Encoder()
+        encoder.writeVarUint(0) // this is a feature flag that we might use in the future
+        encoder.writeVarUint8Array(this.keyClockEncoder.toUint8Array())
+        encoder.writeVarUint8Array(this.clientEncoder.toUint8Array())
+        encoder.writeVarUint8Array(this.leftClockEncoder.toUint8Array())
+        encoder.writeVarUint8Array(this.rightClockEncoder.toUint8Array())
+        encoder.writeVarUint8Array(this.infoEncoder.encoder.toUint8Array())
+        encoder.writeVarUint8Array(this.stringEncoder.toUint8Array())
+        encoder.writeVarUint8Array(this.parentInfoEncoder.encoder.toUint8Array())
+        encoder.writeVarUint8Array(this.typeRefEncoder.toUint8Array())
+        encoder.writeVarUint8Array(this.lenEncoder.toUint8Array())
         // @note The rest encoder is appended! (note the missing var)
-        encoding.writeUint8Array(encoder, encoding.toUint8Array(this.restEncoder))
-        return encoding.toUint8Array(encoder)
+        encoder.writeUint8Array(this.restEncoder.toUint8Array())
+        return encoder.toUint8Array()
     }
 
     writeLeftID(id: ID) {
@@ -234,11 +237,11 @@ export class UpdateEncoderV2 extends DSEncoderV2 {
     }
 
     writeAny(any: any) {
-        encoding.writeAny(this.restEncoder, any)
+        this.restEncoder.writeAny(any)
     }
 
     writeBuf(buf: Uint8Array) {
-        encoding.writeVarUint8Array(this.restEncoder, buf)
+        this.restEncoder.writeVarUint8Array(buf)
     }
 
     /**
@@ -247,7 +250,7 @@ export class UpdateEncoderV2 extends DSEncoderV2 {
      * Initial we incoded objects using JSON. Now we use the much faster lib0/any-encoder. This method mainly exists for legacy purposes for the v1 encoder.
      */
     writeJSON(embed: any) {
-        encoding.writeAny(this.restEncoder, embed)
+        this.restEncoder.writeAny(embed)
     }
 
     /**

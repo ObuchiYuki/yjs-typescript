@@ -1,12 +1,12 @@
 
 import {
     UpdateEncoderAny_, StructStore, Item, Transaction,
-    Content_, ContentDecoder_, AbstractType_
+    YContent, YContentDecoder, AbstractType_
 } from '../internals'
 
 import * as lib0 from "lib0-typescript"
 
-export class ContentFormat implements Content_ {
+export class ContentFormat implements YContent {
     constructor(
         public key: string,
         public value: object
@@ -41,6 +41,6 @@ export class ContentFormat implements Content_ {
     getRef(): number { return 6 }
 }
 
-export const readContentFormat: ContentDecoder_ = decoder => {
+export const readContentFormat: YContentDecoder = decoder => {
     return new ContentFormat(decoder.readKey(), decoder.readJSON())
 }

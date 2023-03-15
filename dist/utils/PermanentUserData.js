@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PermanentUserData = void 0;
 const internals_1 = require("../internals");
-const decoding = require("lib0/decoding");
+const lib0 = require("lib0-typescript");
 class PermanentUserData {
     /**
      * @param {Doc} doc
@@ -29,12 +29,12 @@ class PermanentUserData {
                 event.changes.added.forEach(item => {
                     item.content.getContent().forEach(encodedDs => {
                         if (encodedDs instanceof Uint8Array) {
-                            this.dss.set(userDescription, internals_1.DeleteSet.mergeAll([this.dss.get(userDescription) || new internals_1.DeleteSet(), internals_1.DeleteSet.decode(new internals_1.DSDecoderV1(decoding.createDecoder(encodedDs)))]));
+                            this.dss.set(userDescription, internals_1.DeleteSet.mergeAll([this.dss.get(userDescription) || new internals_1.DeleteSet(), internals_1.DeleteSet.decode(new internals_1.DSDecoderV1(new lib0.Decoder(encodedDs)))]));
                         }
                     });
                 });
             });
-            this.dss.set(userDescription, internals_1.DeleteSet.mergeAll(ds.map((encodedDs) => internals_1.DeleteSet.decode(new internals_1.DSDecoderV1(decoding.createDecoder(encodedDs))))));
+            this.dss.set(userDescription, internals_1.DeleteSet.mergeAll(ds.map((encodedDs) => internals_1.DeleteSet.decode(new internals_1.DSDecoderV1(new lib0.Decoder(encodedDs))))));
             ids.observe((event) => event.changes.added.forEach(item => item.content.getContent().forEach(addClientId)));
             ids.forEach(addClientId);
         };

@@ -1,5 +1,5 @@
-import { UpdateEncoderAny_, StructStore, Item, Transaction, Content_, ContentDecoder_ } from '../internals';
-export declare class ContentEmbed implements Content_ {
+import { UpdateEncoderAny_, StructStore, Item, Transaction, YContent, YContentDecoder } from '../internals';
+export declare class ContentEmbed implements YContent {
     embed: object;
     constructor(embed: object);
     getLength(): number;
@@ -14,4 +14,4 @@ export declare class ContentEmbed implements Content_ {
     write(encoder: UpdateEncoderAny_, offset: number): void;
     getRef(): number;
 }
-export declare const readContentEmbed: ContentDecoder_;
+export declare const readContentEmbed: YContentDecoder;

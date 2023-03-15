@@ -8,9 +8,6 @@ import {
     StructStore, ID
 } from '../internals'
 
-import * as decoding from 'lib0/decoding'
-import * as encoding from 'lib0/encoding'
-
 import * as lib0 from 'lib0-typescript'
 
 export class Snapshot {
@@ -45,12 +42,12 @@ export class Snapshot {
         return this.encodeV2(new DSEncoderV1())
     }
     
-    static decodeV2(buf: Uint8Array, decoder: DSDecoderV1 | DSDecoderV2 = new DSDecoderV2(decoding.createDecoder(buf))): Snapshot {
+    static decodeV2(buf: Uint8Array, decoder: DSDecoderV1 | DSDecoderV2 = new DSDecoderV2(new lib0.Decoder(buf))): Snapshot {
         return new Snapshot(DeleteSet.decode(decoder), readStateVector(decoder))
     }
     
     static decode(buf: Uint8Array): Snapshot {
-        return Snapshot.decodeV2(buf, new DSDecoderV1(decoding.createDecoder(buf)))
+        return Snapshot.decodeV2(buf, new DSDecoderV1(new lib0.Decoder(buf)))
     }
    
     splitAffectedStructs(transaction: Transaction) {
@@ -83,7 +80,7 @@ export class Snapshot {
                     size++
                 }
             })
-            encoding.writeVarUint(encoder.restEncoder, size)
+            encoder.restEncoder.writeVarUint(size)
             // splitting the structs before writing them to the encoder
             for (const [client, clock] of sv) {
                 if (clock === 0) {
@@ -95,10 +92,10 @@ export class Snapshot {
                 const structs = originDoc.store.clients.get(client) || []
                 const lastStructIndex = StructStore.findIndexSS(structs, clock - 1)
                 // write # encoded structs
-                encoding.writeVarUint(encoder.restEncoder, lastStructIndex + 1)
+                encoder.restEncoder.writeVarUint(lastStructIndex + 1)
                 encoder.writeClient(client)
                 // first clock written is 0
-                encoding.writeVarUint(encoder.restEncoder, 0)
+                encoder.restEncoder.writeVarUint(0)
                 for (let i = 0; i <= lastStructIndex; i++) {
                     structs[i].write(encoder, 0)
                 }

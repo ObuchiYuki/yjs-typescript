@@ -1,11 +1,11 @@
-import { Doc, UpdateEncoderAny_, StructStore, Transaction, Item, Content_, ContentDecoder_ } from '../internals';
+import { Doc, UpdateEncoderAny_, StructStore, Transaction, Item, YContent, YContentDecoder } from '../internals';
 export type ContentDocOpts = {
     gc?: boolean;
     meta?: any;
     autoLoad?: boolean;
     shouldLoad?: boolean;
 };
-export declare class ContentDoc implements Content_ {
+export declare class ContentDoc implements YContent {
     doc: Doc;
     opts: ContentDocOpts;
     constructor(doc: Doc);
@@ -21,4 +21,4 @@ export declare class ContentDoc implements Content_ {
     write(encoder: UpdateEncoderAny_, offset: number): void;
     getRef(): number;
 }
-export declare const readContentDoc: ContentDecoder_;
+export declare const readContentDoc: YContentDecoder;
