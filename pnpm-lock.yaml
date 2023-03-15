@@ -8,11 +8,11 @@ specifiers:
   typescript: ^4.9.5
 
 dependencies:
-  lib0: 0.2.67
-  lib0-typescript: github.com/ObuchiYuki/lib0-typescript/870f2bd506327b4b3282f57150dee242b310caf5_d2dllaz5dte7avnjm55wl7fmsu
+  lib0-typescript: github.com/ObuchiYuki/lib0-typescript/ecf780e4c7d5b13170840bd0606ed39b9f015066_d2dllaz5dte7avnjm55wl7fmsu
 
 devDependencies:
   '@types/node': 18.15.3
+  lib0: 0.2.67
   ts-node: 10.9.1_cbfmry4sbbh4vatmdrsmatfg5a
   typescript: 4.9.5
 
@@ -1298,7 +1298,6 @@ packages:
 
   /isomorphic.js/0.2.5:
     resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
-    dev: false
 
   /istanbul-lib-coverage/3.2.0:
     resolution: {integrity: sha512-eOeJ5BHCmHYvQK7xt9GkdHuzuCGS1Y6g9Gvnx3Ym33fz/HpLRYxiS0wHNr+m/MBC8B647Xt608vCDEvhl9c6Mw==}
@@ -1800,7 +1799,6 @@ packages:
     hasBin: true
     dependencies:
       isomorphic.js: 0.2.5
-    dev: false
 
   /lines-and-columns/1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
@@ -2369,12 +2367,13 @@ packages:
     engines: {node: '>=10'}
     dev: false
 
-  github.com/ObuchiYuki/lib0-typescript/870f2bd506327b4b3282f57150dee242b310caf5_d2dllaz5dte7avnjm55wl7fmsu:
-    resolution: {tarball: https://codeload.github.com/ObuchiYuki/lib0-typescript/tar.gz/870f2bd506327b4b3282f57150dee242b310caf5}
-    id: github.com/ObuchiYuki/lib0-typescript/870f2bd506327b4b3282f57150dee242b310caf5
+  github.com/ObuchiYuki/lib0-typescript/ecf780e4c7d5b13170840bd0606ed39b9f015066_d2dllaz5dte7avnjm55wl7fmsu:
+    resolution: {tarball: https://codeload.github.com/ObuchiYuki/lib0-typescript/tar.gz/ecf780e4c7d5b13170840bd0606ed39b9f015066}
+    id: github.com/ObuchiYuki/lib0-typescript/ecf780e4c7d5b13170840bd0606ed39b9f015066
     name: lib0-typescript
     version: 1.0.0
     dependencies:
+      isomorphic.js: 0.2.5
       jest: 29.5.0_d2dllaz5dte7avnjm55wl7fmsu
       lib0: 0.2.67
       ts-jest: 29.0.5_doipufordlnvh5g4adbwayvyvy

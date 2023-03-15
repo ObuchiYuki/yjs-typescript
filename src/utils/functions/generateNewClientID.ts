@@ -1,3 +1,3 @@
-import * as random from 'lib0/random'
+import * as lib0 from 'lib0-typescript'
 
-export const generateNewClientID = random.uint32
+export const generateNewClientID = lib0.random_uint32

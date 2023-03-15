@@ -5,8 +5,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Doc = void 0;
 const internals_1 = require("../internals");
-const random = require("lib0/random");
 const lib0 = require("lib0-typescript");
+const uuidv4 = () => {
+    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+};
 /**
  * A Yjs instance handles the state of shared data.
  * @extends Observable<string>
@@ -15,7 +17,7 @@ class Doc extends lib0.Observable {
     /**
      * @param {DocOpts} opts configuration
      */
-    constructor({ guid = random.uuidv4(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true } = {}) {
+    constructor({ guid = uuidv4(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true } = {}) {
         super();
         this.gc = gc;
         this.gcFilter = gcFilter;
