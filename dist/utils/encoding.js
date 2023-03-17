@@ -15,7 +15,7 @@
  * 7: Item with Type
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.encodeStateVector = exports.encodeStateVectorV2 = exports.writeDocumentStateVector = exports.writeStateVector = exports.decodeStateVector = exports.readStateVector = exports.encodeStateAsUpdate = exports.encodeStateAsUpdateV2 = exports.writeStateAsUpdate = exports.applyUpdate = exports.applyUpdateV2 = exports.readUpdate = exports.readUpdateV2 = exports.writeStructsFromTransaction = exports.readClientsStructRefs = exports.writeClientsStructs = void 0;
+exports.encodeStateVector = exports.encodeStateVectorV2 = exports.writeDocumentStateVector = exports.writeStateVector = exports.decodeStateVector = exports.readStateVector = exports.encodeStateAsUpdate = exports.encodeStateAsUpdateV2 = exports.writeStateAsUpdate = exports.applyUpdate = exports.applyUpdateV2 = exports.readUpdate = exports.readUpdateV2 = exports.writeStructsFromTransaction = exports.readClientsStructRefs = exports.writeClientsStructs = exports.writeStructs = void 0;
 const internals_1 = require("../internals");
 const lib0 = require("lib0-typescript");
 /**
@@ -41,6 +41,7 @@ const writeStructs = (encoder, structs, client, clock) => {
         structs[i].write(encoder, 0);
     }
 };
+exports.writeStructs = writeStructs;
 /**
  * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
  * @param {StructStore} store
@@ -69,7 +70,7 @@ const writeClientsStructs = (encoder, store, _sm) => {
     // This heavily improves the conflict algorithm.
     Array.from(sm.entries()).sort((a, b) => b[0] - a[0]).forEach(([client, clock]) => {
         var _a;
-        writeStructs(encoder, (_a = store.clients.get(client)) !== null && _a !== void 0 ? _a : [], client, clock);
+        (0, exports.writeStructs)(encoder, (_a = store.clients.get(client)) !== null && _a !== void 0 ? _a : [], client, clock);
     });
 };
 exports.writeClientsStructs = writeClientsStructs;

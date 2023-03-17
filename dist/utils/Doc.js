@@ -17,11 +17,11 @@ class Doc extends lib0.Observable {
     /**
      * @param {DocOpts} opts configuration
      */
-    constructor({ guid = uuidv4(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true } = {}) {
+    constructor({ guid = uuidv4(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true, clientID } = {}) {
         super();
         this.gc = gc;
         this.gcFilter = gcFilter;
-        this.clientID = (0, internals_1.generateNewClientID)();
+        this.clientID = clientID !== null && clientID !== void 0 ? clientID : (0, internals_1.generateNewClientID)();
         this.guid = guid;
         this.collectionid = collectionid;
         this.share = new Map();

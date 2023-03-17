@@ -5,6 +5,15 @@ import { UpdateDecoderV1, UpdateDecoderV2, UpdateEncoderV1, UpdateEncoderV2, DSE
 import * as lib0 from "lib0-typescript";
 /**
  * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
+ * @param {Array<GC|Item>} structs All structs by `client`
+ * @param {number} client
+ * @param {number} clock write structs starting with `ID(client,clock)`
+ *
+ * @function
+ */
+export declare const writeStructs: (encoder: UpdateEncoderV1 | UpdateEncoderV2, structs: Array<GC | Item>, client: number, clock: number) => void;
+/**
+ * @param {UpdateEncoderV1 | UpdateEncoderV2} encoder
  * @param {StructStore} store
  * @param {Map<number,number>} _sm
  *

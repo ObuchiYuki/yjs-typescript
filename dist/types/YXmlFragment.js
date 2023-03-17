@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.readYXmlFragment = exports.YXmlFragment = exports.YXmlTreeWalker = void 0;
+exports.readYXmlFragment = exports.YXmlFragment = void 0;
 const AbstractType_1 = require("./AbstractType_");
 const internals_1 = require("../internals");
+const YXmlTreeWalker_1 = require("./YXmlTreeWalker_");
 /**
  * Dom filter function.
  *
@@ -11,62 +12,6 @@ const internals_1 = require("../internals");
  * @param {Map} attributes The map of attributes.
  * @return {boolean} Whether to include the Dom node in the YXmlElement.
  */
-/**
- * Represents a subset of the nodes of a YXmlElement / YXmlFragment and a
- * position within them.
- *
- * Can be created with {@link YXmlFragment#createTreeWalker}
- *
- * @public
- * @implements {Iterable<YXmlElement|YXmlText|YXmlElement|YXmlHook>}
- */
-class YXmlTreeWalker {
-    constructor(root, f = () => true) {
-        this._filter = f;
-        this._root = root;
-        this._currentNode = root._start;
-        this._firstCall = true;
-    }
-    [Symbol.iterator]() {
-        return this;
-    }
-    /** Get the next node. */
-    next() {
-        let n = this._currentNode;
-        let type = n && n.content && n.content.type;
-        if (n !== null && (!this._firstCall || n.deleted || !this._filter(type))) { // if first call, we check if we can use the first item
-            do {
-                type = n.content.type;
-                if (!n.deleted && (type.constructor === internals_1.YXmlElement || type.constructor === YXmlFragment) && type._start !== null) {
-                    // walk down in the tree
-                    n = type._start;
-                }
-                else {
-                    // walk right or up in the tree
-                    while (n !== null) {
-                        if (n.right !== null) {
-                            n = n.right;
-                            break;
-                        }
-                        else if (n.parent === this._root) {
-                            n = null;
-                        }
-                        else {
-                            n = n.parent._item;
-                        }
-                    }
-                }
-            } while (n !== null && (n.deleted || !this._filter(n.content.type)));
-        }
-        this._firstCall = false;
-        if (n === null) {
-            return { value: undefined, done: true };
-        }
-        this._currentNode = n;
-        return { value: n.content.type, done: false };
-    }
-}
-exports.YXmlTreeWalker = YXmlTreeWalker;
 /**
  * Represents a list of {@link YXmlElement}.and {@link YXmlText} types.
  * A YxmlFragment is similar to a {@link YXmlElement}, but it does not have a
@@ -127,7 +72,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      * @public
      */
     createTreeWalker(filter) {
-        return new YXmlTreeWalker(this, filter);
+        return new YXmlTreeWalker_1.YXmlTreeWalker(this, filter);
     }
     /**
      * Returns the first YXmlElement that matches the query.
@@ -146,7 +91,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      */
     querySelector(query) {
         query = query.toUpperCase();
-        const iterator = new YXmlTreeWalker(this, element => {
+        const iterator = new YXmlTreeWalker_1.YXmlTreeWalker(this, element => {
             const xmlElement = element;
             return xmlElement.nodeName != null && xmlElement.nodeName.toUpperCase() === query;
         });
@@ -171,7 +116,7 @@ class YXmlFragment extends AbstractType_1.AbstractType_ {
      */
     querySelectorAll(query) {
         query = query.toUpperCase();
-        const walker = new YXmlTreeWalker(this, element => {
+        const walker = new YXmlTreeWalker_1.YXmlTreeWalker(this, element => {
             const xmlElement = element;
             return xmlElement.nodeName != null && xmlElement.nodeName.toUpperCase() === query;
         });

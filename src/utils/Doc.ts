@@ -29,7 +29,8 @@ export type DocOpts = {
     collectionid?: string | null,
     meta?: any,
     autoLoad?: boolean,
-    shouldLoad?: boolean
+    shouldLoad?: boolean,
+    clientID?: number
 }
 
 export type DocMessageType = {
@@ -106,11 +107,11 @@ export class Doc extends lib0.Observable<DocMessageType> {
     /**
      * @param {DocOpts} opts configuration
      */
-    constructor ({ guid = uuidv4(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true }: DocOpts = {}) {
+    constructor ({ guid = uuidv4(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true, clientID }: DocOpts = {}) {
         super()
         this.gc = gc
         this.gcFilter = gcFilter
-        this.clientID = generateNewClientID()
+        this.clientID = clientID ?? generateNewClientID()
         this.guid = guid
         this.collectionid = collectionid
         this.share = new Map()

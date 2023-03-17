@@ -43,7 +43,7 @@ import * as lib0 from "lib0-typescript"
  *
  * @function
  */
-const writeStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, structs: Array<GC | Item>, client: number, clock: number) => {
+export const writeStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, structs: Array<GC | Item>, client: number, clock: number) => {
     // write first id
     clock = Math.max(clock, structs[0].id.clock) // make sure the first id exists
     const startNewStructs = StructStore.findIndexSS(structs, clock)
@@ -68,6 +68,7 @@ const writeStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, structs: Array
  * @function
  */
 export const writeClientsStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, store: StructStore, _sm: Map<number, number>) => {
+    
     // we filter all valid _sm entries into sm
     const sm = new Map()
     _sm.forEach((clock, client) => {
@@ -81,6 +82,7 @@ export const writeClientsStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, 
             sm.set(client, 0)
         }
     })
+    
     // write # states that were updated
     encoder.restEncoder.writeVarUint(sm.size)
     // Write items with higher client ids first

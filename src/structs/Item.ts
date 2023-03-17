@@ -510,6 +510,7 @@ export class Item extends Struct_ {
         }
         if (origin === null && rightOrigin === null) {
             const parent = (this.parent as AbstractType_<any>)
+
             if (parent._item !== undefined) {
                 const parentItem = parent._item
                 if (parentItem === null) {

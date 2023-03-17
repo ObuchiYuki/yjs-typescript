@@ -1,5 +1,6 @@
 import { AbstractType_ } from "./AbstractType_";
 import { YXmlEvent, YXmlElement, Doc, Transaction, Item, YXmlText, YXmlHook, UpdateEncoderAny_, UpdateDecoderAny_ } from '../internals';
+import { YXmlTreeWalker } from "./YXmlTreeWalker_";
 /**
  * Define the elements to which a set of CSS queries apply.
  * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors|CSS_Selectors}
@@ -20,25 +21,6 @@ type CSS_Selector = string;
  * @param {Map} attributes The map of attributes.
  * @return {boolean} Whether to include the Dom node in the YXmlElement.
  */
-/**
- * Represents a subset of the nodes of a YXmlElement / YXmlFragment and a
- * position within them.
- *
- * Can be created with {@link YXmlFragment#createTreeWalker}
- *
- * @public
- * @implements {Iterable<YXmlElement|YXmlText|YXmlElement|YXmlHook>}
- */
-export declare class YXmlTreeWalker {
-    _filter: (type: AbstractType_<any>) => boolean;
-    _root: YXmlFragment | YXmlElement;
-    _currentNode: Item;
-    _firstCall: boolean;
-    constructor(root: YXmlFragment | YXmlElement, f?: (type: AbstractType_<any>) => boolean);
-    [Symbol.iterator](): this;
-    /** Get the next node. */
-    next(): IteratorResult<YXmlElement | YXmlText | YXmlHook>;
-}
 /**
  * Represents a list of {@link YXmlElement}.and {@link YXmlText} types.
  * A YxmlFragment is similar to a {@link YXmlElement}, but it does not have a

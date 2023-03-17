@@ -12,6 +12,7 @@ export type DocOpts = {
     meta?: any;
     autoLoad?: boolean;
     shouldLoad?: boolean;
+    clientID?: number;
 };
 export type DocMessageType = {
     "load": [];
@@ -80,7 +81,7 @@ export declare class Doc extends lib0.Observable<DocMessageType> {
     /**
      * @param {DocOpts} opts configuration
      */
-    constructor({ guid, collectionid, gc, gcFilter, meta, autoLoad, shouldLoad }?: DocOpts);
+    constructor({ guid, collectionid, gc, gcFilter, meta, autoLoad, shouldLoad, clientID }?: DocOpts);
     /**
      * Notify the parent document that you request to load data into this subdocument (if it is a subdocument).
      *

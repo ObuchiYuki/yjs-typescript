@@ -11,10 +11,10 @@ import * as text from './cases/y-text.tests'
 import * as xml from './cases/y-xml.tests'
 import * as snapshot from './cases/snapshot.tests'
 
-
 import { runTests } from 'lib0/testing'
 import { isBrowser, isNode } from 'lib0/environment'
 import * as log from 'lib0/logging'
+import { UpdateEncoderV1, writeStructs } from '../src/internals'
 
 if (isBrowser) {
     log.createVConsole(document.body)
