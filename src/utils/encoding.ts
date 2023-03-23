@@ -47,12 +47,15 @@ export const writeStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, structs
     // write first id
     clock = Math.max(clock, structs[0].id.clock) // make sure the first id exists
     const startNewStructs = StructStore.findIndexSS(structs, clock)
+
     // write # encoded structs
     encoder.restEncoder.writeVarUint(structs.length - startNewStructs)
     encoder.writeClient(client)
     encoder.restEncoder.writeVarUint(clock)
+
     const firstStruct = structs[startNewStructs]
     // write first struct with an offset
+    
     firstStruct.write(encoder, clock - firstStruct.id.clock)
     for (let i = startNewStructs + 1; i < structs.length; i++) {
         structs[i].write(encoder, 0)
@@ -67,8 +70,7 @@ export const writeStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, structs
  * @private
  * @function
  */
-export const writeClientsStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, store: StructStore, _sm: Map<number, number>) => {
-    
+export const writeClientsStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, store: StructStore, _sm: Map<number, number>) => {    
     // we filter all valid _sm entries into sm
     const sm = new Map()
     _sm.forEach((clock, client) => {
@@ -82,11 +84,13 @@ export const writeClientsStructs = (encoder: UpdateEncoderV1 | UpdateEncoderV2, 
             sm.set(client, 0)
         }
     })
-    
+
     // write # states that were updated
     encoder.restEncoder.writeVarUint(sm.size)
+
     // Write items with higher client ids first
     // This heavily improves the conflict algorithm.
+
     Array.from(sm.entries()).sort((a, b) => b[0] - a[0]).forEach(([client, clock]) => {
         writeStructs(encoder, store.clients.get(client) ?? [], client, clock)
     })
@@ -105,6 +109,7 @@ export const readClientsStructRefs = (decoder: UpdateDecoderAny_, doc: Doc): Map
         let clock = decoder.restDecoder.readVarUint()
         // const start = performance.now()
         clientRefs.set(client, { i: 0, refs })
+
         for (let i = 0; i < numberOfStructs; i++) {
             const info = decoder.readInfo()
             switch (lib0.Bits.n5 & info) {
@@ -252,7 +257,7 @@ const integrateStructs = (transaction: Transaction, store: StructStore, clientsS
     /**
      * @type {GC|Item}
      */
-    let stackHead: GC | Item = (curStructsTarget as any).refs[(curStructsTarget as any).i++]
+    let stackHead: GC | Item = curStructsTarget!.refs[curStructsTarget!.i++]
     // caching the state because it is used very often
     const state = new Map()
 
@@ -298,7 +303,7 @@ const integrateStructs = (transaction: Transaction, store: StructStore, clientsS
 
                     if (structRefs.refs.length === structRefs.i) {
                         // This update message causally depends on another update message that doesn't exist yet
-                        updateMissingSv( (missing), store.getState(missing))
+                        updateMissingSv(missing, store.getState(missing))
                         addStackToRestSS()
                     } else {
                         stackHead = structRefs.refs[structRefs.i++]
@@ -358,8 +363,8 @@ export const writeStructsFromTransaction = (encoder: UpdateEncoderV1 | UpdateEnc
  *
  * @function
  */
-export const readUpdateV2 = (decoder: lib0.Decoder, ydoc: Doc, transactionOrigin: any, structDecoder: UpdateDecoderV1 | UpdateDecoderV2 = new UpdateDecoderV2(decoder)) =>
-    ydoc.transact(transaction => {
+export const readUpdateV2 = (decoder: lib0.Decoder, ydoc: Doc, transactionOrigin: any, structDecoder: UpdateDecoderV1 | UpdateDecoderV2 = new UpdateDecoderV2(decoder)) => {
+    return ydoc.transact(transaction => {
         // force that transaction.local is set to non-local
         transaction.local = false
         let retry = false
@@ -397,6 +402,7 @@ export const readUpdateV2 = (decoder: lib0.Decoder, ydoc: Doc, transactionOrigin
         // console.log('time to integrate: ', performance.now() - start) // @todo remove
         // start = performance.now()
         const dsRest = DeleteSet.decodeAndApply(structDecoder, transaction, store)
+        
         if (store.pendingDs) {
             // @todo we could make a lower-bound state-vector check as we do above
             const pendingDSUpdate = new UpdateDecoderV2(new lib0.Decoder(store.pendingDs))
@@ -426,7 +432,7 @@ export const readUpdateV2 = (decoder: lib0.Decoder, ydoc: Doc, transactionOrigin
             applyUpdateV2(transaction.doc, update)
         }
     }, transactionOrigin, false)
-
+}
 /**
  * Read and apply a document update.
  *
@@ -500,7 +506,9 @@ export const writeStateAsUpdate = (encoder: UpdateEncoderV1 | UpdateEncoderV2, d
  */
 export const encodeStateAsUpdateV2 = (doc: Doc, encodedTargetStateVector: Uint8Array = new Uint8Array([0]), encoder: UpdateEncoderV1 | UpdateEncoderV2 = new UpdateEncoderV2()): Uint8Array => {
     const targetStateVector = decodeStateVector(encodedTargetStateVector)
+
     writeStateAsUpdate(encoder, doc, targetStateVector)
+
     const updates = [encoder.toUint8Array()]
     // also add the pending updates (if there are any)
     if (doc.store.pendingDs) {

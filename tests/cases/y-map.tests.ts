@@ -512,6 +512,7 @@ export const testYmapEventHasCorrectValueWhenSettingAPrimitive = (tc: t.TestCase
   /**
    * @type {Object<string,any>}
    */
+  Y.YMapEvent
   let event: { [s: string]: any } = {}
   map0.observe(e => {
     event = e
@@ -534,6 +535,7 @@ export const testYmapEventHasCorrectValueWhenSettingAPrimitiveFromOtherUser = (t
     event = e
   })
   map1.set('stuff', 2)
+  console.log("event", event)
   testConnector.flushAllMessages()
   t.compare(event.value, event.target.get(event.name))
   compare(users)

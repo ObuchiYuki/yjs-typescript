@@ -336,14 +336,19 @@ const mergeUpdatesV2 = (updates, YDecoder = internals_1.UpdateDecoderV2, YEncode
             let iterated = false;
             // iterate until we find something that we haven't written already
             // remember: first the high client-ids are written
-            while (curr !== null && curr.id.clock + curr.length <= currWrite.struct.id.clock + currWrite.struct.length && curr.id.client >= currWrite.struct.id.client) {
+            while (curr !== null
+                && curr.id.clock + curr.length <= currWrite.struct.id.clock + currWrite.struct.length
+                && curr.id.client >= currWrite.struct.id.client) {
                 curr = currDecoder.next();
                 iterated = true;
             }
-            if (curr === null || // current decoder is empty
-                curr.id.client !== firstClient || // check whether there is another decoder that has has updates from `firstClient`
-                (iterated && curr.id.clock > currWrite.struct.id.clock + currWrite.struct.length) // the above while loop was used and we are potentially missing updates
-            ) {
+            if (
+            // current decoder is empty
+            curr === null
+                // check whether there is another decoder that has has updates from `firstClient`
+                || curr.id.client !== firstClient
+                // the above while loop was used and we are potentially missing updates
+                || (iterated && curr.id.clock > currWrite.struct.id.clock + currWrite.struct.length)) {
                 continue;
             }
             if (firstClient !== currWrite.struct.id.client) {
@@ -361,9 +366,6 @@ const mergeUpdatesV2 = (updates, YDecoder = internals_1.UpdateDecoderV2, YEncode
                     else {
                         writeStructToLazyStructWriter(lazyStructEncoder, currWrite.struct, currWrite.offset);
                         const diff = curr.id.clock - currWrite.struct.id.clock - currWrite.struct.length;
-                        /**
-                         * @type {Skip}
-                         */
                         const struct = new internals_1.Skip(new internals_1.ID(firstClient, currWrite.struct.id.clock + currWrite.struct.length), diff);
                         currWrite = { struct, offset: 0 };
                     }
@@ -391,7 +393,10 @@ const mergeUpdatesV2 = (updates, YDecoder = internals_1.UpdateDecoderV2, YEncode
             currWrite = { struct: currDecoder.curr, offset: 0 };
             currDecoder.next();
         }
-        for (let next = currDecoder.curr; next !== null && next.id.client === firstClient && next.id.clock === currWrite.struct.id.clock + currWrite.struct.length && next.constructor !== internals_1.Skip; next = currDecoder.next()) {
+        for (let next = currDecoder.curr; next !== null
+            && next.id.client === firstClient
+            && next.id.clock === currWrite.struct.id.clock + currWrite.struct.length
+            && next.constructor !== internals_1.Skip; next = currDecoder.next()) {
             writeStructToLazyStructWriter(lazyStructEncoder, currWrite.struct, currWrite.offset);
             currWrite = { struct: next, offset: 0 };
         }

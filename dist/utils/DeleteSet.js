@@ -175,10 +175,14 @@ class DeleteSet {
                     const clock = struct.id.clock;
                     let len = struct.length;
                     if (i + 1 < structs.length) {
-                        for (let next = structs[i + 1]; i + 1 < structs.length && next.deleted; next = structs[++i + 1]) {
+                        let next = structs[i + 1];
+                        while (i + 1 < structs.length && next.deleted) {
                             len += next.length;
+                            i += 1;
+                            next = structs[i + 1];
                         }
                     }
+                    console.log("dsitem add", len);
                     dsitems.push(new DeleteItem(clock, len));
                 }
             }
@@ -202,6 +206,7 @@ class DeleteSet {
                 const clockEnd = clock + decoder.readDsLen();
                 if (clock < state) {
                     if (state < clockEnd) {
+                        console.log("add 0");
                         unappliedDS.add(client, state, clockEnd - state);
                     }
                     let index = internals_1.StructStore.findIndexSS(structs, clock);
@@ -236,6 +241,7 @@ class DeleteSet {
             }
         }
         if (unappliedDS.clients.size > 0) {
+            console.log("unappliedDS!!!");
             const ds = new internals_1.UpdateEncoderV2();
             ds.restEncoder.writeVarUint(0); // encode 0 structs
             unappliedDS.encode(ds);

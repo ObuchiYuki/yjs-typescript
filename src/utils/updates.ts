@@ -314,6 +314,7 @@ const sliceStruct = (left: Item | GC | Skip, diff: number): Item | GC => {
  * @return {Uint8Array}
  */
 export const mergeUpdatesV2 = (updates: Array<Uint8Array>, YDecoder: typeof UpdateDecoderV1 | typeof UpdateDecoderV2 = UpdateDecoderV2, YEncoder: typeof UpdateEncoderV1 | typeof UpdateEncoderV2 = UpdateEncoderV2): Uint8Array => {
+
     if (updates.length === 1) {
         return updates[0]
     }
@@ -354,6 +355,7 @@ export const mergeUpdatesV2 = (updates: Array<Uint8Array>, YDecoder: typeof Upda
                 }
             }
         )
+
         if (lazyStructDecoders.length === 0) {
             break
         }
@@ -368,14 +370,20 @@ export const mergeUpdatesV2 = (updates: Array<Uint8Array>, YDecoder: typeof Upda
 
             // iterate until we find something that we haven't written already
             // remember: first the high client-ids are written
-            while (curr !== null && curr.id.clock + curr.length <= currWrite.struct.id.clock + currWrite.struct.length && curr.id.client >= currWrite.struct.id.client) {
+            while (curr !== null 
+                && curr.id.clock + curr.length <= currWrite.struct.id.clock + currWrite.struct.length 
+                && curr.id.client >= currWrite.struct.id.client
+            ) {
                 curr = currDecoder.next()
                 iterated = true
             }
             if (
-                curr === null || // current decoder is empty
-                curr.id.client !== firstClient || // check whether there is another decoder that has has updates from `firstClient`
-                (iterated && curr.id.clock > currWrite.struct.id.clock + currWrite.struct.length) // the above while loop was used and we are potentially missing updates
+                // current decoder is empty
+                curr === null 
+                // check whether there is another decoder that has has updates from `firstClient`
+                || curr.id.client !== firstClient 
+                 // the above while loop was used and we are potentially missing updates
+                || (iterated && curr.id.clock > currWrite.struct.id.clock + currWrite.struct.length)
             ) {
                 continue
             }
@@ -393,9 +401,6 @@ export const mergeUpdatesV2 = (updates: Array<Uint8Array>, YDecoder: typeof Upda
                     } else {
                         writeStructToLazyStructWriter(lazyStructEncoder, currWrite.struct, currWrite.offset)
                         const diff = curr.id.clock - currWrite.struct.id.clock - currWrite.struct.length
-                        /**
-                         * @type {Skip}
-                         */
                         const struct: Skip = new Skip(new ID(firstClient, currWrite.struct.id.clock + currWrite.struct.length), diff)
                         currWrite = { struct, offset: 0 }
                     }
@@ -422,7 +427,10 @@ export const mergeUpdatesV2 = (updates: Array<Uint8Array>, YDecoder: typeof Upda
         }
         for (
             let next = currDecoder.curr;
-            next !== null && next.id.client === firstClient && next.id.clock === currWrite.struct.id.clock + currWrite.struct.length && next.constructor !== Skip;
+            next !== null 
+            && next.id.client === firstClient 
+            && next.id.clock === currWrite.struct.id.clock + currWrite.struct.length 
+            && next.constructor !== Skip;
             next = currDecoder.next()
         ) {
             writeStructToLazyStructWriter(lazyStructEncoder, currWrite.struct, currWrite.offset)

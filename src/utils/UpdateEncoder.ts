@@ -182,16 +182,17 @@ export class UpdateEncoderV2 extends DSEncoderV2 {
         const encoder = new lib0.Encoder()
         encoder.writeVarUint(0) // this is a feature flag that we might use in the future
         encoder.writeVarUint8Array(this.keyClockEncoder.toUint8Array())
+
         encoder.writeVarUint8Array(this.clientEncoder.toUint8Array())
         encoder.writeVarUint8Array(this.leftClockEncoder.toUint8Array())
         encoder.writeVarUint8Array(this.rightClockEncoder.toUint8Array())
-        encoder.writeVarUint8Array(this.infoEncoder.encoder.toUint8Array())
+        encoder.writeVarUint8Array(this.infoEncoder.encoder.toUint8Array())        
         encoder.writeVarUint8Array(this.stringEncoder.toUint8Array())
         encoder.writeVarUint8Array(this.parentInfoEncoder.encoder.toUint8Array())
         encoder.writeVarUint8Array(this.typeRefEncoder.toUint8Array())
         encoder.writeVarUint8Array(this.lenEncoder.toUint8Array())
-        // @note The rest encoder is appended! (note the missing var)
         encoder.writeUint8Array(this.restEncoder.toUint8Array())
+        
         return encoder.toUint8Array()
     }
 

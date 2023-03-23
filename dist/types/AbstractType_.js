@@ -39,7 +39,8 @@ class AbstractType_ {
                 if (this._searchMarker) {
                     internals_1.ArraySearchMarker_.updateChanges(this._searchMarker, index, contents.length);
                 }
-                return this.listInsertGenericsAfter(transaction, null, contents);
+                this.listInsertGenericsAfter(transaction, null, contents);
+                return;
             }
             const startIndex = index;
             const marker = internals_1.ArraySearchMarker_.find(this, index);
@@ -274,11 +275,7 @@ class AbstractType_ {
                 jsonContent.push(content);
             }
             else {
-                if (content.constructor === Number ||
-                    content.constructor === Object ||
-                    content.constructor === Boolean ||
-                    content.constructor === Array ||
-                    content.constructor === String) {
+                if (content.constructor === Number || content.constructor === Object || content.constructor === Boolean || content.constructor === Array || content.constructor === String) {
                     jsonContent.push(content);
                 }
                 else {

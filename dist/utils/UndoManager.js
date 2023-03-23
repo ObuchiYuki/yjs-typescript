@@ -53,9 +53,10 @@ class UndoManager extends lib0.Observable {
         this.captureTimeout = captureTimeout;
         this.afterTransactionHandler = (transaction) => {
             // Only track certain transactions
-            if (!this.captureTransaction(transaction) ||
-                !this.scope.some(type => transaction.changedParentTypes.has(type)) ||
-                (!this.trackedOrigins.has(transaction.origin) && (!transaction.origin || !this.trackedOrigins.has(transaction.origin.constructor)))) {
+            if (!this.captureTransaction(transaction)
+                || !this.scope.some(type => transaction.changedParentTypes.has(type))
+                || (!this.trackedOrigins.has(transaction.origin)
+                    && (!transaction.origin || !this.trackedOrigins.has(transaction.origin.constructor)))) {
                 return;
             }
             const undoing = this.undoing;

@@ -56,7 +56,8 @@ class Transaction {
         this.local = local;
     }
     encodeUpdateMessage(encoder) {
-        if (this.deleteSet.clients.size === 0 && !lib0.any(this.afterState, (clock, client) => this.beforeState.get(client) !== clock)) {
+        const hasContent = lib0.any(this.afterState, (clock, client) => this.beforeState.get(client) !== clock);
+        if (this.deleteSet.clients.size === 0 && !hasContent) {
             return false;
         }
         this.deleteSet.sortAndMerge();

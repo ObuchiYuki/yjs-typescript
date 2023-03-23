@@ -1,7 +1,7 @@
 import {
     Doc, Transaction, EventHandler, YEvent, Item, 
     UpdateEncoderAny_, ArraySearchMarker_, Snapshot, 
-    ContentAny, ContentBinary, ContentDoc, ContentType, YContent, ID, StructStore
+    ContentAny, ContentBinary, ContentDoc, ContentType, YContent, ID, StructStore, encodeStateAsUpdate
 } from '../internals'
 
 import * as lib0 from "lib0-typescript"
@@ -253,11 +253,7 @@ export abstract class AbstractType_<EventType> {
                 jsonContent.push(content)
             } else {
                 if (
-                    content.constructor === Number ||
-                    content.constructor === Object ||
-                    content.constructor === Boolean ||
-                    content.constructor === Array ||
-                    content.constructor === String
+                    content.constructor === Number || content.constructor === Object || content.constructor === Boolean || content.constructor === Array || content.constructor === String
                 ) {
                     jsonContent.push(content as string)
                 } else {
@@ -274,7 +270,9 @@ export abstract class AbstractType_<EventType> {
                         const id = new ID(ownClientId, store.getState(ownClientId))
                         const icontent = new ContentDoc(content as Doc)
                         left = new Item(id, left, left && left.lastID, right, right && right.id, this, null, icontent)
+                        
                         left.integrate(transaction, 0)
+
                     } else if (content instanceof AbstractType_) {
                         const id = new ID(ownClientId, store.getState(ownClientId))
                         const icontent = new ContentType(content)
@@ -297,7 +295,9 @@ export abstract class AbstractType_<EventType> {
             if (this._searchMarker) {
                 ArraySearchMarker_.updateChanges(this._searchMarker, index, contents.length)
             }
-            return this.listInsertGenericsAfter(transaction, null, contents)
+            
+            this.listInsertGenericsAfter(transaction, null, contents)
+            return 
         }
         const startIndex = index
         const marker = ArraySearchMarker_.find(this, index)

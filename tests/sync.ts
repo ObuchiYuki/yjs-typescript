@@ -1,6 +1,7 @@
 import * as Y from '../src/index'
 
 import * as lib0 from "lib0-typescript"
+import { decode } from 'punycode'
 
 export type StateMap = Map<number, number>
 
@@ -48,7 +49,8 @@ export const writeSyncStep1 = (encoder: lib0.Encoder, doc: Y.Doc) => {
 
 export const writeSyncStep2 = (encoder: lib0.Encoder, doc: Y.Doc, encodedStateVector?: Uint8Array) => {
     encoder.writeVarUint(MessageType.syncStep2)
-    encoder.writeVarUint8Array(Y.encodeStateAsUpdate(doc, encodedStateVector))
+    const update = Y.encodeStateAsUpdate(doc, encodedStateVector)
+    encoder.writeVarUint8Array(update)
 }
 
 /**
@@ -65,7 +67,8 @@ export const readSyncStep1 = (decoder: lib0.Decoder, encoder: lib0.Encoder, doc:
  */
 export const readSyncStep2 = (decoder: lib0.Decoder, doc: Y.Doc, transactionOrigin: unknown) => {
     try {
-        Y.applyUpdate(doc, decoder.readVarUint8Array(), transactionOrigin)
+        let data = decoder.readVarUint8Array()
+        Y.applyUpdate(doc, data, transactionOrigin)
     } catch (error) {
         // This catches errors that are thrown by event handlers
         console.error('Caught error while handling a Yjs update', error)

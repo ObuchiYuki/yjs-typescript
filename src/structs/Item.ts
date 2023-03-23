@@ -7,11 +7,13 @@ import {
     readContentDeleted, readContentBinary, readContentJSON, readContentAny, readContentString, readContentEmbed, readContentDoc, readContentFormat, readContentType,
     DeleteSet, ContentType, ContentDeleted, StructStore, ID, AbstractType_, Transaction,
 
-    UpdateDecoderAny_, UpdateEncoderAny_, YContentDecoder, YContent, Snapshot,
+    UpdateDecoderAny_, UpdateEncoderAny_, YContentDecoder, YContent, Snapshot, encodeStateAsUpdate, UpdateEncoderV1, ContentFormat,
 } from '../internals'
 
 import * as lib0 from "lib0-typescript"
+import { glo } from "../utils/functions/global_"
 
+let mergeCount = 0
 // ================================================================================================================ //
 // MARK: - Item -
 // ================================================================================================================ //
@@ -383,8 +385,11 @@ export class Item extends Struct_ {
             if (this.parentSub === null && this.countable && !this.deleted) {
                 (this.parent as AbstractType_<any>)._length += this.length
             }
+
             transaction.doc.store.addStruct(this)
+                    
             this.content.integrate(transaction, this)
+
             // add parent to transaction.changed
             transaction.addChangedType((this.parent as AbstractType_<any>), this.parentSub)
             if (((this.parent as AbstractType_<any>)._item !== null && (this.parent as AbstractType_<any>)._item!.deleted) || (this.parentSub !== null && this.right !== null)) {
@@ -421,6 +426,7 @@ export class Item extends Struct_ {
 
     /** Try to merge two items */
     mergeWith(right: Item): boolean {
+        mergeCount += 1
         if (
             this.constructor === right.constructor &&
             compareIDs(right.origin, this.lastID) &&
@@ -536,6 +542,7 @@ export class Item extends Struct_ {
                 encoder.writeString(parentSub)
             }
         }
+
         this.content.write(encoder, offset)
     }
 

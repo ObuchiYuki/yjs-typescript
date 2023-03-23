@@ -224,6 +224,9 @@ const integrateStructs = (transaction, store, clientsStructRefs) => {
      * @param {number} clock
      */
     const updateMissingSv = (client, clock) => {
+        if (client == 1) {
+            console.log("1111111!!!");
+        }
         const mclock = missingSV.get(client);
         if (mclock == null || mclock > clock) {
             missingSV.set(client, clock);
@@ -276,7 +279,7 @@ const integrateStructs = (transaction, store, clientsStructRefs) => {
                     const structRefs = clientsStructRefs.get(missing) || { refs: [], i: 0 };
                     if (structRefs.refs.length === structRefs.i) {
                         // This update message causally depends on another update message that doesn't exist yet
-                        updateMissingSv((missing), store.getState(missing));
+                        updateMissingSv(missing, store.getState(missing));
                         addStackToRestSS();
                     }
                     else {
@@ -340,75 +343,77 @@ exports.writeStructsFromTransaction = writeStructsFromTransaction;
  *
  * @function
  */
-const readUpdateV2 = (decoder, ydoc, transactionOrigin, structDecoder = new internals_1.UpdateDecoderV2(decoder)) => ydoc.transact(transaction => {
-    // force that transaction.local is set to non-local
-    transaction.local = false;
-    let retry = false;
-    const doc = transaction.doc;
-    const store = doc.store;
-    // let start = performance.now()
-    const ss = (0, exports.readClientsStructRefs)(structDecoder, doc);
-    // console.log('time to read structs: ', performance.now() - start) // @todo remove
-    // start = performance.now()
-    // console.log('time to merge: ', performance.now() - start) // @todo remove
-    // start = performance.now()
-    const restStructs = integrateStructs(transaction, store, ss);
-    const pending = store.pendingStructs;
-    if (pending) {
-        // check if we can apply something
-        for (const [client, clock] of pending.missing) {
-            if (clock < store.getState(client)) {
-                retry = true;
-                break;
-            }
-        }
-        if (restStructs) {
-            // merge restStructs into store.pending
-            for (const [client, clock] of restStructs.missing) {
-                const mclock = pending.missing.get(client);
-                if (mclock == null || mclock > clock) {
-                    pending.missing.set(client, clock);
+const readUpdateV2 = (decoder, ydoc, transactionOrigin, structDecoder = new internals_1.UpdateDecoderV2(decoder)) => {
+    return ydoc.transact(transaction => {
+        // force that transaction.local is set to non-local
+        transaction.local = false;
+        let retry = false;
+        const doc = transaction.doc;
+        const store = doc.store;
+        // let start = performance.now()
+        const ss = (0, exports.readClientsStructRefs)(structDecoder, doc);
+        // console.log('time to read structs: ', performance.now() - start) // @todo remove
+        // start = performance.now()
+        // console.log('time to merge: ', performance.now() - start) // @todo remove
+        // start = performance.now()
+        const restStructs = integrateStructs(transaction, store, ss);
+        const pending = store.pendingStructs;
+        if (pending) {
+            // check if we can apply something
+            for (const [client, clock] of pending.missing) {
+                if (clock < store.getState(client)) {
+                    retry = true;
+                    break;
                 }
             }
-            pending.update = (0, internals_1.mergeUpdatesV2)([pending.update, restStructs.update]);
-        }
-    }
-    else {
-        store.pendingStructs = restStructs;
-    }
-    // console.log('time to integrate: ', performance.now() - start) // @todo remove
-    // start = performance.now()
-    const dsRest = internals_1.DeleteSet.decodeAndApply(structDecoder, transaction, store);
-    if (store.pendingDs) {
-        // @todo we could make a lower-bound state-vector check as we do above
-        const pendingDSUpdate = new internals_1.UpdateDecoderV2(new lib0.Decoder(store.pendingDs));
-        pendingDSUpdate.restDecoder.readVarUint(); // read 0 structs, because we only encode deletes in pendingdsupdate
-        const dsRest2 = internals_1.DeleteSet.decodeAndApply(pendingDSUpdate, transaction, store);
-        if (dsRest && dsRest2) {
-            // case 1: ds1 != null && ds2 != null
-            store.pendingDs = (0, internals_1.mergeUpdatesV2)([dsRest, dsRest2]);
+            if (restStructs) {
+                // merge restStructs into store.pending
+                for (const [client, clock] of restStructs.missing) {
+                    const mclock = pending.missing.get(client);
+                    if (mclock == null || mclock > clock) {
+                        pending.missing.set(client, clock);
+                    }
+                }
+                pending.update = (0, internals_1.mergeUpdatesV2)([pending.update, restStructs.update]);
+            }
         }
         else {
-            // case 2: ds1 != null
-            // case 3: ds2 != null
-            // case 4: ds1 == null && ds2 == null
-            store.pendingDs = dsRest || dsRest2;
+            store.pendingStructs = restStructs;
         }
-    }
-    else {
-        // Either dsRest == null && pendingDs == null OR dsRest != null
-        store.pendingDs = dsRest;
-    }
-    // console.log('time to cleanup: ', performance.now() - start) // @todo remove
-    // start = performance.now()
-    // console.log('time to resume delete readers: ', performance.now() - start) // @todo remove
-    // start = performance.now()
-    if (retry) {
-        const update = store.pendingStructs.update;
-        store.pendingStructs = null;
-        (0, exports.applyUpdateV2)(transaction.doc, update);
-    }
-}, transactionOrigin, false);
+        // console.log('time to integrate: ', performance.now() - start) // @todo remove
+        // start = performance.now()
+        const dsRest = internals_1.DeleteSet.decodeAndApply(structDecoder, transaction, store);
+        if (store.pendingDs) {
+            // @todo we could make a lower-bound state-vector check as we do above
+            const pendingDSUpdate = new internals_1.UpdateDecoderV2(new lib0.Decoder(store.pendingDs));
+            pendingDSUpdate.restDecoder.readVarUint(); // read 0 structs, because we only encode deletes in pendingdsupdate
+            const dsRest2 = internals_1.DeleteSet.decodeAndApply(pendingDSUpdate, transaction, store);
+            if (dsRest && dsRest2) {
+                // case 1: ds1 != null && ds2 != null
+                store.pendingDs = (0, internals_1.mergeUpdatesV2)([dsRest, dsRest2]);
+            }
+            else {
+                // case 2: ds1 != null
+                // case 3: ds2 != null
+                // case 4: ds1 == null && ds2 == null
+                store.pendingDs = dsRest || dsRest2;
+            }
+        }
+        else {
+            // Either dsRest == null && pendingDs == null OR dsRest != null
+            store.pendingDs = dsRest;
+        }
+        // console.log('time to cleanup: ', performance.now() - start) // @todo remove
+        // start = performance.now()
+        // console.log('time to resume delete readers: ', performance.now() - start) // @todo remove
+        // start = performance.now()
+        if (retry) {
+            const update = store.pendingStructs.update;
+            store.pendingStructs = null;
+            (0, exports.applyUpdateV2)(transaction.doc, update);
+        }
+    }, transactionOrigin, false);
+};
 exports.readUpdateV2 = readUpdateV2;
 /**
  * Read and apply a document update.

@@ -103,6 +103,7 @@ class DSEncoderV2 {
      * @param {number} clock
      */
     writeDsClock(clock) {
+        console.log("writeDsClock", clock, clock - this.dsCurrVal);
         const diff = clock - this.dsCurrVal;
         this.dsCurrVal = clock;
         this.restEncoder.writeVarUint(diff);
@@ -150,7 +151,6 @@ class UpdateEncoderV2 extends DSEncoderV2 {
         encoder.writeVarUint8Array(this.parentInfoEncoder.encoder.toUint8Array());
         encoder.writeVarUint8Array(this.typeRefEncoder.toUint8Array());
         encoder.writeVarUint8Array(this.lenEncoder.toUint8Array());
-        // @note The rest encoder is appended! (note the missing var)
         encoder.writeUint8Array(this.restEncoder.toUint8Array());
         return encoder.toUint8Array();
     }

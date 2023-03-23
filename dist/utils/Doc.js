@@ -6,9 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Doc = void 0;
 const internals_1 = require("../internals");
 const lib0 = require("lib0-typescript");
-const uuidv4 = () => {
-    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
-};
 /**
  * A Yjs instance handles the state of shared data.
  * @extends Observable<string>
@@ -17,7 +14,7 @@ class Doc extends lib0.Observable {
     /**
      * @param {DocOpts} opts configuration
      */
-    constructor({ guid = uuidv4(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true, clientID } = {}) {
+    constructor({ guid = (0, internals_1.generateDocGuid)(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true, clientID } = {}) {
         super();
         this.gc = gc;
         this.gcFilter = gcFilter;
@@ -122,9 +119,8 @@ class Doc extends lib0.Observable {
             t._integrate(this, null);
             return t;
         });
-        const Constr = type.constructor;
-        if (TypeConstructor !== internals_1.AbstractType_ && Constr !== TypeConstructor) {
-            if (Constr === internals_1.AbstractType_) {
+        if (TypeConstructor !== internals_1.AbstractType_ && type.constructor !== TypeConstructor) {
+            if (type.constructor === internals_1.AbstractType_) {
                 const t = new TypeConstructor();
                 t._map = type._map;
                 type._map.forEach((n) => {

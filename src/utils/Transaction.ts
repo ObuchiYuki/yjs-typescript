@@ -83,7 +83,8 @@ export class Transaction {
     }
 
     encodeUpdateMessage(encoder: UpdateEncoderAny_): boolean {
-        if (this.deleteSet.clients.size === 0 && !lib0.any(this.afterState, (clock, client) => this.beforeState.get(client) !== clock)) {
+        const hasContent = lib0.any(this.afterState, (clock, client) => this.beforeState.get(client) !== clock)
+        if (this.deleteSet.clients.size === 0 && !hasContent) {
             return false
         }
         this.deleteSet.sortAndMerge()
@@ -169,7 +170,7 @@ export class Transaction {
                     ds.tryGCDeleteSet(store, doc.gcFilter)
                 }
                 ds.tryMerge(store)
-    
+                
                 // on all affected store.clients props, try to merge
                 transaction.afterState.forEach((clock, client) => {
                     const beforeClock = transaction.beforeState.get(client) || 0
@@ -177,11 +178,14 @@ export class Transaction {
                         const structs = store.clients.get(client) as Array<GC|Item>
                         // we iterate from right to left so we can safely remove entries
                         const firstChangePos = Math.max(StructStore.findIndexSS(structs, beforeClock), 1)
+                        
                         for (let i = structs.length - 1; i >= firstChangePos; i--) {
                             Struct_.tryMergeWithLeft(structs, i)
                         }
                     }
                 })
+
+
                 // try to merge mergeStructs
                 // @todo: it makes more sense to transform mergeStructs to a DS, sort it, and merge from right to left
                 //                but at the moment DS does not handle duplicates
@@ -200,8 +204,10 @@ export class Transaction {
                     console.warn('[yjs] Changed the client-id because another client seems to be using it.')
                     doc.clientID = generateNewClientID()
                 }
+
                 // @todo Merge all the transactions into one and provide send the data as a single update message
                 doc.emit('afterTransactionCleanup', [transaction, doc])
+
                 if (doc.isObserving('update')) {
                     const encoder = new UpdateEncoderV1()
                     const hasContent = transaction.encodeUpdateMessage(encoder)
@@ -249,6 +255,7 @@ export class Transaction {
             initialCall = true
             doc._transaction = new Transaction(doc, origin, local)
             transactionCleanups.push(doc._transaction)
+            
             if (transactionCleanups.length === 1) {
                 doc.emit('beforeAllTransactions', [doc])
             }
@@ -260,7 +267,9 @@ export class Transaction {
             if (initialCall) {
                 const finishCleanup = doc._transaction === transactionCleanups[0]
                 doc._transaction = null
-                if (finishCleanup) { Transaction.cleanup(transactionCleanups, 0) }
+                if (finishCleanup) {     
+                    Transaction.cleanup(transactionCleanups, 0)
+                }
             }
         }
     }

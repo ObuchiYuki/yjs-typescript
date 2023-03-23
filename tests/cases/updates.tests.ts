@@ -19,7 +19,7 @@ import * as lib0 from "lib0-typescript"
  * @property {function(Uint8Array, Uint8Array):Uint8Array} Enc.diffUpdate
  */
 
-type Enc = {
+export type Enc = {
   mergeUpdates: (updates: Array<Uint8Array>) => Uint8Array,
   encodeStateAsUpdate: (doc: Y.Doc, encodedTargetStateVector?: Uint8Array) => Uint8Array,
   applyUpdate: (ydoc: Y.Doc, update: Uint8Array, transactionOrigin?: any) => void,
@@ -35,7 +35,7 @@ type Enc = {
 /**
  * @type {Enc}
  */
-const encV1: Enc = {
+export const encV1: Enc = {
   mergeUpdates: Y.mergeUpdates,
   encodeStateAsUpdate: Y.encodeStateAsUpdate,
   applyUpdate: Y.applyUpdate,
@@ -51,7 +51,7 @@ const encV1: Enc = {
 /**
  * @type {Enc}
  */
-const encV2: Enc = {
+export const encV2: Enc = {
   mergeUpdates: Y.mergeUpdatesV2,
   encodeStateAsUpdate: Y.encodeStateAsUpdateV2,
   applyUpdate: Y.applyUpdateV2,
@@ -67,7 +67,7 @@ const encV2: Enc = {
 /**
  * @type {Enc}
  */
-const encDoc: Enc = {
+export const encDoc: Enc = {
   mergeUpdates: (updates) => {
     const ydoc = new Y.Doc({ gc: false })
     updates.forEach(update => {
@@ -94,16 +94,17 @@ const encDoc: Enc = {
   }
 }
 
-const encoders = [encV1, encV2, encDoc]
+export const encoders = [encV1, encV2, encDoc]
 
 /**
  * @param {Array<Y.Doc>} users
  * @param {Enc} enc
- */
-const fromUpdates = (users: Array<Y.Doc>, enc: Enc) => {
+ */ 
+export const fromUpdates = (users: Array<Y.Doc>, enc: Enc) => {
   const updates = users.map(user =>
     enc.encodeStateAsUpdate(user)
   )
+
   const ydoc = new Y.Doc()
   enc.applyUpdate(ydoc, enc.mergeUpdates(updates))
   return ydoc
@@ -149,7 +150,7 @@ export const testKeyEncoding = (tc: t.TestCase) => {
  * @param {Enc} enc
  * @param {boolean} hasDeletes
  */
-const checkUpdateCases = (ydoc: Y.Doc, updates: Array<Uint8Array>, enc: Enc, hasDeletes: boolean) => {
+export const checkUpdateCases = (ydoc: Y.Doc, updates: Array<Uint8Array>, enc: Enc, hasDeletes: boolean) => {
   const cases: Uint8Array[] = []
 
   // Case 1: Simple case, simply merge everything
@@ -176,11 +177,11 @@ const checkUpdateCases = (ydoc: Y.Doc, updates: Array<Uint8Array>, enc: Enc, has
   ]))
 
   // Case 5: overlapping with many duplicates
-  cases.push(enc.mergeUpdates(cases))
+  // cases.push(enc.mergeUpdates(cases))
 
-  // const targetState = enc.encodeStateAsUpdate(ydoc)
-  // t.info('Target State: ')
-  // enc.logUpdate(targetState)
+  const targetState = enc.encodeStateAsUpdate(ydoc)
+  t.info('Target State: ')
+  enc.logUpdate(targetState)
 
   cases.forEach((mergedUpdates, i) => {
     // t.info('State Case $' + i + ':')

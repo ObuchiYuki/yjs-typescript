@@ -1,23 +1,14 @@
-
+import * as Y from '../src/index'
 import * as t from 'lib0/testing'
-import * as prng from 'lib0/prng'
-import * as syncProtocol from './sync'
+import * as lib0 from "lib0-typescript"
+import * as syncProtocol from '../tests/sync'
 import * as object from 'lib0/object'
 import * as map from 'lib0/map'
-import * as Y from '../src/index'
-import { DocMessageType } from '../src/internals.js'
-export * from '../src/index'
 
-import * as lib0 from "lib0-typescript"
+import { glo } from '../src/utils/functions/global_'
+import { RandomGenerator } from './RandomGenerator'
+glo.$__test = true
 
-if (typeof window !== 'undefined') {
-    (window as any).Y = Y
-}
-
-/**
- * @param {TestYInstance} y // publish message created by `y` to all other online clients
- * @param {Uint8Array} m
- */
 const broadcastMessage = (y: TestYInstance, m: Uint8Array) => {
     if (y.tc.onlineConns.has(y)) {
         y.tc.onlineConns.forEach(remoteYInstance => {
@@ -66,29 +57,14 @@ export class TestYInstance extends Y.Doc {
     userID: number
     receiving: Map<TestYInstance, Uint8Array[]>
     updates: Uint8Array[]
-    /**
-     * @param {TestConnector} testConnector
-     * @param {number} clientID
-     */
-    constructor (testConnector: TestConnector, clientID: number) {
+    
+    constructor(testConnector: TestConnector, clientID: number) {
         super()
-        this.userID = clientID // overwriting clientID
-        /**
-         * @type {TestConnector}
-         */
+        this.userID = clientID 
         this.tc = testConnector
-        /**
-         * @type {Map<TestYInstance, Array<Uint8Array>>}
-         */
         this.receiving = new Map()
         testConnector.allConns.add(this)
-        /**
-         * The list of received updates.
-         * We are going to merge them later using Y.mergeUpdates and check if the resulting document is correct.
-         * @type {Array<Uint8Array>}
-         */
         this.updates = []
-        // set up observe on local model
         this.on(enc.updateEventName as "update"|"updateV2", (update: Uint8Array, origin: any) => {
             if (origin !== testConnector) {
                 const encoder = new lib0.Encoder()
@@ -100,10 +76,8 @@ export class TestYInstance extends Y.Doc {
         this.connect()
     }
 
-    /**
-     * Disconnect from TestConnector.
-     */
-    disconnect () {
+
+    disconnect() {
         this.receiving = new Map()
         this.tc.onlineConns.delete(this)
     }
@@ -112,7 +86,7 @@ export class TestYInstance extends Y.Doc {
      * Append yourself to the list of known Y instances in testconnector.
      * Also initiate sync with all clients.
      */
-    connect () {
+    connect() {
         if (!this.tc.onlineConns.has(this)) {
             this.tc.onlineConns.add(this)
             const encoder = new lib0.Encoder()
@@ -130,96 +104,55 @@ export class TestYInstance extends Y.Doc {
         }
     }
 
-    /**
-     * Receive a message from another client. This message is only appended to the list of receiving messages.
-     * TestConnector decides when this client actually reads this message.
-     *
-     * @param {Uint8Array} message
-     * @param {TestYInstance} remoteClient
-     */
-    _receive (message: Uint8Array, remoteClient: TestYInstance) {
+    _receive(message: Uint8Array, remoteClient: TestYInstance) {
         map.setIfUndefined(this.receiving, remoteClient, () => [] as Uint8Array[]).push(message)
     }
 }
 
-/**
- * Keeps track of TestYInstances.
- *
- * The TestYInstances add/remove themselves from the list of connections maiained in this object.
- * I think it makes sense. Deal with it.
- */
 export class TestConnector {
     allConns: Set<TestYInstance>
     onlineConns: Set<TestYInstance>
-    prng: prng.PRNG
-    /**
-     * @param {prng.PRNG} gen
-     */
-    constructor (gen: prng.PRNG) {
-        /**
-         * @type {Set<TestYInstance>}
-         */
+    gen: RandomGenerator
+    
+    constructor(gen: RandomGenerator) {
         this.allConns = new Set()
-        /**
-         * @type {Set<TestYInstance>}
-         */
         this.onlineConns = new Set()
-        /**
-         * @type {prng.PRNG}
-         */
-        this.prng = gen
+        this.gen = gen
     }
 
-    /**
-     * Create a new Y instance and add it to the list of connections
-     * @param {number} clientID
-     */
-    createY (clientID: number) {
+    createY(clientID: number) {
         return new TestYInstance(this, clientID)
     }
 
-    /**
-     * Choose random connection and flush a random message from a random sender.
-     *
-     * If this function was unable to flush a message, because there are no more messages to flush, it returns false. true otherwise.
-     * @return {boolean}
-     */
-    flushRandomMessage (): boolean {
-        const gen = this.prng
+    flushRandomMessage(): boolean {
         const conns = Array.from(this.onlineConns).filter(conn => conn.receiving.size > 0)
-        if (conns.length > 0) {
-            const receiver = conns.sort((a, b) => a.clientID - b.clientID)[0]
 
-            const [sender, messages] = Array.from(receiver.receiving.entries())
-                .sort(([doc1], [doc2]) => {
-                    return doc1.clientID - doc2.clientID
-                })[0]
+        if (conns.length <= 0) { return false }
 
-            const m = messages.shift()
-            if (messages.length === 0) {
-                receiver.receiving.delete(sender)
-            }
-            if (m === undefined) {
-                return this.flushRandomMessage()
-            }
-            const encoder = new lib0.Encoder()
+        const receiver = conns.sort((a, b) => a.clientID - b.clientID)[0]
 
-            // console.log('receive (' + sender.userID + '->' + receiver.userID + '):\n', syncProtocol.stringifySyncMessage(decoding.createDecoder(m), receiver))
-            // do not publish data created when this function is executed (could be ss2 or update message)
-            syncProtocol.readSyncMessage(new lib0.Decoder(m), encoder, receiver, receiver.tc)
-            if (encoder.length > 0) {
-                // send reply message
-                sender._receive(encoder.toUint8Array(), receiver)
-            }
-            return true
+        const [sender, messages] = Array.from(receiver.receiving.entries())
+            .sort(([doc1], [doc2]) => {
+                return doc1.clientID - doc2.clientID
+            })[0]
+
+        const m = messages.shift()
+        if (messages.length === 0) {
+            receiver.receiving.delete(sender)
         }
-        return false
+        if (m === undefined) {
+            return this.flushRandomMessage()
+        }
+        const encoder = new lib0.Encoder()
+
+        syncProtocol.readSyncMessage(new lib0.Decoder(m), encoder, receiver, receiver.tc)
+        if (encoder.length > 0) {
+            sender._receive(encoder.toUint8Array(), receiver)
+        }
+        return true    
     }
 
-    /**
-     * @return {boolean} True iff this function actually flushed something
-     */
-    flushAllMessages (): boolean {
+    flushAllMessages(): boolean {
         let didSomething = false
         while (this.flushRandomMessage()) {
             didSomething = true
@@ -227,39 +160,30 @@ export class TestConnector {
         return didSomething
     }
 
-    reconnectAll () {
+    reconnectAll() {
         this.allConns.forEach(conn => conn.connect())
     }
 
-    disconnectAll () {
+    disconnectAll() {
         this.allConns.forEach(conn => conn.disconnect())
     }
 
-    syncAll () {
+    syncAll() {
         this.reconnectAll()
         this.flushAllMessages()
     }
 
-    /**
-     * @return {boolean} Whether it was possible to disconnect a randon connection.
-     */
-    disconnectRandom (): boolean {
+    disconnectRandom(): boolean {
         if (this.onlineConns.size === 0) {
             return false
         }
-        prng.oneOf(this.prng, Array.from(this.onlineConns)).disconnect()
+        this.gen.oneOf(Array.from(this.onlineConns).sort((a, b) => a.clientID - b.clientID)).disconnect()
         return true
     }
 
-    /**
-     * @return {boolean} Whether it was possible to reconnect a random connection.
-     */
-    reconnectRandom (): boolean {
-        /**
-         * @type {Array<TestYInstance>}
-         */
+    reconnectRandom(): boolean {
         const reconnectable: Array<TestYInstance> = []
-        this.allConns.forEach(conn => {
+        Array.from(this.allConns).sort((a, b) => a.clientID - b.clientID).forEach(conn => {
             if (!this.onlineConns.has(conn)) {
                 reconnectable.push(conn)
             }
@@ -267,20 +191,14 @@ export class TestConnector {
         if (reconnectable.length === 0) {
             return false
         }
-        prng.oneOf(this.prng, reconnectable).connect()
+        this.gen.oneOf(reconnectable).connect()
         return true
     }
 }
 
-/**
- * @template T
- * @param {t.TestCase} tc
- * @param {{users?:number}} conf
- * @param {InitTestObjectCallback<T>} [initTestObject]
- * @return {{testObjects:Array<any>,testConnector:TestConnector,users:Array<TestYInstance>,array0:Y.Array<any>,array1:Y.Array<any>,array2:Y.Array<any>,map0:Y.Map<any>,map1:Y.Map<any>,map2:Y.Map<any>,map3:Y.Map<any>,text0:Y.Text,text1:Y.Text,text2:Y.Text,xml0:Y.XmlElement,xml1:Y.XmlElement,xml2:Y.XmlElement}}
- */
 export const init = <T>(
     tc: t.TestCase,
+    gen: RandomGenerator = new RandomGenerator(0),
     { users = 5 }: { users?: number } = {},
     initTestObject?: InitTestObjectCallback<T>
 ): {
@@ -301,19 +219,9 @@ export const init = <T>(
     xml1: Y.XmlElement;
     xml2: Y.XmlElement;
 } => {
-    /**
-     * @type {Object<string,any>}
-     */
     const result: { [s: string]: any } = {
         users: [],
     };
-    const gen = tc.prng;
-    // choose an encoding approach at random
-    if (prng.bool(gen)) {
-        useV2Encoding();
-    } else {
-        useV1Encoding();
-    }
 
     const testConnector = new TestConnector(gen);
     result.testConnector = testConnector;
@@ -328,24 +236,14 @@ export const init = <T>(
     }
     testConnector.syncAll();
     result.testObjects = result.users.map(initTestObject || (() => null));
-    useV1Encoding();
+
     return result as any;
 };
 
-/**
- * 1. reconnect and flush all
- * 2. user 0 gc
- * 3. get type content
- * 4. disconnect & reconnect all (so gc is propagated)
- * 5. compare os, ds, ss
- *
- * @param {Array<TestYInstance>} users
- */
 export const compare = (users: Array<TestYInstance>) => {
     users.forEach(u => u.connect())
-    while (users[0].tc.flushAllMessages()) {} // eslint-disable-line
-    // For each document, merge all received document updates with Y.mergeUpdates and create a new document which will be added to the list of "users"
-    // This ensures that mergeUpdates works correctly
+    while (users[0].tc.flushAllMessages()) {}
+    
     const mergedDocs = users.map(user => {
         const ydoc = new Y.Doc()
         const update = enc.mergeUpdates(user.updates)
@@ -368,14 +266,13 @@ export const compare = (users: Array<TestYInstance>) => {
     const ymapkeys = Array.from(users[0].getMap('map').keys())
     t.assert(ymapkeys.length === Object.keys(userMapValues[0]).length)
     ymapkeys.forEach(key => t.assert(object.hasProperty(userMapValues[0], key)))
-    /**
-     * @type {Object<string,any>}
-     */
+    
     const mapRes: { [s: string]: any } = {}
     for (const [k, v] of users[0].getMap('map')) {
         mapRes[k] = v instanceof Y.AbstractType_ ? v.toJSON() : v
     }
     t.compare(userMapValues[0], mapRes)
+    
     // Compare all users
     for (let i = 0; i < users.length - 1; i++) {
         t.compare(userArrayValues[i].length, users[i].getArray('array').length)
@@ -398,17 +295,8 @@ export const compare = (users: Array<TestYInstance>) => {
     users.map(u => u.destroy())
 }
 
-/**
- * @param {Y.Item?} a
- * @param {Y.Item?} b
- * @return {boolean}
- */
 export const compareItemIDs = (a: Y.Item | null, b: Y.Item | null): boolean => a === b || (a !== null && b != null && Y.compareIDs(a.id, b.id))
 
-/**
- * @param {import('../../src/internals.js').StructStore} ss1
- * @param {import('../../src/internals.js').StructStore} ss2
- */
 export const compareStructStores = (ss1: import('../src/internals.js').StructStore, ss2: import('../src/internals.js').StructStore) => {
     t.assert(ss1.clients.size === ss2.clients.size)
     for (const [client, structs1] of ss1.clients) {
@@ -448,10 +336,6 @@ export const compareStructStores = (ss1: import('../src/internals.js').StructSto
     }
 }
 
-/**
- * @param {import('../src/internals.js').DeleteSet} ds1
- * @param {import('../src/internals.js').DeleteSet} ds2
- */
 export const compareDS = (ds1: import('../src/internals.js').DeleteSet, ds2: import('../src/internals.js').DeleteSet) => {
     t.assert(ds1.clients.size === ds2.clients.size)
     ds1.clients.forEach((deleteItems1, client) => {
@@ -467,45 +351,31 @@ export const compareDS = (ds1: import('../src/internals.js').DeleteSet, ds2: imp
     })
 }
 
-/**
- * @template T
- * @callback InitTestObjectCallback
- * @param {TestYInstance} y
- * @return {T}
- */
-
 type InitTestObjectCallback<T> = (y: TestYInstance) => T
 
-/**
- * @template T
- * @param {t.TestCase} tc
- * @param {Array<function(Y.Doc,prng.PRNG,T):void>} mods
- * @param {number} iterations
- * @param {InitTestObjectCallback<T>} [initTestObject]
- */
-export const applyRandomTests = <T>(tc: t.TestCase, mods: Array<((arg0: Y.Doc, arg1: prng.PRNG, arg2: T) => void)>, iterations: number, initTestObject?: InitTestObjectCallback<T>) => {
-    const gen = tc.prng
-    const result = init(tc, { users: 5 }, initTestObject)
+export const applyRandomTests = <T>(tc: t.TestCase, gen: RandomGenerator, mods: Array<((doc: Y.Doc, gen: RandomGenerator, obj: T) => void)>, iterations: number) => {
+    const result = init(tc, gen, { users: 5 })
     const { testConnector, users } = result
     for (let i = 0; i < iterations; i++) {
-        if (prng.int32(gen, 0, 100) <= 2) {
+        if (gen.int32(0, 100) <= 2) {
             // 2% chance to disconnect/reconnect a random user
-            if (prng.bool(gen)) {
+            if (gen.bool()) {
                 testConnector.disconnectRandom()
             } else {
                 testConnector.reconnectRandom()
             }
-        } else if (prng.int32(gen, 0, 100) <= 1) {
+        } else if (gen.int32(0, 100) <= 1) {
             // 1% chance to flush all
             testConnector.flushAllMessages()
-        } else if (prng.int32(gen, 0, 100) <= 50) {
+        } else if (gen.int32(0, 100) <= 50) {
             // 50% chance to flush a random message
             testConnector.flushRandomMessage()
         }
-        const user = prng.int32(gen, 0, users.length - 1)
-        const test = prng.oneOf(gen, mods)
+        const user = gen.int32(0, users.length - 1)
+        const test = gen.oneOf(mods)
         test(users[user], gen, result.testObjects[user])
     }
     compare(users)
     return result
 }
+

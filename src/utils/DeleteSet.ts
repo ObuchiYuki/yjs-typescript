@@ -86,6 +86,7 @@ export class DeleteSet {
         Array.from(this.clients.entries())
             .sort((a, b) => b[0] - a[0])
             .forEach(([client, dsitems]) => {
+
                 encoder.resetDsCurVal()
                 encoder.restEncoder.writeVarUint(client)
                 const len = dsitems.length

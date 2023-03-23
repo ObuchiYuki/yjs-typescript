@@ -19,9 +19,6 @@ class PermanentUserData {
          * @param {string} userDescription
          */
         const initUser = (user, userDescription) => {
-            /**
-             * @type {YArray<Uint8Array>}
-             */
             const ds = user.get('ds');
             const ids = user.get('ids');
             const addClientId = (clientid) => this.clients.set(clientid, userDescription);

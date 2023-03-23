@@ -25,7 +25,7 @@ runTests({
     encoding,
     relativePositions,
     undoredo,
-    updates,
+    updates: updates as any,
     map,
     array,
     text,

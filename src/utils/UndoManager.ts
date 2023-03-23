@@ -124,12 +124,15 @@ export class UndoManager extends lib0.Observable<UndoManagerMessages> {
         this.afterTransactionHandler = (transaction: Transaction) => {
             // Only track certain transactions
             if (
-                !this.captureTransaction(transaction) ||
-                !this.scope.some(type => transaction.changedParentTypes.has(type)) ||
-                (!this.trackedOrigins.has(transaction.origin) && (!transaction.origin || !this.trackedOrigins.has(transaction.origin.constructor)))
-            ) {
-                return
-            }
+                !this.captureTransaction(transaction) 
+                || !this.scope.some(type => transaction.changedParentTypes.has(type)) 
+                || (
+                    !this.trackedOrigins.has(transaction.origin) 
+                        && (!transaction.origin || !this.trackedOrigins.has(transaction.origin.constructor))
+                    )
+                )
+            { return }
+
             const undoing = this.undoing
             const redoing = this.redoing
             const stack = undoing ? this.redoStack : this.undoStack

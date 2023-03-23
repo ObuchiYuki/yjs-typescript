@@ -7,6 +7,7 @@ import {
 
 import * as lib0 from 'lib0-typescript'
 
+let addStructCount = 0
 export class StructStore {
     clients: Map<number,Array<GC|Item>>
     pendingStructs: null | { missing: Map<number, number>, update: Uint8Array }
@@ -61,7 +62,9 @@ export class StructStore {
                 throw new lib0.UnexpectedCaseError()
             }
         }
+
         structs.push(struct)
+
     }
 
     /** Expects that id is actually in store. This function throws or is an infinite loop otherwise. */

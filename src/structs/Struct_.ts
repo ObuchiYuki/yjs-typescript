@@ -34,7 +34,10 @@ export abstract class Struct_ {
         if (left.deleted === right.deleted && left.constructor === right.constructor) {
             if (left.mergeWith(right)) {
                 structs.splice(pos, 1)
-                if (right instanceof Item && right.parentSub !== null && (right.parent as AbstractType_<any>)._map.get(right.parentSub) === right) {
+                if (right instanceof Item 
+                    && right.parentSub !== null 
+                    && (right.parent as AbstractType_<any>)._map.get(right.parentSub) === right
+                    ) {
                     (right.parent as AbstractType_<any>)._map.set(right.parentSub, left as Item)
                 }
             }

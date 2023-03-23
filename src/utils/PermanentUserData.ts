@@ -31,10 +31,7 @@ export class PermanentUserData {
          * @param {string} userDescription
          */
         const initUser = (user: YMap<any>, userDescription: string) => {
-            /**
-             * @type {YArray<Uint8Array>}
-             */
-            const ds = user.get('ds')
+            const ds = user.get('ds') as YArray<Uint8Array>
             const ids = user.get('ids')
             const addClientId = (clientid: number) => this.clients.set(clientid, userDescription)
             ds.observe((event: YArrayEvent<any>) => {

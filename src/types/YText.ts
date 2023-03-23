@@ -106,6 +106,7 @@ const insertNegatedAttributes = (transaction: Transaction, parent: AbstractType_
     }
     const doc = transaction.doc
     const ownClientId = doc.clientID
+
     negatedAttributes.forEach((val, key) => {
         const left = currPos.left
         const right = currPos.right
@@ -147,15 +148,20 @@ const insertAttributes = (transaction: Transaction, parent: AbstractType_<any>, 
     for (const key in attributes) {
         const val = attributes[key]
         const currentVal = currPos.currentAttributes.get(key) || null
+
         if (!equalAttributes_(currentVal, val)) {
             // save negated attribute (set null if currentVal undefined)
             negatedAttributes.set(key, currentVal)
             const { left, right } = currPos
-            currPos.right = new Item(new ID(ownClientId, doc.store.getState(ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, new ContentFormat(key, val))
+            currPos.right = new Item(
+                new ID(ownClientId, doc.store.getState(ownClientId)), left, left && left.lastID, right, right && right.id, parent, null, 
+                new ContentFormat(key, val)
+            )
             currPos.right.integrate(transaction, 0)
             currPos.forward()
         }
     }
+
     return negatedAttributes
 }
 
@@ -171,6 +177,7 @@ const insertText = (transaction: Transaction, parent: AbstractType_<any>, currPo
     const negatedAttributes = insertAttributes(transaction, parent, currPos, attributes)
     // insert content
     const content = text.constructor === String ? new ContentString((text as string)) : (text instanceof AbstractType_ ? new ContentType(text) : new ContentEmbed(text as object))
+
     let { left, right, index } = currPos
     if (parent._searchMarker) {
         ArraySearchMarker_.updateChanges(parent._searchMarker, currPos.index, content.getLength())
@@ -180,6 +187,7 @@ const insertText = (transaction: Transaction, parent: AbstractType_<any>, currPo
     currPos.right = right
     currPos.index = index
     currPos.forward()
+
     insertNegatedAttributes(transaction, parent, currPos, negatedAttributes)
 }
 
@@ -861,13 +869,16 @@ export class YText extends AbstractType_<YTextEvent> {
         if (text.length <= 0) {
             return
         }
+
         if (this.doc !== null) {
             this.doc.transact(transaction => {
                 const pos = ItemTextListPosition.find(transaction, this, index)
+
                 if (!attributes) {
                     attributes = {}
                     pos.currentAttributes.forEach((v, k) => { attributes![k] = v })
                 }
+                                
                 insertText(transaction, this, pos, text, attributes)
             })
         } else {

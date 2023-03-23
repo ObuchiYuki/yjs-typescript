@@ -11,16 +11,12 @@ import {
     YXmlFragment,
     ContentDoc, Item, Transaction, YEvent, // eslint-disable-line
     Contentable_,
-    generateNewClientID
+    generateNewClientID,
+    ContentDeleted,
+    generateDocGuid
 } from '../internals'
 
 import * as lib0 from 'lib0-typescript'
-
-const uuidv4 = (): string => {
-    return ([1e7] as any+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, (c: any) =>
-      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-    );
-}
 
 export type DocOpts = {
     gc?: boolean,
@@ -107,7 +103,7 @@ export class Doc extends lib0.Observable<DocMessageType> {
     /**
      * @param {DocOpts} opts configuration
      */
-    constructor ({ guid = uuidv4(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true, clientID }: DocOpts = {}) {
+    constructor ({ guid = generateDocGuid(), collectionid = null, gc = true, gcFilter = () => true, meta = null, autoLoad = false, shouldLoad = true, clientID }: DocOpts = {}) {
         super()
         this.gc = gc
         this.gcFilter = gcFilter
@@ -216,9 +212,9 @@ export class Doc extends lib0.Observable<DocMessageType> {
             t._integrate(this, null)
             return t
         })
-        const Constr = type.constructor
-        if (TypeConstructor !== AbstractType_ && Constr !== TypeConstructor) {
-            if (Constr === AbstractType_) {
+
+        if (TypeConstructor !== AbstractType_ && type.constructor !== TypeConstructor) {
+            if (type.constructor === AbstractType_) {
                 const t = new TypeConstructor()
                 t._map = type._map
                 type._map.forEach((n: Item | null) => {
@@ -268,6 +264,7 @@ export class Doc extends lib0.Observable<DocMessageType> {
         if (item !== null) {
             this._item = null
             const content = item.content as ContentDoc
+
             content.doc = new Doc({ guid: this.guid, ...content.opts, shouldLoad: false })
             content.doc._item = item;
             (item.parent as AbstractType_<any>).doc?.transact(transaction => {
