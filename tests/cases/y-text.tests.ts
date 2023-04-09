@@ -1857,27 +1857,22 @@ export const testSnapshot = (tc: t.TestCase) => {
     const { text0 } = init(tc, { users: 1 })
     const doc0 = text0.doc as Y.Doc
     doc0.gc = false
-    text0.applyDelta([{
-        insert: 'abcd'
-    }])
+    text0.applyDelta([
+        { insert: 'abcd' }
+    ])
     const snapshot1 = Y.Snapshot.snapshot(doc0)
-    text0.applyDelta([{
-        retain: 1
-    }, {
-        insert: 'x'
-    }, {
-        delete: 1
-    }])
+    text0.applyDelta([
+        { retain: 1 },
+        { insert: 'x' },
+        { delete: 1 }
+    ])
     const snapshot2 = Y.Snapshot.snapshot(doc0)
-    text0.applyDelta([{
-        retain: 2
-    }, {
-        delete: 3
-    }, {
-        insert: 'x'
-    }, {
-        delete: 1
-    }])
+    text0.applyDelta([
+        { retain: 2 },
+        { delete: 3 }, 
+        { insert: 'x' },
+        { delete: 1 }
+    ])
     const state1 = text0.toDelta(snapshot1)
     t.compare(state1, [{ insert: 'abcd' }])
     const state2 = text0.toDelta(snapshot2)
@@ -1899,17 +1894,16 @@ export const testSnapshotDeleteAfter = (tc: t.TestCase) => {
     const { text0 } = init(tc, { users: 1 })
     const doc0 = text0.doc as Y.Doc
     doc0.gc = false
-    text0.applyDelta([{
-        insert: 'abcd'
-    }])
+    text0.applyDelta([
+        { insert: 'abcd' }
+    ])
     const snapshot1 = Y.Snapshot.snapshot(doc0)
-    text0.applyDelta([{
-        retain: 4
-    }, {
-        insert: 'e'
-    }])
+    text0.applyDelta([
+        { retain: 4 },
+        { insert: 'e' }
+    ])
     const state1 = text0.toDelta(snapshot1)
-    t.compare(state1, [{ insert: 'abcd' }])
+    t.compare(state1, [ { insert: 'abcd' } ])
 }
 
 /**

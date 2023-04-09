@@ -131,7 +131,11 @@ const minimizeAttributeChanges = (currPos: ItemTextListPosition, attributes: { [
     while (true) {
         if (currPos.right === null) {
             break
-        } else if (currPos.right.deleted || (currPos.right.content.constructor === ContentFormat && equalAttributes_(attributes[(currPos.right.content as ContentFormat).key] || null, (currPos.right.content as ContentFormat).value))) {
+        } else if (currPos.right.deleted 
+            || (currPos.right.content.constructor === ContentFormat 
+                && equalAttributes_(
+                    attributes[(currPos.right.content as ContentFormat).key] || null,
+                    (currPos.right.content as ContentFormat).value))) {
             //
         } else {
             break
@@ -196,6 +200,8 @@ const formatText = (transaction: Transaction, parent: AbstractType_<any>, currPo
     const ownClientId = doc.clientID
     minimizeAttributeChanges(currPos, attributes)
     const negatedAttributes = insertAttributes(transaction, parent, currPos, attributes)
+
+
     // iterate until first non-format or null is found
     // delete all formats with attributes[format.key] != null
     // also check the attributes after the first non-format as we do not want to insert redundant negated attributes there
@@ -211,36 +217,37 @@ const formatText = (transaction: Transaction, parent: AbstractType_<any>, currPo
     ) {
         if (!currPos.right.deleted) {
             switch (currPos.right.content.constructor) {
-                case ContentFormat: {
-                    const { key, value } = currPos.right.content as ContentFormat
-                    const attr = attributes[key]
-                    if (attr !== undefined) {
-                        if (equalAttributes_(attr, value)) {
-                            negatedAttributes.delete(key)
-                        } else {
-                            if (length === 0) {
-                                // no need to further extend negatedAttributes
-                                // eslint-disable-next-line no-labels
-                                break iterationLoop
-                            }
-                            negatedAttributes.set(key, value)
-                        }
-                        currPos.right.delete(transaction)
+            case ContentFormat: {
+                const { key, value } = currPos.right.content as ContentFormat
+                const attr = attributes[key]
+                if (attr !== undefined) {
+                    if (equalAttributes_(attr, value)) {
+                        negatedAttributes.delete(key)
                     } else {
-                        currPos.currentAttributes.set(key, value)
+                        if (length === 0) {
+                            // no need to further extend negatedAttributes
+                            // eslint-disable-next-line no-labels
+                            break iterationLoop
+                        }
+                        negatedAttributes.set(key, value)
                     }
-                    break
+                    currPos.right.delete(transaction)
+                } else {
+                    currPos.currentAttributes.set(key, value)
                 }
-                default:
-                    if (length < currPos.right.length) {
-                        StructStore.getItemCleanStart(transaction, new ID(currPos.right.id.client, currPos.right.id.clock + length))
-                    }
-                    length -= currPos.right.length
-                    break
+                break
+            }
+            default:
+                if (length < currPos.right.length) {
+                    StructStore.getItemCleanStart(transaction, new ID(currPos.right.id.client, currPos.right.id.clock + length))
+                }
+                length -= currPos.right.length
+                break
             }
         }
         currPos.forward()
     }
+        
     // Quill just assumes that the editor starts with a newline and that it always
     // ends with a newline. We only insert that newline when a new newline is
     // inserted - i.e when length is bigger than type.length
@@ -516,6 +523,7 @@ export class YTextEvent extends YEvent<YText> {
                     retain = 0
                 }
                 deltas.push(delta)
+
                 action = null
             }
 
@@ -548,6 +556,7 @@ export class YTextEvent extends YEvent<YText> {
                     }
                 } else if (item.content instanceof ContentFormat) {
                     const { key, value } = (item.content as ContentFormat)
+
                     if (this.adds(item)) {
                         if (!this.deletes(item)) {
                             const curVal = currentAttributes.get(key) || null
@@ -559,6 +568,7 @@ export class YTextEvent extends YEvent<YText> {
                                 } else {
                                     attributes[key] = value
                                 }
+                                
                             } else if (value !== null) {
                                 item.delete(transaction)
                             }
@@ -570,6 +580,7 @@ export class YTextEvent extends YEvent<YText> {
                             if (action === 'retain') { addDelta() }
                             attributes[key] = curVal
                         }
+
                     } else if (!item.deleted) {
                         oldAttributes.set(key, value)
                         const attr = attributes[key]
@@ -577,6 +588,7 @@ export class YTextEvent extends YEvent<YText> {
                             if (!equalAttributes_(attr, value)) {
                                 if (action === 'retain') { addDelta() }
                                 if (value === null) { delete attributes[key] } else { attributes[key] = value }
+
                             } else if (attr !== null) { // this will be cleaned up automatically by the contextless cleanup function
                                 item.delete(transaction)
                             }
@@ -602,6 +614,7 @@ export class YTextEvent extends YEvent<YText> {
         })
 
         this._delta = deltas    
+
         return deltas
     }
 }

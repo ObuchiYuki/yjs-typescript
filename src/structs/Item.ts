@@ -176,6 +176,7 @@ export class Item extends Struct_ {
             }
             while (parentItem.redone !== null) {
                 parentItem = StructStore.getItemCleanStart(transaction, parentItem.redone)
+                console.log(parentItem.redone)
             }
         }
         const parentType = parentItem === null ? (this.parent as AbstractType_<any>) : (parentItem.content as ContentType).type

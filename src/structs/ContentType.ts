@@ -16,24 +16,6 @@ import {
 
 import * as lib0 from "lib0-typescript"
 
-export const typeRefs: ((decoder: UpdateDecoderAny_) => AbstractType_<any>)[] = [
-    readYArray,
-    readYMap,
-    readYText,
-    readYXmlElement,
-    readYXmlFragment,
-    readYXmlHook,
-    readYXmlText
-]
-
-export const YArrayRefID = 0
-export const YMapRefID = 1
-export const YTextRefID = 2
-export const YXmlElementRefID = 3
-export const YXmlFragmentRefID = 4
-export const YXmlHookRefID = 5
-export const YXmlTextRefID = 6
-
 export class ContentType implements YContent {
     constructor(public type: AbstractType_<any>) {}
 
@@ -102,5 +84,28 @@ export class ContentType implements YContent {
 }
 
 export const readContentType: YContentDecoder = decoder => {
-    return new ContentType(typeRefs[decoder.readTypeRef()](decoder))
+    const ref = decoder.readTypeRef()
+    if (ref <= 6) {
+        return new ContentType(typeRefs[ref](decoder))
+    } else { // for integration to yswift
+        return new ContentType(readYMap(decoder)) 
+    }
 }
+
+export const typeRefs: ((decoder: UpdateDecoderAny_) => AbstractType_<any>)[] = [
+    readYArray,
+    readYMap,
+    readYText,
+    readYXmlElement,
+    readYXmlFragment,
+    readYXmlHook,
+    readYXmlText
+]
+
+export const YArrayRefID = 0
+export const YMapRefID = 1
+export const YTextRefID = 2
+export const YXmlElementRefID = 3
+export const YXmlFragmentRefID = 4
+export const YXmlHookRefID = 5
+export const YXmlTextRefID = 6
